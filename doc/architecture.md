@@ -44,3 +44,7 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 - Kanten stehen für statische Abhängigkeiten zwischen einzelnen Knoten.
 - Der Graph ist hierarchisch und kann pro Knoten auf- und zugeklappt werden.
 
+## Vorgehen
+
+- Alle Änderungen werden durch Test(s) abgesichert, so dass später keine Regressionen vorkommen.
+

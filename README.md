@@ -1,8 +1,8 @@
-# archclairbear
+# ArchClairBear
 
 **English**
 
-archclairbear is a planned browser-based architecture explorer for Java codebases.
+ArchClairBear is a planned browser-based architecture explorer for Java codebases.
 
 The idea is to:
 
@@ -14,7 +14,7 @@ The idea is to:
 
 **Deutsch**
 
-archclairbear ist ein geplanter browserbasierter Architektur-Explorer für Java-Codebasen.
+ArchClairBear ist ein geplanter browserbasierter Architektur-Explorer für Java-Codebasen.
 
 Die Idee ist:
 

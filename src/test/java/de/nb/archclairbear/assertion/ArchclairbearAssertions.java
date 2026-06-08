@@ -2,8 +2,8 @@ package de.nb.archclairbear.assertion;
 
 import org.jsoup.nodes.Document;
 
-public class ArchclairbearAssertions {
-  private ArchclairbearAssertions() {
+public class ArchClairBearAssertions {
+  private ArchClairBearAssertions() {
   }
 
   public static DocumentAssert assertThat(final Document actual) {

@@ -3,19 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Eine minimale Client-Oberfläche anzeigen
-
-Ziel:
-Die ausgelieferte Startseite soll eine sehr einfache Oberfläche enthalten, die sichtbar macht, dass der Client funktioniert.
-
-Warum:
-Der erste sichtbare Zustand sollte nicht leer sein. Auch ein einzelner Titel, ein Statushinweis oder eine Platzhalterfläche reichen aus.
-
-Ergebnis:
-
-- Der Browser zeigt eine erkennbare UI.
-- Es ist klar, dass die Seite vom Projekt stammt und nicht nur ein leerer Serverantworttext ist.
-
 ## Einen ersten API-Endpunkt für Graphdaten bereitstellen
 
 Ziel:
