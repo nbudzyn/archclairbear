@@ -14,7 +14,7 @@ Client und Server sollen früh über einen echten Vertrag gekoppelt werden. Die 
 Ergebnis:
 
 - Ein Endpunkt wie `GET /api/graph/root` liefert JSON.
-- Die Antwort enthält mindestens einen Knoten vom Typ `Verzeichnis`.
+- Die Antwort enthält mindestens einen Knoten vom Typ `directory`.
 
 ## Den ersten Knoten im Client rendern
 
