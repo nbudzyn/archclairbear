@@ -3,7 +3,7 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## 1. Eine minimale Client-Oberfläche anzeigen
+## Eine minimale Client-Oberfläche anzeigen
 
 Ziel:
 Die ausgelieferte Startseite soll eine sehr einfache Oberfläche enthalten, die sichtbar macht, dass der Client funktioniert.
@@ -16,7 +16,7 @@ Ergebnis:
 - Der Browser zeigt eine erkennbare UI.
 - Es ist klar, dass die Seite vom Projekt stammt und nicht nur ein leerer Serverantworttext ist.
 
-## 2. Einen ersten API-Endpunkt für Graphdaten bereitstellen
+## Einen ersten API-Endpunkt für Graphdaten bereitstellen
 
 Ziel:
 Der Server soll einen kleinen JSON-Endpunkt anbieten, der genau eine minimale Graphantwort zurückgibt.
@@ -29,7 +29,7 @@ Ergebnis:
 - Ein Endpunkt wie `GET /api/graph/root` liefert JSON.
 - Die Antwort enthält mindestens einen Knoten vom Typ `Verzeichnis`.
 
-## 3. Den ersten Knoten im Client rendern
+## Den ersten Knoten im Client rendern
 
 Ziel:
 Der Client soll die Graphdaten aus dem API-Endpunkt lesen und den einzelnen Knoten darstellen.
@@ -42,7 +42,7 @@ Ergebnis:
 - Die Seite lädt Daten vom Server.
 - Ein einzelner Verzeichnis-Knoten wird in der Visualisierung angezeigt.
 
-## 4. Einfache Status- und Fehlermeldungen ergänzen
+## Einfache Status- und Fehlermeldungen ergänzen
 
 Ziel:
 Der Client soll sichtbar machen, ob Daten geladen wurden oder ob ein Fehler aufgetreten ist.
@@ -55,7 +55,7 @@ Ergebnis:
 - Während des Ladens gibt es einen klaren Statushinweis.
 - Bei einem Fehler wird eine verständliche Meldung angezeigt.
 
-## 5. Einen kleinen Service zwischen Controller und Datenquelle einführen
+## Einen kleinen Service zwischen Controller und Datenquelle einführen
 
 Ziel:
 Der Controller soll nicht direkt die Antwort zusammensetzen, sondern einen kleinen Service verwenden.
@@ -68,7 +68,7 @@ Ergebnis:
 - Der Controller delegiert an einen Service.
 - Der Service liefert aktuell noch feste Testdaten.
 
-## 6. Den Workspace-Pfad konfigurierbar machen
+## Den Workspace-Pfad konfigurierbar machen
 
 Ziel:
 Der Server soll wissen, aus welchem lokalen Pfad der Java-Quellcode gelesen wird.
@@ -81,7 +81,7 @@ Ergebnis:
 - Ein Konfigurationswert definiert den Workspace.
 - Die Anwendung startet auch dann, wenn der Pfad noch nicht für die Analyse verwendet wird.
 
-## 7. Den ersten echten Verzeichnisknoten aus dem Dateisystem ableiten
+## Den ersten echten Verzeichnisknoten aus dem Dateisystem ableiten
 
 Ziel:
 Statt Dummy-Daten soll der erste Knoten aus einem echten Verzeichnis des Workspaces kommen.
@@ -94,7 +94,7 @@ Ergebnis:
 - Der erste Knoten repräsentiert ein echtes Verzeichnis.
 - Der Knotenname und die Struktur stammen aus dem Dateisystem.
 
-## 8. Einen Smoke-Test für den kompletten Startpfad ergänzen
+## Einen Smoke-Test für den kompletten Startpfad ergänzen
 
 Ziel:
 Es soll einen automatisierten Test geben, der den Startpunkt der Anwendung und den Graph-Endpunkt absichert.
@@ -107,7 +107,7 @@ Ergebnis:
 - Die Anwendung startet im Testkontext.
 - Der API-Endpunkt liefert eine gültige Antwort.
 
-## 9. Die nächste Ausbaustufe vorbereiten
+## Die nächste Ausbaustufe vorbereiten
 
 Ziel:
 Nach dem ersten sichtbaren Skeleton sollen Package- und Typ-Knoten folgen.
