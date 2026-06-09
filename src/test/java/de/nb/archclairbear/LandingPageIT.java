@@ -43,11 +43,14 @@ class LandingPageIT {
 
     assertThat(doc) //
         .contains("ArchClairBear") //
-        .contains("Platzhalter für den Graphen");
+        .contains("Cytoscape") //
+        .doesNotHaveElement(".placeholder");
 
     assertThat(doc) //
-        .hasElement("h1.app-title") //
-        .hasElement("main.graph-area") //
-        .hasElement(".placeholder");
+        .hasElement("h1") //
+        .hasElement("main.graph-frame") //
+        .hasElement("#cy") //
+        .hasElement("script[src=\"/webjars/cytoscape/3.33.1/dist/cytoscape.min.js\"]") //
+        .hasElement("script[src=\"/graph-app.js\"]");
   }
 }

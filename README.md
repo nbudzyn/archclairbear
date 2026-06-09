@@ -23,3 +23,7 @@ Die Idee ist:
 - einen hierarchischen Graphen aus Verzeichnissen, Packages und Typen aufzubauen,
 - Graphdaten an den Browser zu senden,
 - und dort die Struktur mit Auf- und Zuklappen, Hover, Zoom, Pan und Drag darzustellen und zu erkunden.
+
+## Entwicklung
+
+Hinweise zu lokalen Builds, Tests und Gradle-Aufrufen stehen in [doc/development.md](/C:/projects/2026/archclairbear/archclairbear/doc/development.md).

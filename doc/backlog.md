@@ -3,23 +3,11 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Einen ersten API-Endpunkt für Graphdaten bereitstellen
-
-Ziel:
-Der Server soll einen kleinen JSON-Endpunkt anbieten, der genau eine minimale Graphantwort zurückgibt.
-
-Warum:
-Client und Server sollen früh über einen echten Vertrag gekoppelt werden. Die spätere Analyse kann denselben Vertrag weiterverwenden.
-
-Ergebnis:
-
-- Ein Endpunkt wie `GET /api/graph/root` liefert JSON.
-- Die Antwort enthält mindestens einen Knoten vom Typ `directory`.
-
 ## Den ersten Knoten im Client rendern
 
 Ziel:
-Der Client soll die Graphdaten aus dem API-Endpunkt lesen und den einzelnen Knoten darstellen.
+Der Client soll die Graphdaten aus dem API-Endpunkt lesen und den einzelnen Knoten darstellen. Cytoscape produktionsreif einbinden und für
+Interaktion und Graph-Rendering verwenden.
 
 Warum:
 Erst wenn die komplette Kette von HTTP über JSON bis zur Darstellung funktioniert, ist das Skeleton wirklich überprüfbar.

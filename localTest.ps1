@@ -4,6 +4,9 @@ param(
     [switch]$Stacktrace
 )
 
+$env:GRADLE_USER_HOME = Join-Path $PSScriptRoot '.gradle-user'
+New-Item -ItemType Directory -Force -Path $env:GRADLE_USER_HOME | Out-Null
+
 $gradleArgs = @('--console=plain', '-q', 'localTest')
 
 if ($Stacktrace)
