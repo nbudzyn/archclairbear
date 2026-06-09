@@ -3,20 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Den ersten Knoten im Client rendern
-
-Ziel:
-Der Client soll die Graphdaten aus dem API-Endpunkt lesen und den einzelnen Knoten darstellen. Cytoscape produktionsreif einbinden und für
-Interaktion und Graph-Rendering verwenden.
-
-Warum:
-Erst wenn die komplette Kette von HTTP über JSON bis zur Darstellung funktioniert, ist das Skeleton wirklich überprüfbar.
-
-Ergebnis:
-
-- Die Seite lädt Daten vom Server.
-- Ein einzelner Verzeichnis-Knoten wird in der Visualisierung angezeigt.
-
 ## Einfache Status- und Fehlermeldungen ergänzen
 
 Ziel:
