@@ -32,3 +32,49 @@ dependencies {
 tasks.named('test') {
   useJUnitPlatform()
 }
+
+tasks.register('localTest', Test) {
+  group = 'verification'
+  description = 'Runs tests with minimal successful output.'
+  def showDetailedFailures = project.hasProperty('localTestStacktrace')
+
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath = sourceSets.test.runtimeClasspath
+  useJUnitPlatform()
+  ignoreFailures = true
+
+  testLogging {
+    events = []
+    exceptionFormat showDetailedFailures ? 'full' : 'short'
+    showCauses = showDetailedFailures
+    showExceptions = true
+    showStackTraces = showDetailedFailures
+    showStandardStreams = false
+  }
+
+  afterTest {descriptor, result ->
+    if (result.resultType == TestResult.ResultType.FAILURE) {
+      logger.quiet("FAILED: ${descriptor.className}.${descriptor.name}")
+      if (showDetailedFailures && result.exception != null) {
+        def writer = new StringWriter()
+        result.exception.printStackTrace(new PrintWriter(writer))
+        writer.toString().readLines().each {line -> logger.quiet(line)
+        }
+      } else {
+        def message = result.exception == null ? 'Test failed.' : (result.exception.message ?: result.exception.toString())
+        logger.quiet(message)
+      }
+    }
+  }
+
+  afterSuite {descriptor, result ->
+    if (descriptor.parent == null) {
+      if (result.failedTestCount == 0) {
+        logger.quiet('OK')
+      } else {
+        logger.quiet("${result.testCount} tests completed, ${result.failedTestCount} failed")
+        throw new GradleException('Tests failed.')
+      }
+    }
+  }
+}
