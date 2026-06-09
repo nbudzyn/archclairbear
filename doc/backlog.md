@@ -13,7 +13,7 @@ Schon im Skeleton ist wichtig, dass man Ladefehler oder leere Antworten sofort e
 
 Ergebnis:
 
-- Während des Ladens gibt es einen klaren Statushinweis.
+- Während des Ladens gibt es einen klaren Statushinweis, der danach wieder entfernt wird.
 - Bei einem Fehler wird eine verständliche Meldung angezeigt.
 
 ## Einen kleinen Service zwischen Controller und Datenquelle einführen
