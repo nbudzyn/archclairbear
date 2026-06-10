@@ -7,6 +7,7 @@
 - Die Gradle-Wrapper-Aufrufe verwenden das Standard-Gradle-User-Home im Benutzerverzeichnis (`C:\Users\...\ .gradle`).
 - Tests laufen über `.\localTest.ps1`.
 - Falls ein Test mehr Fehlerdetails braucht, danach `.\localTest.ps1 -Stacktrace`.
+- Für KI-Prüfstarts wird `server.port=8081` verwendet; der normale Start aus IntelliJ bleibt auf `8080`.
 
 ## Arbeitsweise
 
