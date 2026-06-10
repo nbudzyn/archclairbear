@@ -27,8 +27,8 @@
 - Im ersten Schritt immer `.\localTest.ps1` bzw. `.\localJsTest.ps1` verwenden, bei Bedarf mit `-Stacktrace`.
 - Direkte Testaufrufe über Gradle nur nach ausdrücklicher Nachfrage beim User.
 - Java: `.\localTest.ps1`, bei Bedarf `.\localTest.ps1 -Stacktrace`.
-- JavaScript: `.\localJsTest.ps1`, bei Bedarf `.\localJsTest.ps1 -Stacktrace`.
-- Gemeinsamer Lauf: `.\gradlew.bat --console=plain allTests`.
+- JavaScript: `.\localJsTest.ps1`, bei Bedarf `.\localJsTest.ps1 -Stacktrace`. Die JS-Tests laufen mit `node:test` im Einprozessmodus `--test-isolation=none`.
+- Gemeinsamer Lauf: `.\gradlew.bat --console=plain allTests`. Die JS-Tests sind eine eigene Suite, die dort mitläuft.
 - Für KI-Prüfstarts `server.port=8081`.
 
 ### Manuell gestartete Tests (aus IntelliJ)

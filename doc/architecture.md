@@ -28,6 +28,7 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 - Fragt bei Bedarf zusätzliche Graphdaten ab.
 - Cytoscape für Interaktion und Graph-Rendering verwenden.
 - Der Client soll leicht bleiben; die Analyse gehört auf den Server.
+- Die reine Frontend-Logik liegt in importierbaren Modulen; DOM-Zugriffe bleiben in einer dünnen Integrationsschicht.
 - Die erste Implementierung bleibt einfach und stabil.
 - Angular gehört nicht zur ersten Version.
 
