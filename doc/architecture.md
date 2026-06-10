@@ -7,7 +7,7 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 ## Grobe Aufteilung
 
 - Server: Spring Boot
-- Client: pures HTML/CSS/TypeScript oder JavaScript mit Cytoscape
+- Client: HTML/CSS/JavaScript mit Cytoscape; evtl. später TypeScript
 
 ## Zuständigkeiten
 

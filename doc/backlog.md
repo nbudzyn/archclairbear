@@ -3,19 +3,39 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Einen schlanken Browser-Testpfad für kritische UI-Flows ergänzen
+## Einen schlanken Browser-Testpfad für den erfolgreichen Initial-Load ergänzen
 
 Ziel:
-Die wichtigsten End-to-End-Pfade sollen einmal im echten Browser abgesichert werden.
+Der zentrale Startpfad soll einmal im echten Browser abgesichert werden.
 
 Warum:
-JS-Tests schützen die Logik, aber nicht die Browser-Integration. Klicks, Nachladen und sichtbare DOM-Zustände brauchen eine kleine Zahl
-gezielter Browser-Tests.
+JS-Tests schützen die Logik, aber nicht die Browser-Integration. Der erste sichtbare Start der Anwendung braucht deshalb einen kleinen, gezielten Browser-Test.
+
+Verfeinerung:
+
+- Der Test startet die Anwendung im echten Browser.
+- Der Test prüft, dass der Root-Graph erfolgreich geladen wird.
+- Der Test prüft, dass der Graph im Ziel-Container sichtbar gerendert wird.
+- Der Ladeschirm wird bewusst nicht geprüft, damit keine Produktivcode-Änderung nötig wird.
+- Der Test bleibt bewusst klein und ersetzt keine breite UI-Automation.
 
 Ergebnis:
 
-- Ein Browser-Test prüft den erfolgreichen Initial-Load.
+- Der Browser-Startpfad ist abgesichert.
+- Der Test scheitert, wenn Laden oder Rendering im echten Browser brechen.
+
+## Einen schlanken Browser-Testpfad für den Fehlerfall ergänzen
+
+Ziel:
+Der sichtbare Fehlerpfad soll einmal im echten Browser abgesichert werden.
+
+Warum:
+Auch im Skeleton muss sofort erkennbar sein, wenn das Laden der Graphdaten fehlschlägt.
+
+Ergebnis:
+
 - Ein Browser-Test prüft den Fehlerfall nach gefälschtem Backend-Fehler.
+- Die Fehlermeldung ist im Browser sichtbar.
 - Weitere Browser-Tests decken nur wirklich kritische Interaktionen ab.
 
 ## Einfache Status- und Fehlermeldungen ergänzen
