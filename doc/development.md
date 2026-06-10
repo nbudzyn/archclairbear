@@ -13,3 +13,11 @@
 - Vor Änderungen die verbindlichen Dokumente lesen.
 - Neue Skripte und Build-Aufrufe nicht auf ein projektlokales Gradle-User-Home umbiegen.
 - Entwicklungswissen hier bündeln, nicht in Produktdokumenten oder im README doppeln.
+
+## Tests
+
+- `Jsoup` prüft nur gerendertes HTML, nicht JavaScript-Ausführung oder Browser-Verhalten.
+- Der GUI-Start hängt an der Auslieferung der statischen Client-Assets; Browser-Checks sollen deshalb auch die Asset-Requests mitprüfen.
+- Frontend-Logik nach Möglichkeit in kleine, importierbare Module schneiden und dort mit schnellen JS-Tests absichern.
+- Browser-Tests nur für wenige kritische Flows einsetzen.
+- Screenshot-Tests nur sparsam verwenden; flexible Layouts machen sie schnell fragil.

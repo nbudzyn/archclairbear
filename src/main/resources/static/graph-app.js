@@ -1,13 +1,21 @@
 const graphContainer = document.getElementById('cy');
+const graphStatus = document.getElementById('graph-status');
+const graphStatusMessage = graphStatus.querySelector('[data-message]');
+const graphError = document.getElementById('graph-error');
+const graphErrorMessage = graphError.querySelector('[data-message]');
 
 main();
 
 async function main() {
+  showStatus('Graphdaten werden geladen ...');
+
   try {
     const graph = await loadGraph();
     renderGraph(graph);
+    hideStatus();
   } catch (error) {
     console.error('Failed to load root graph.', error);
+    showError('Der Graph konnte nicht geladen werden. Bitte versuche es erneut.');
   }
 }
 
@@ -129,4 +137,20 @@ function renderGraph(graph) {
     cy.resize();
     cy.fit(cy.elements(), 120);
   });
+}
+
+function showStatus(message) {
+  graphError.hidden = true;
+  graphStatusMessage.textContent = message;
+  graphStatus.hidden = false;
+}
+
+function hideStatus() {
+  graphStatus.hidden = true;
+}
+
+function showError(message) {
+  graphStatus.hidden = true;
+  graphErrorMessage.textContent = message;
+  graphError.hidden = false;
 }

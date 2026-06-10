@@ -40,4 +40,13 @@ class GraphControllerIT {
         .hasSingleDirectoryNode("root-directory", "Workspace") //
         .hasNoEdges();
   }
+
+  @Test
+  void cytoscapeWebjarIsServedFromClasspath() throws Exception {
+    // WHEN
+    mockMvc.perform(get("/webjars/cytoscape/3.33.1/dist/cytoscape.min.js"))
+        // THEN
+        .andExpect(status().isOk()) //
+        .andExpect(content().contentTypeCompatibleWith(MediaType.valueOf("text/javascript")));
+  }
 }

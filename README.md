@@ -27,3 +27,5 @@ Die Idee ist:
 ## Entwicklung
 
 Hinweise zu lokalen Builds, Tests und Gradle-Aufrufen stehen in [doc/development.md](/C:/projects/2026/archclairbear/archclairbear/doc/development.md).
+
+Die Anwendung ist lokal im Browser unter `http://localhost:8080/` erreichbar, sobald der Server läuft.

@@ -44,13 +44,33 @@ class LandingPageIT {
     assertThat(doc) //
         .contains("ArchClairBear") //
         .contains("Cytoscape") //
+        .contains("Graphdaten werden geladen") //
         .doesNotHaveElement(".placeholder");
 
     assertThat(doc) //
         .hasElement("h1") //
         .hasElement("main.graph-frame") //
+        .hasElement("#graph-status[role=\"status\"]") //
+        .hasElement("#graph-error[role=\"alert\"]") //
+        .hasElement("#graph-error[hidden]") //
         .hasElement("#cy") //
         .hasElement("script[src=\"/webjars/cytoscape/3.33.1/dist/cytoscape.min.js\"]") //
         .hasElement("script[src=\"/graph-app.js\"]");
+  }
+
+  @Test
+  void indexContainsErrorFallbackMarkup() throws Exception {
+    // WHEN
+    var html = mockMvc.perform(get("/index.html"))//
+        // THEN
+        .andExpect(status().isOk()) //
+        .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+    var doc = Jsoup.parse(html);
+
+    assertThat(doc) //
+        .contains("Der Graph konnte nicht geladen werden") //
+        .hasElement("#graph-error[role=\"alert\"]") //
+        .hasElement("#graph-error[hidden]");
   }
 }
