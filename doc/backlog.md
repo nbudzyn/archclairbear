@@ -3,20 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Die Frontend-Logik in testbare Module zerlegen
-
-Ziel:
-Der Client soll so geschnitten werden, dass die reine Logik unabhängig vom Browser testbar ist.
-
-Warum:
-JS-Tests sollen die schnelle, stabile Absicherung übernehmen. Dafür müssen Graph-Transformation, Fehlerbehandlung und Zustandswechsel aus dem DOM-gebundenen Skript herausgelöst werden.
-
-Ergebnis:
-
-- Funktionen für Datenaufbereitung, Statuswechsel und Graph-Updates liegen in importierbaren Modulen.
-- DOM-Zugriffe bleiben an einer kleinen Integrationsschicht gebündelt.
-- Die Logik kann ohne Browser in Node getestet werden.
-
 ## Einen JS-Testlauf für die Frontend-Logik ergänzen
 
 Ziel:
@@ -37,7 +23,8 @@ Ziel:
 Die wichtigsten End-to-End-Pfade sollen einmal im echten Browser abgesichert werden.
 
 Warum:
-JS-Tests schützen die Logik, aber nicht die Browser-Integration. Klicks, Nachladen und sichtbare DOM-Zustände brauchen eine kleine Zahl gezielter Browser-Tests.
+JS-Tests schützen die Logik, aber nicht die Browser-Integration. Klicks, Nachladen und sichtbare DOM-Zustände brauchen eine kleine Zahl
+gezielter Browser-Tests.
 
 Ergebnis:
 

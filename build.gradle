@@ -34,6 +34,168 @@ tasks.named('test') {
   useJUnitPlatform()
 }
 
+tasks.register('jsTest', Exec) {
+  group = 'verification'
+  description = 'Runs the JavaScript tests with standard Node output.'
+
+  workingDir = rootDir
+  commandLine 'node', '--test', '--test-isolation=none', '--test-reporter=tap', 'src/js-test/**/*.test.mjs'
+}
+
+tasks.register('jsTestQuiet') {
+  group = 'verification'
+  description = 'Runs the JavaScript tests with minimal output.'
+
+  def showDetailedFailures = project.hasProperty('jsTestStacktrace')
+
+  doLast {
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    def detailedLines = []
+
+    def process = ['node', '--test', '--test-isolation=none', '--test-reporter=tap', 'src/js-test/**/*.test.mjs'].execute(null, rootDir)
+    process.consumeProcessOutput(stdout, stderr)
+    process.waitFor()
+
+    def lines = (stdout.toString('UTF-8') + stderr.toString('UTF-8')).readLines()
+    def hadFailures = false
+
+    lines.each { line ->
+      def text = line as String
+
+      if (text.isBlank()) {
+        return
+      }
+
+      if (text ==~ /^# tests \d+$/) {
+        return
+      }
+
+      if (text ==~ /^# suites \d+$/) {
+        return
+      }
+
+      if (text ==~ /^# pass \d+$/) {
+        return
+      }
+
+      if (text ==~ /^# fail \d+$/) {
+        return
+      }
+
+      if (text ==~ /^# cancelled \d+$/) {
+        return
+      }
+
+      if (text ==~ /^# skipped \d+$/) {
+        return
+      }
+
+      if (text ==~ /^# todo \d+$/) {
+        return
+      }
+
+      if (text ==~ /^# duration_ms \d+(\.\d+)?$/) {
+        return
+      }
+
+      if (text == 'TAP version 13') {
+        return
+      }
+
+      if (text ==~ /^1\.\.\d+$/) {
+        return
+      }
+
+      if (text.startsWith('ok ')) {
+        return
+      }
+
+      if (text.startsWith('# Subtest:')) {
+        return
+      }
+
+      if (text.startsWith('not ok ')) {
+        hadFailures = true
+        if (showDetailedFailures) {
+          detailedLines << text
+        } else {
+          logger.quiet("FAILED: ${text.substring(7)}")
+        }
+        return
+      }
+
+      if (text ==~ /^FAILURE: Build failed with an exception\.$/) {
+        return
+      }
+
+      if (text ==~ /^Execution failed for task '.*'.$/) {
+        return
+      }
+
+      if (text ==~ /^> Run with --stacktrace option to get the stack trace\.$/) {
+        return
+      }
+
+      if (text ==~ /^> Run with --info or --debug option to get more log output\.$/) {
+        return
+      }
+
+      if (text ==~ /^> Run with --scan to get full insights into the build\.$/) {
+        return
+      }
+
+      if (text ==~ /^> Get more help at https:\/\/help\.gradle\.org\.$/) {
+        return
+      }
+
+      if (text ==~ /^BUILD FAILED in .+$/) {
+        return
+      }
+
+      if (showDetailedFailures) {
+        detailedLines << text
+      }
+    }
+
+    if (process.exitValue() == 0 && !hadFailures) {
+      logger.quiet('OK')
+      return
+    }
+
+    if (showDetailedFailures) {
+      detailedLines.each { line ->
+        logger.quiet(line)
+      }
+    }
+
+    def summaryMatch = lines.find { line -> (line as String) ==~ /^# tests \d+$/ }
+    def failMatch = lines.find { line -> (line as String) ==~ /^# fail \d+$/ }
+
+    if (summaryMatch != null && failMatch != null) {
+      def total = (summaryMatch as String).replaceFirst(/^# tests /, '')
+      def failed = (failMatch as String).replaceFirst(/^# fail /, '')
+      logger.quiet("${total} tests completed, ${failed} failed")
+    } else {
+      logger.quiet('Tests failed.')
+    }
+
+    throw new GradleException('Tests failed.')
+  }
+}
+
+tasks.named('check') {
+  dependsOn tasks.named('jsTest')
+}
+
+tasks.register('allTests') {
+  group = 'verification'
+  description = 'Runs the Java and JavaScript test suites.'
+
+  dependsOn tasks.named('test')
+  dependsOn tasks.named('jsTest')
+}
+
 tasks.register('localTest', Test) {
   group = 'verification'
   description = 'Runs tests with minimal successful output.'

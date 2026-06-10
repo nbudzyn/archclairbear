@@ -9,4 +9,4 @@ Verbindlich sind:
 
 Änderungen zuerst daran abgleichen.
 
-Ein Backlog mit Tasks liegt unter [/backlog.md].
+Ein Backlog mit Tasks liegt unter [/doc/backlog.md].

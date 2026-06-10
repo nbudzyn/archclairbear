@@ -2,12 +2,9 @@
 
 ## Gradle
 
-- Bei allen Gradle-Aufrufen muss vorher explizit eine Freigabe des Users eingeholt werden, damit es nicht an Berechtigungen scheitert.
-- Das gilt für `gradle`, `gradlew.bat` und `.\localTest.ps1`.
-- Die Gradle-Wrapper-Aufrufe verwenden das Standard-Gradle-User-Home im Benutzerverzeichnis (`C:\Users\...\ .gradle`).
-- Tests laufen über `.\localTest.ps1`.
-- Falls ein Test mehr Fehlerdetails braucht, danach `.\localTest.ps1 -Stacktrace`.
-- Für KI-Prüfstarts wird `server.port=8081` verwendet; der normale Start aus IntelliJ bleibt auf `8080`.
+- Vor Gradle-Aufrufen immer explizit Freigabe holen.
+- Das gilt für `gradle`, `gradlew.bat`, `.\localTest.ps1` und `.\localJsTest.ps1`.
+- Die Wrapper verwenden das Standard-Gradle-User-Home im Benutzerverzeichnis (`C:\Users\...\ .gradle`).
 
 ## Arbeitsweise
 
@@ -17,8 +14,23 @@
 
 ## Tests
 
+### Allgemeines
+
 - `Jsoup` prüft nur gerendertes HTML, nicht JavaScript-Ausführung oder Browser-Verhalten.
-- Der GUI-Start hängt an der Auslieferung der statischen Client-Assets; Browser-Checks sollen deshalb auch die Asset-Requests mitprüfen.
-- Frontend-Logik nach Möglichkeit in kleine, importierbare Module schneiden und dort mit schnellen JS-Tests absichern.
+- Beim GUI-Start auch die statischen Client-Assets mitprüfen.
+- Frontend-Logik in kleine, importierbare Module schneiden und mit schnellen JS-Tests absichern.
 - Browser-Tests nur für wenige kritische Flows einsetzen.
 - Screenshot-Tests nur sparsam verwenden; flexible Layouts machen sie schnell fragil.
+
+### Tests durch die KI
+
+- Java: `.\localTest.ps1`, bei Bedarf `.\localTest.ps1 -Stacktrace`.
+- JavaScript: `.\localJsTest.ps1`, bei Bedarf `.\localJsTest.ps1 -Stacktrace`.
+- Gemeinsamer Lauf: `.\gradlew.bat --console=plain allTests`.
+- Für KI-Prüfstarts `server.port=8081`.
+
+### Manuell gestartete Tests (aus IntelliJ)
+
+- Java-Tests in IntelliJ: `src\test` -> `Run Tests in...`
+- JavaScript-Tests in IntelliJ: `src\js-test` -> `Run Tests in...`
+- Für manuelle GUI-Starts `server.port=8080`.
