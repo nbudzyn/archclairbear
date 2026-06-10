@@ -3,20 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Einen JS-Testlauf für die Frontend-Logik ergänzen
-
-Ziel:
-Der Client soll mit schnellen Unit-Tests gegen Regressionen abgesichert werden.
-
-Warum:
-JS-Tests laufen schneller als Browser-Interaktionen und sind für häufige Layout- und UI-Änderungen robuster als Screenshot-Tests.
-
-Ergebnis:
-
-- Es gibt einen dedizierten JS-Testlauf im Build.
-- Tests decken Graphdaten-Transformation, Lade-/Fehlerzustände und einfache Node-Diff-Logik ab.
-- Die Tests laufen ohne echten Browser und ohne Pixel-Vergleiche.
-
 ## Einen schlanken Browser-Testpfad für kritische UI-Flows ergänzen
 
 Ziel:

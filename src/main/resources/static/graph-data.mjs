@@ -26,6 +26,20 @@ export function createGraphElements(graph) {
   ];
 }
 
+export function diffGraphNodes(previousNodes, nextNodes) {
+  const previousNodeMap = new Map(previousNodes.map((node) => [node.id, node]));
+  const nextNodeMap = new Map(nextNodes.map((node) => [node.id, node]));
+
+  return {
+    added: nextNodes.filter((node) => !previousNodeMap.has(node.id)),
+    removed: previousNodes.filter((node) => !nextNodeMap.has(node.id)),
+    updated: nextNodes.filter((node) => {
+      const previousNode = previousNodeMap.get(node.id);
+      return previousNode != null && !areNodesEqual(previousNode, node);
+    }),
+  };
+}
+
 export class GraphDataValidationError extends Error {
   constructor(message) {
     super(message);
@@ -97,4 +111,10 @@ function createEdgeId(edge, index) {
 
 function isString(value) {
   return typeof value === 'string' && value.length > 0;
+}
+
+function areNodesEqual(previousNode, nextNode) {
+  return previousNode.id === nextNode.id
+    && previousNode.label === nextNode.label
+    && previousNode.type === nextNode.type;
 }

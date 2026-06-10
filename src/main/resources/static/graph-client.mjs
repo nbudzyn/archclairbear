@@ -12,6 +12,8 @@ export async function startGraphApp({
   graphErrorMessage = errorElement?.querySelector('[data-message]'),
   graphStatus = document.getElementById('graph-status'),
   graphStatusMessage = graphStatus?.querySelector('[data-message]'),
+  loadGraphImpl = loadGraph,
+  renderGraphImpl = renderGraph,
   requestUrl = '/api/graph/root',
   windowObject = window,
   cytoscape = window.cytoscape,
@@ -26,8 +28,8 @@ export async function startGraphApp({
   graphStatusController.showLoading('Graphdaten werden geladen ...');
 
   try {
-    const graph = normalizeGraph(await loadGraph(fetchImpl, requestUrl));
-    renderGraph(graph, {
+    const graph = normalizeGraph(await loadGraphImpl(fetchImpl, requestUrl));
+    renderGraphImpl(graph, {
       cytoscape,
       container,
       windowObject,
