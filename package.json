@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "browser-test": "playwright test",
+    "browser-test:quiet": "node src/browser-test/playwright-quiet.mjs",
     "browser-test:headed": "playwright test --headed"
   },
   "devDependencies": {

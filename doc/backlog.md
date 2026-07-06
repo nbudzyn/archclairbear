@@ -3,19 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Einen kleinen Service zwischen Controller und Datenquelle einführen
-
-Ziel:
-Der Controller soll nicht direkt die Antwort zusammensetzen, sondern einen kleinen Service verwenden.
-
-Warum:
-So bleibt die Struktur erweiterbar. Die Dummy-Daten können später durch echte Analyse ersetzt werden, ohne die HTTP-Schnittstelle umzubauen.
-
-Ergebnis:
-
-- Der Controller delegiert an einen Service.
-- Der Service liefert aktuell noch feste Testdaten.
-
 ## Den Workspace-Pfad konfigurierbar machen
 
 Ziel:

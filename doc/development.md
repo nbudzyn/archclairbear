@@ -11,6 +11,10 @@
 - Vor Änderungen die verbindlichen Dokumente lesen.
 - Neue Skripte und Build-Aufrufe nicht auf ein projektlokales Gradle-User-Home umbiegen.
 - Entwicklungswissen hier bündeln, nicht in Produktdokumenten oder im README doppeln.
+- Wenn ein Package leer wird, das leere Package-Verzeichnis löschen.
+- Wenn das oberste Backlog-Item umgesetzt scheint, Bescheid sagen und fragen, ob es aus dem Backlog entfernt werden soll.
+- Bei Review-Findings erst Lokalität prüfen: projektspezifische Test-/Reporter-Logik möglichst dort halten, wo die zugehörige Toolwelt lebt
+  (z. B. Playwright-Auswertung in Node/JS statt im Gradle-Buildscript).
 
 ## Tests
 
@@ -24,6 +28,9 @@
 - Browser-Tests laufen mit Playwright gegen eine lokal gestartete Anwendung auf Port `8081`.
 - Browser-Tests prüfen robuste Zustände statt pixelgenauer Layouts. Pixelprüfungen bleiben klein und dienen nur dazu, leere Canvas-Renderings
   zu erkennen.
+- Playwright-spezifische Auswertung und Output-Filterung in kleinen Node-Skripten halten; Gradle soll diese Skripte nur aufrufen.
+- Auf Windows `.cmd`-Starter aus Node nicht direkt spawnen, wenn es vermeidbar ist. Für lokale Node-Tools lieber deren JS-Entry-Point mit
+  `process.execPath` starten.
 
 ### Tests durch die KI
 
