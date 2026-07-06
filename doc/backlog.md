@@ -15,7 +15,7 @@ Rahmen:
 
 - Die Package-Hierarchie darf zunächst aus der Verzeichnisstruktur abgeleitet werden.
 - Mittelfristig soll sie aus den echten Java-`package`-Deklarationen entstehen.
-- Ein Package gilt in dieser Story als nichtleer, wenn es direkt `.java`-Dateien enthält.
+- Ein Package gilt in dieser Story als nichtleer, wenn es direkt `.java`-Dateien enthält ODER MEHRERE SUBPACKAGES.
 - Leere Packages werden nicht als eigene Knoten angezeigt.
 - Der erste sichtbare Knoten ist das erste nichtleere Package.
 - Packages mit nur einem relevanten Kind werden sofort zu einem Package-Knoten zusammengefasst.
@@ -28,7 +28,6 @@ Akzeptanzkriterien:
 - Beim Start ist das erste nichtleere Package sichtbar.
 - Der Graph enthält keine Verzeichnis-Knoten.
 - Der erste sichtbare Package-Knoten enthält den nötigen Package-Kontext, z. B. `de.aventiure`.
-- Die erste relevante Verzweigung unterhalb dieses Knotens ist sichtbar, z. B. `lay05_being` und `lay06b_world`.
 - Der Knotentyp "Verzeichnis" ist entfernt.
 
 ## In ein Package-Gebiet per Doppelklick weiter hinein navigieren
