@@ -3,26 +3,10 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Einen schlanken Browser-Testpfad für den erfolgreichen Initial-Load ergänzen
+## Sicherstellen, dass der Browser-Test nur wenige Tokens an das LLM schickt
 
 Ziel:
-Der zentrale Startpfad soll einmal im echten Browser abgesichert werden.
-
-Warum:
-JS-Tests schützen die Logik, aber nicht die Browser-Integration. Der erste sichtbare Start der Anwendung braucht deshalb einen kleinen, gezielten Browser-Test.
-
-Verfeinerung:
-
-- Der Test startet die Anwendung im echten Browser.
-- Der Test prüft, dass der Root-Graph erfolgreich geladen wird.
-- Der Test prüft, dass der Graph im Ziel-Container sichtbar gerendert wird.
-- Der Ladeschirm wird bewusst nicht geprüft, damit keine Produktivcode-Änderung nötig wird.
-- Der Test bleibt bewusst klein und ersetzt keine breite UI-Automation.
-
-Ergebnis:
-
-- Der Browser-Startpfad ist abgesichert.
-- Der Test scheitert, wenn Laden oder Rendering im echten Browser brechen.
+Tokens sparen, trotzdem Fehlerfälle erkennen
 
 ## Einen schlanken Browser-Testpfad für den Fehlerfall ergänzen
 

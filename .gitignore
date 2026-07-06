@@ -3,6 +3,9 @@ HELP.md
 .gradle-home/
 .gradle-user/
 build/
+node_modules/
+playwright-report/
+test-results/
 bootrun.err
 bootrun.out
 !gradle/wrapper/gradle-wrapper.jar

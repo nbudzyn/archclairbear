@@ -42,6 +42,15 @@ tasks.register('jsTest', Exec) {
   commandLine 'node', '--test', '--test-isolation=none', '--test-reporter=tap', 'src/js-test/**/*.test.mjs'
 }
 
+tasks.register('browserTest', Exec) {
+  group = 'verification'
+  description = 'Runs the Playwright browser tests.'
+
+  workingDir = rootDir
+  def npmExecutable = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'npm.cmd' : 'npm'
+  commandLine npmExecutable, 'run', 'browser-test', '--', '--reporter=line'
+}
+
 tasks.register('jsTestQuiet') {
   group = 'verification'
   description = 'Runs the JavaScript tests with minimal output.'
