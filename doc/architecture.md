@@ -27,6 +27,8 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 - Hält mehrere Detailstufen gleichzeitig sichtbar.
 - Fragt bei Bedarf zusätzliche Graphdaten ab.
 - Cytoscape für Interaktion und Graph-Rendering verwenden.
+- ELK als Layout-Engine verwenden, wenn der Graph schichtweise und möglichst kollisionsfrei angeordnet werden soll.
+- Der Renderer bleibt leicht: ELK berechnet Positionen, Cytoscape rendert nur noch die fertigen Boxen und Kanten.
 - Der Client soll leicht bleiben; die Analyse gehört auf den Server.
 - Die reine Frontend-Logik liegt in importierbaren Modulen; DOM-Zugriffe bleiben in einer dünnen Integrationsschicht.
 - Die erste Implementierung bleibt einfach und stabil.
@@ -44,5 +46,6 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 - Knoten stehen für Verzeichnisbäume, Packages und konkrete Typen.
 - Kanten stehen für statische Abhängigkeiten zwischen einzelnen Knoten.
 - Der Graph ist hierarchisch und kann pro Knoten auf- und zugeklappt werden.
+- Geöffnete Packages dürfen als Boxen in Boxen dargestellt werden; Überlappungen zwischen Geschwistern sollen vermieden werden.
 
 

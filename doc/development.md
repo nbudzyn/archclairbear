@@ -15,6 +15,12 @@
 - Wenn das oberste Backlog-Item umgesetzt scheint, Bescheid sagen und fragen, ob es aus dem Backlog entfernt werden soll.
 - Bei Review-Findings erst Lokalität prüfen: projektspezifische Test-/Reporter-Logik möglichst dort halten, wo die zugehörige Toolwelt lebt
   (z. B. Playwright-Auswertung in Node/JS statt im Gradle-Buildscript).
+- Für Layoutänderungen bevorzugt erst die Layout-Engine bestimmen und dann die Renderer-Integration bauen; manuelle Reflow-Heuristiken nur als
+  Übergangslösung.
+- Wenn ein lokales Browser- oder Test-Server-Skript über Port `8081` oder `8082` scheitert, zuerst prüfen, ob noch ein alter Serverprozess
+  läuft.
+- Bei statischen Browser-Modulen immer Cache-Busting und alle abhängigen Versionen gemeinsam aktualisieren
+  (`graph-app.js`, `graph-client.mjs`, `graph-renderer.mjs`, Landing-Page-Test).
 
 ## Tests
 
@@ -30,6 +36,8 @@
   zu erkennen.
 - Bei Fehlerfällen erst die echte HTTP-Antwort prüfen, dann die GUI. Gemockte Browser-Routen beweisen nur die Client-Reaktion, nicht den
   echten Weg von Spring über HTTP und Fetch bis ins Layout.
+- Wenn zusätzliche Browser-Abhängigkeiten aus `node_modules` kommen, sie über Spring Resource Handler unter einem stabilen Pfad exponieren
+  und im HTML explizit einbinden.
 - Wenn statische JS-Module geändert werden und manuell im Browser geprüft wird, Cache-Busting oder frische Asset-URLs verwenden.
 - Windows-Pfade in Properties mit echten Backslashes testen; Escaping-Fallen nicht nur über `TempDir` abdecken.
 - Playwright-spezifische Auswertung und Output-Filterung in kleinen Node-Skripten halten; Gradle soll diese Skripte nur aufrufen.
