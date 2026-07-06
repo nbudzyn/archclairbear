@@ -1,7 +1,7 @@
 package de.nb.archclairbear.graph;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.nio.file.Path;
 
@@ -34,8 +34,8 @@ class GraphServiceTest {
     var graphService = new GraphService(missingDirectory);
 
     // WHEN/THEN
-    assertThatIllegalStateException()
+    assertThatExceptionOfType(WorkspacePathNotFoundException.class)
         .isThrownBy(graphService::rootGraph)
-        .withMessage("Workspace-Verzeichnis nicht gefunden: " + missingDirectory);
+        .withMessage("Der Workspace-Pfad " + missingDirectory + " wurde nicht gefunden.");
   }
 }

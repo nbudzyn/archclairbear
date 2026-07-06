@@ -4,6 +4,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -11,12 +13,11 @@ import org.springframework.stereotype.Service;
  */
 @Service
 class GraphService {
-  private static final Path WORKSPACE_PATH = Path.of("C:\\projects\\2003\\aventiure");
-
   private final Path workspacePath;
 
-  GraphService() {
-    this(WORKSPACE_PATH);
+  @Autowired
+  GraphService(@Value("${archclairbear.workspace.path}") final String workspacePath) {
+    this(Path.of(workspacePath));
   }
 
   GraphService(final Path workspacePath) {
@@ -24,8 +25,12 @@ class GraphService {
   }
 
   GraphResponse rootGraph() {
+    if (!Files.exists(workspacePath)) {
+      throw new WorkspacePathNotFoundException(workspacePath);
+    }
+
     if (!Files.isDirectory(workspacePath)) {
-      throw new IllegalStateException("Workspace-Verzeichnis nicht gefunden: " + workspacePath);
+      throw new IllegalStateException("Workspace-Pfad ist kein Verzeichnis: " + workspacePath);
     }
 
     return new GraphResponse(List.of(new GraphNode("root-directory", "directory", workspacePath.getFileName().toString())), List.of());

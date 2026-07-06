@@ -2,8 +2,8 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './src/browser-test',
-  testIgnore: '**/missing-workspace.spec.mjs',
-  timeout: 30000,
+  testMatch: 'missing-workspace.spec.mjs',
+  timeout: 120000,
   expect: {
     timeout: 5000,
   },
@@ -13,7 +13,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: '.\\gradlew.bat --console=plain bootRun --args=--server.port=8081',
+    command: '.\\gradlew.bat --console=plain bootRun --args="--server.port=8081 --archclairbear.workspace.path=C:\\TMP\\archclairbear-missing-workspace"',
     url: 'http://127.0.0.1:8081/',
     reuseExistingServer: false,
     timeout: 120000,

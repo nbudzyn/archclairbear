@@ -28,6 +28,10 @@
 - Browser-Tests laufen mit Playwright gegen eine lokal gestartete Anwendung auf Port `8081`.
 - Browser-Tests prüfen robuste Zustände statt pixelgenauer Layouts. Pixelprüfungen bleiben klein und dienen nur dazu, leere Canvas-Renderings
   zu erkennen.
+- Bei Fehlerfällen erst die echte HTTP-Antwort prüfen, dann die GUI. Gemockte Browser-Routen beweisen nur die Client-Reaktion, nicht den
+  echten Weg von Spring über HTTP und Fetch bis ins Layout.
+- Wenn statische JS-Module geändert werden und manuell im Browser geprüft wird, Cache-Busting oder frische Asset-URLs verwenden.
+- Windows-Pfade in Properties mit echten Backslashes testen; Escaping-Fallen nicht nur über `TempDir` abdecken.
 - Playwright-spezifische Auswertung und Output-Filterung in kleinen Node-Skripten halten; Gradle soll diese Skripte nur aufrufen.
 - Auf Windows `.cmd`-Starter aus Node nicht direkt spawnen, wenn es vermeidbar ist. Für lokale Node-Tools lieber deren JS-Entry-Point mit
   `process.execPath` starten.

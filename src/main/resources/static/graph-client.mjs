@@ -52,7 +52,7 @@ export async function loadGraph(fetchImpl = fetch, requestUrl = '/api/graph/root
   });
 
   if (!response.ok) {
-    throw new Error(`Graph request failed with status ${response.status}.`);
+    throw new GraphRequestError(await readErrorMessage(response), response.status);
   }
 
   return response.json();
@@ -63,5 +63,27 @@ function createUserFacingErrorMessage(error) {
     return 'Die Graphdaten vom Server sind ungültig. Bitte lade die Seite neu.';
   }
 
+  if (error instanceof GraphRequestError && error.userFacingMessage !== '') {
+    return error.userFacingMessage;
+  }
+
   return 'Der Graph konnte nicht geladen werden. Bitte versuche es erneut.';
+}
+
+async function readErrorMessage(response) {
+  try {
+    const body = await response.json();
+    return typeof body.message === 'string' ? body.message : '';
+  } catch (_error) {
+    return '';
+  }
+}
+
+class GraphRequestError extends Error {
+  constructor(userFacingMessage, status) {
+    super(`Graph request failed with status ${status}.`);
+    this.name = 'GraphRequestError';
+    this.userFacingMessage = userFacingMessage;
+    this.status = status;
+  }
 }

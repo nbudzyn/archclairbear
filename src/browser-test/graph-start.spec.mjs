@@ -35,9 +35,9 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
 test('load errors are shown in the browser', async ({ page }) => {
   // GIVEN
   await page.route('**/api/graph/root', (route) => route.fulfill({
-    status: 503,
+    status: 404,
     contentType: 'application/json',
-    body: '{"message":"Backend unavailable."}',
+    body: '{"message":"Der Workspace-Pfad C:\\\\projects\\\\2003\\\\aventiure wurde nicht gefunden."}',
   }));
 
   // WHEN
@@ -45,7 +45,7 @@ test('load errors are shown in the browser', async ({ page }) => {
 
   // THEN
   await expect(page.getByRole('alert'))
-      .toContainText('Der Graph konnte nicht geladen werden. Bitte versuche es erneut.');
+      .toContainText('Der Workspace-Pfad C:\\projects\\2003\\aventiure wurde nicht gefunden.');
 });
 
 async function hasRenderedCanvasPixels(page) {

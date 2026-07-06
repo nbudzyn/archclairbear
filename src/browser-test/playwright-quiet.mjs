@@ -1,25 +1,30 @@
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 
-const result = await runPlaywrightJson();
+const results = [
+  await runPlaywrightJson(),
+  await runPlaywrightJson('playwright.missing-workspace.config.mjs'),
+];
 
-if (result.exitCode === 0) {
+if (results.every((result) => result.exitCode === 0)) {
   console.log('OK');
   process.exit(0);
 }
 
-const report = parseReport(result.stdout);
-const failedSpecs = collectFailedSpecs(report);
+const reports = results.map((result) => parseReport(result.stdout));
+const failedSpecs = reports.flatMap((report) => collectFailedSpecs(report));
 
 if (failedSpecs.length === 0) {
   console.log('Browser tests failed.');
-  const firstErrorLine = firstRelevantLine(result.stderr);
+  const firstErrorLine = results
+      .map((result) => firstRelevantLine(result.stderr))
+      .find((line) => line != null);
 
   if (firstErrorLine != null) {
     console.log(firstErrorLine);
   }
 
-  process.exit(result.exitCode);
+  process.exit(firstFailureExitCode(results));
 }
 
 for (const spec of failedSpecs) {
@@ -30,14 +35,24 @@ for (const spec of failedSpecs) {
   }
 }
 
-console.log(`${collectSpecCount(report)} tests completed, ${failedSpecs.length} failed`);
-process.exit(result.exitCode);
+const specCount = reports
+    .map((report) => collectSpecCount(report))
+    .reduce((sum, count) => sum + count, 0);
 
-function runPlaywrightJson() {
+console.log(`${specCount} tests completed, ${failedSpecs.length} failed`);
+process.exit(firstFailureExitCode(results));
+
+function runPlaywrightJson(configFile) {
   return new Promise((resolve) => {
+    const args = ['test', '--reporter=json'];
+
+    if (configFile != null) {
+      args.push(`--config=${configFile}`);
+    }
+
     const child = spawn(
         process.execPath,
-        [playwrightExecutable(), 'test', '--reporter=json'],
+        [playwrightExecutable(), ...args],
         {
           cwd: process.cwd(),
           windowsHide: true,
@@ -59,6 +74,10 @@ function runPlaywrightJson() {
       });
     });
   });
+}
+
+function firstFailureExitCode(results) {
+  return results.find((result) => result.exitCode !== 0)?.exitCode ?? 1;
 }
 
 function playwrightExecutable() {

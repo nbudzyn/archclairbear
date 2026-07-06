@@ -5,15 +5,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.file.Path;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -21,6 +25,9 @@ import org.springframework.test.web.servlet.MockMvc;
 class GraphControllerIT {
   @Autowired
   private MockMvc mockMvc;
+
+  @TempDir
+  private Path tempDir;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -48,5 +55,28 @@ class GraphControllerIT {
         // THEN
         .andExpect(status().isOk()) //
         .andExpect(content().contentTypeCompatibleWith(MediaType.valueOf("text/javascript")));
+  }
+
+  @Test
+  void rootGraphReturnsMessageForMissingWorkspacePath() throws Exception {
+    // GIVEN
+    var missingDirectory = tempDir.resolve("missing");
+    var controller = new GraphController(new GraphService(missingDirectory));
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
+    // WHEN
+    var response = standaloneMockMvc.perform(get("/api/graph/root"))
+        // THEN
+        .andExpect(status().isNotFound())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    var root = objectMapper.readTree(response);
+    org.assertj.core.api.Assertions.assertThat(root.path("message").asText())
+        .isEqualTo("Der Workspace-Pfad " + missingDirectory + " wurde nicht gefunden.");
   }
 }

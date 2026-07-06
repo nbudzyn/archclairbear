@@ -1,3 +1,3 @@
-import { startGraphApp } from './graph-client.mjs';
+import { startGraphApp } from './graph-client.mjs?v=workspace-error-message-1';
 
 startGraphApp();

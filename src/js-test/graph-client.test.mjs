@@ -185,3 +185,53 @@ test('startGraphApp zeigt bei Ladefehlern eine allgemeine Fehlermeldung', async 
   assert.equal(errorElement.hidden, false);
   assert.equal(errorMessage.textContent, 'Der Graph konnte nicht geladen werden. Bitte versuche es erneut.');
 });
+
+test('startGraphApp zeigt Server-Fehlermeldungen im Fehlerlayout', async () => {
+  // GIVEN
+  const statusMessage = { textContent: '' };
+  const errorMessage = { textContent: '' };
+  const statusElement = { hidden: true, querySelector: () => statusMessage };
+  const errorElement = { hidden: true, querySelector: () => errorMessage };
+  const renderCalls = [];
+  const originalConsoleError = console.error;
+
+  // WHEN
+  console.error = () => {};
+
+  try {
+    await startGraphApp({
+      container: { id: 'cy' },
+      errorElement,
+      fetchImpl: async () => ({
+        ok: false,
+        status: 404,
+        json: async () => ({
+          message: 'Der Workspace-Pfad C:\\projects\\2003\\aventiure wurde nicht gefunden.',
+        }),
+      }),
+      graphErrorMessage: errorMessage,
+      graphStatus: statusElement,
+      graphStatusMessage: statusMessage,
+      renderGraphImpl: () => {
+        renderCalls.push(true);
+        return {
+          destroy() {},
+        };
+      },
+      requestUrl: '/api/graph/root',
+      windowObject: {
+        addEventListener() {},
+        removeEventListener() {},
+      },
+      cytoscape: {},
+    });
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  // THEN
+  assert.equal(renderCalls.length, 0);
+  assert.equal(statusElement.hidden, true);
+  assert.equal(errorElement.hidden, false);
+  assert.equal(errorMessage.textContent, 'Der Workspace-Pfad C:\\projects\\2003\\aventiure wurde nicht gefunden.');
+});
