@@ -3,38 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.  
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Sicherstellen, dass der Browser-Test nur wenige Tokens an das LLM schickt
-
-Ziel:
-Tokens sparen, trotzdem Fehlerfälle erkennen
-
-## Einen schlanken Browser-Testpfad für den Fehlerfall ergänzen
-
-Ziel:
-Der sichtbare Fehlerpfad soll einmal im echten Browser abgesichert werden.
-
-Warum:
-Auch im Skeleton muss sofort erkennbar sein, wenn das Laden der Graphdaten fehlschlägt.
-
-Ergebnis:
-
-- Ein Browser-Test prüft den Fehlerfall nach gefälschtem Backend-Fehler.
-- Die Fehlermeldung ist im Browser sichtbar.
-- Weitere Browser-Tests decken nur wirklich kritische Interaktionen ab.
-
-## Einfache Status- und Fehlermeldungen ergänzen
-
-Ziel:
-Der Client soll sichtbar machen, ob Daten geladen wurden oder ob ein Fehler aufgetreten ist.
-
-Warum:
-Schon im Skeleton ist wichtig, dass man Ladefehler oder leere Antworten sofort erkennt.
-
-Ergebnis:
-
-- Während des Ladens gibt es einen klaren Statushinweis, der danach wieder entfernt wird.
-- Bei einem Fehler wird eine verständliche Meldung angezeigt.
-
 ## Einen kleinen Service zwischen Controller und Datenquelle einführen
 
 Ziel:
@@ -73,19 +41,6 @@ Ergebnis:
 
 - Der erste Knoten repräsentiert ein echtes Verzeichnis.
 - Der Knotenname und die Struktur stammen aus dem Dateisystem.
-
-## Einen Smoke-Test für den kompletten Startpfad ergänzen
-
-Ziel:
-Es soll einen automatisierten Test geben, der den Startpunkt der Anwendung und den Graph-Endpunkt absichert.
-
-Warum:
-Schon kleine UI- und API-Änderungen dürfen das Skeleton nicht unbeabsichtigt brechen.
-
-Ergebnis:
-
-- Die Anwendung startet im Testkontext.
-- Der API-Endpunkt liefert eine gültige Antwort.
 
 ## Die nächste Ausbaustufe vorbereiten
 

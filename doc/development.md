@@ -3,7 +3,7 @@
 ## Gradle
 
 - Vor Gradle-Aufrufen immer explizit Freigabe holen.
-- Das gilt für `gradle`, `gradlew.bat`, `.\localTest.ps1` und `.\localJsTest.ps1`.
+- Das gilt für `gradle`, `gradlew.bat`, `.\localTest.ps1`, `.\localJsTest.ps1` und `.\localBrowserTest.ps1`.
 - Die Wrapper verwenden das Standard-Gradle-User-Home im Benutzerverzeichnis (`C:\Users\...\ .gradle`).
 
 ## Arbeitsweise
@@ -27,12 +27,11 @@
 
 ### Tests durch die KI
 
-- Im ersten Schritt immer `.\localTest.ps1` bzw. `.\localJsTest.ps1` verwenden, bei Bedarf mit `-Stacktrace`.
+- Im ersten Schritt immer die passenden token-sparenden lokalen Testskripte verwenden, bei Bedarf mit `-Stacktrace`.
 - Direkte Testaufrufe über Gradle nur nach ausdrücklicher Nachfrage beim User.
 - Java: `.\localTest.ps1`, bei Bedarf `.\localTest.ps1 -Stacktrace`.
 - JavaScript: `.\localJsTest.ps1`, bei Bedarf `.\localJsTest.ps1 -Stacktrace`. Die JS-Tests laufen mit `node:test` im Einprozessmodus `--test-isolation=none`.
-- Browser: `.\localBrowserTest.ps1`.
-- Gemeinsamer Lauf: `.\gradlew.bat --console=plain allTests`. Die JS-Tests sind eine eigene Suite, die dort mitläuft.
+- Browser: `.\localBrowserTest.ps1`, bei Bedarf mit `-Stacktrace`.
 - Für KI-Prüfstarts `server.port=8081`.
 
 ### Browser-Tests
@@ -40,7 +39,11 @@
 - Einmalig die npm-Abhängigkeiten mit `npm install` installieren.
 - Wenn Playwright noch keinen Chromium-Browser findet, einmalig `npx playwright install chromium` ausführen.
 - Der lokale Browser-Testlauf startet die Anwendung selbst und beendet sie nach dem Testlauf wieder.
+- Für token-sparende KI-Prüfläufe immer `.\localBrowserTest.ps1` verwenden. Bei Erfolg gibt das Skript nur `OK` aus; bei Fehlern nennt es
+  die fehlgeschlagenen Browser-Tests mit einer kurzen Fehlermeldung.
+- Für Details zu Playwright-Fehlern, Trace-Pfaden und vollständiger Ausgabe `.\localBrowserTest.ps1 -Stacktrace` verwenden.
 - Gradle-Task: `.\gradlew.bat --console=plain browserTest`.
+- Ruhiger Gradle-Task: `.\gradlew.bat --console=plain -q browserTestQuiet`.
 
 ### Manuell gestartete Tests (aus IntelliJ)
 

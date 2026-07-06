@@ -51,6 +51,69 @@ tasks.register('browserTest', Exec) {
   commandLine npmExecutable, 'run', 'browser-test', '--', '--reporter=line'
 }
 
+tasks.register('browserTestQuiet') {
+  group = 'verification'
+  description = 'Runs the Playwright browser tests with minimal successful output.'
+
+  def showDetailedFailures = project.hasProperty('browserTestStacktrace')
+
+  doLast {
+    def npmExecutable = org.gradle.internal.os.OperatingSystem.current().isWindows() ? 'npm.cmd' : 'npm'
+    def reporter = showDetailedFailures ? 'line' : 'json'
+    def process = [
+        npmExecutable,
+        '--silent',
+        'run',
+        'browser-test',
+        '--',
+        "--reporter=${reporter}",
+    ].execute(null, rootDir)
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+
+    process.consumeProcessOutput(stdout, stderr)
+    process.waitFor()
+
+    def output = stdout.toString('UTF-8')
+    def errorOutput = stderr.toString('UTF-8')
+
+    if (showDetailedFailures) {
+      print output
+      print errorOutput
+      if (process.exitValue() == 0) {
+        return
+      }
+      throw new GradleException('Browser tests failed.')
+    }
+
+    if (process.exitValue() == 0) {
+      logger.quiet('OK')
+      return
+    }
+
+    def report = parsePlaywrightReport(output)
+    def failedSpecs = collectFailedPlaywrightSpecs(report)
+
+    if (failedSpecs.isEmpty()) {
+      logger.quiet('Browser tests failed.')
+      def relevantLine = firstRelevantLine(errorOutput)
+      if (relevantLine != null) {
+        logger.quiet(relevantLine)
+      }
+      throw new GradleException('Browser tests failed.')
+    }
+
+    failedSpecs.each { spec ->
+      logger.quiet("FAILED: ${spec.title}")
+      if (spec.message != null && !spec.message.isBlank()) {
+        logger.quiet(spec.message)
+      }
+    }
+    logger.quiet("${collectPlaywrightSpecCount(report)} tests completed, ${failedSpecs.size()} failed")
+    throw new GradleException('Browser tests failed.')
+  }
+}
+
 tasks.register('jsTestQuiet') {
   group = 'verification'
   description = 'Runs the JavaScript tests with minimal output.'
@@ -249,4 +312,63 @@ tasks.register('localTest', Test) {
       }
     }
   }
+}
+
+Object parsePlaywrightReport(final String output) {
+  try {
+    return new groovy.json.JsonSlurper().parseText(output)
+  } catch (ignored) {
+    return null
+  }
+}
+
+List collectFailedPlaywrightSpecs(final Object report) {
+  def specs = []
+  collectPlaywrightSpecs(report, specs)
+  return specs.findAll { spec -> spec.failed }
+}
+
+int collectPlaywrightSpecCount(final Object report) {
+  def specs = []
+  collectPlaywrightSpecs(report, specs)
+  return specs.size()
+}
+
+void collectPlaywrightSpecs(final Object suite, final List specs) {
+  if (!(suite instanceof Map)) {
+    return
+  }
+
+  (suite.suites ?: []).each { childSuite -> collectPlaywrightSpecs(childSuite, specs) }
+  (suite.specs ?: []).each { spec ->
+    def results = (spec.tests ?: []).collectMany { test -> test.results ?: [] }
+    def failedResult = results.find { result ->
+      ['failed', 'timedOut', 'interrupted'].contains(result.status)
+    }
+    specs << [
+        title: spec.title,
+        failed: failedResult != null || spec.ok == false,
+        message: firstPlaywrightErrorMessage(failedResult),
+    ]
+  }
+}
+
+String firstPlaywrightErrorMessage(final Object result) {
+  if (!(result instanceof Map)) {
+    return null
+  }
+
+  def message = result.error?.message ?: result.errors?.find { error -> error.message != null }?.message
+  if (message == null) {
+    return null
+  }
+
+  return (message as String).readLines()
+      .find { line -> !line.isBlank() }
+}
+
+String firstRelevantLine(final String output) {
+  return output.readLines()
+      .collect { line -> line as String }
+      .find { line -> !line.isBlank() }
 }

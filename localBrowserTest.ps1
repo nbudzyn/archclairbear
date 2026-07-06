@@ -1,6 +1,15 @@
-<# Calls the browser tests with Playwright. #>
+<# Calls the browser tests with minimal output to save LLM tokens. #>
 
-$gradleArgs = @('--console=plain', '-q', 'browserTest')
+param(
+    [switch]$Stacktrace
+)
+
+$gradleArgs = @('--console=plain', '-q', 'browserTestQuiet')
+
+if ($Stacktrace)
+{
+    $gradleArgs += '-PbrowserTestStacktrace=true'
+}
 
 & "$PSScriptRoot\gradlew.bat" @gradleArgs
 exit $LASTEXITCODE
