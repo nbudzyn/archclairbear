@@ -22,7 +22,7 @@ Es hilft beim:
 
 - Jeder Knoten kann unabhängig auf- und zugeklappt werden.
 - Mehrere Knoten können gleichzeitig in unterschiedlichen Detailstufen offen sein.
-- Der Nutzer soll beim Hineinzoomen keinen äußeren Kontext merken müssen.
+- Der Nutzer soll sich beim Hineinzoomen keinen äußeren Kontext merken müssen.
 - Hover zeigt Details.
 - Zoom und Drag werden unterstützt.
 
