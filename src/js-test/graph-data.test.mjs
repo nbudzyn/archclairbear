@@ -8,14 +8,14 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
   const graph = {
     nodes: [
       {
-        id: 'root-directory',
-        label: 'Workspace',
-        type: 'directory',
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
       },
     ],
     edges: [
       {
-        source: 'root-directory',
+        source: 'de.aventiure',
         target: 'package-a',
       },
     ],
@@ -30,15 +30,15 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
   assert.deepEqual(elements, [
     {
       data: {
-        id: 'root-directory',
-        label: 'Workspace',
-        type: 'directory',
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
       },
     },
     {
       data: {
-        id: 'edge-0-root-directory-package-a',
-        source: 'root-directory',
+        id: 'edge-0-de.aventiure-package-a',
+        source: 'de.aventiure',
         target: 'package-a',
       },
     },
@@ -51,14 +51,14 @@ test('normalizeGraph wirft bei ungültigen Graphdaten', () => {
       () => normalizeGraph({
         nodes: [
           {
-            id: 'root-directory',
-            label: 'Workspace',
-            type: 'directory',
+            id: 'de.aventiure',
+            label: 'de.aventiure',
+            type: 'package',
           },
         ],
         edges: [
           {
-            source: 'root-directory',
+            source: 'de.aventiure',
           },
         ],
       }),

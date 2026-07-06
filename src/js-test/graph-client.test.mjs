@@ -32,9 +32,9 @@ test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', a
         return {
           nodes: [
             {
-              id: 'root-directory',
-              label: 'Workspace',
-              type: 'directory',
+              id: 'de.aventiure',
+              label: 'de.aventiure',
+              type: 'package',
             },
           ],
           edges: [],
@@ -67,9 +67,9 @@ test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', a
   assert.deepEqual(renderCalls[0].graph, {
     nodes: [
       {
-        id: 'root-directory',
-        label: 'Workspace',
-        type: 'directory',
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
       },
     ],
     edges: [],
@@ -101,14 +101,14 @@ test('startGraphApp zeigt bei ungültigen Daten eine verständliche Fehlermeldun
       loadGraphImpl: async () => ({
         nodes: [
           {
-            id: 'root-directory',
-            label: 'Workspace',
-            type: 'directory',
+            id: 'de.aventiure',
+            label: 'de.aventiure',
+            type: 'package',
           },
         ],
         edges: [
           {
-            source: 'root-directory',
+            source: 'de.aventiure',
           },
         ],
       }),

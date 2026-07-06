@@ -71,7 +71,7 @@ function buildGraphStyle() {
       },
     },
     {
-      selector: '[type = "directory"]',
+      selector: 'node[type = "package"]',
       style: {
         shape: 'round-rectangle',
         'background-color': '#271d12',

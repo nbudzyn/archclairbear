@@ -14,9 +14,9 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
   expect(graphData).toEqual({
     nodes: [
       {
-        id: 'root-directory',
-        type: 'directory',
-        label: 'aventiure',
+        id: 'de.aventiure',
+        type: 'package',
+        label: 'de.aventiure',
       },
     ],
     edges: [],

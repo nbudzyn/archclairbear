@@ -7,9 +7,9 @@ test('diffGraphNodes erkennt hinzugefügte, entfernte und geänderte Knoten', ()
   // GIVEN
   const previousNodes = [
     {
-      id: 'root-directory',
-      label: 'Workspace',
-      type: 'directory',
+      id: 'de.aventiure',
+      label: 'de.aventiure',
+      type: 'package',
     },
     {
       id: 'old-package',
@@ -20,9 +20,9 @@ test('diffGraphNodes erkennt hinzugefügte, entfernte und geänderte Knoten', ()
 
   const nextNodes = [
     {
-      id: 'root-directory',
-      label: 'Workspace',
-      type: 'directory',
+      id: 'de.aventiure',
+      label: 'de.aventiure',
+      type: 'package',
     },
     {
       id: 'new-package',
@@ -63,9 +63,9 @@ test('diffGraphNodes erkennt entfernte Knoten', () => {
   // GIVEN
   const previousNodes = [
     {
-      id: 'root-directory',
-      label: 'Workspace',
-      type: 'directory',
+      id: 'de.aventiure',
+      label: 'de.aventiure',
+      type: 'package',
     },
     {
       id: 'old-package',
@@ -76,9 +76,9 @@ test('diffGraphNodes erkennt entfernte Knoten', () => {
 
   const nextNodes = [
     {
-      id: 'root-directory',
-      label: 'Workspace',
-      type: 'directory',
+      id: 'de.aventiure',
+      label: 'de.aventiure',
+      type: 'package',
     },
   ];
 

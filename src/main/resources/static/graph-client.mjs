@@ -1,6 +1,6 @@
 import { createGraphStatusController } from './graph-status.mjs';
 import { GraphDataValidationError, normalizeGraph } from './graph-data.mjs';
-import { renderGraph } from './graph-renderer.mjs';
+import { renderGraph } from './graph-renderer.mjs?v=package-root-2';
 
 /**
  * Startet die Client-Anwendung für den Graphen.

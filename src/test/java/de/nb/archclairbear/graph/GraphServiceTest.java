@@ -3,6 +3,8 @@ package de.nb.archclairbear.graph;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -14,8 +16,10 @@ class GraphServiceTest {
   private Path tempDir;
 
   @Test
-  void rootGraphReturnsDirectoryFromFilesystem() {
+  void rootGraphReturnsCollapsedFirstVisiblePackage() throws IOException {
     // GIVEN
+    createJavaFile("de", "aventiure", "common", "CommonType.java");
+    createJavaFile("de", "aventiure", "story", "StoryType.java");
     var graphService = new GraphService(tempDir);
 
     // WHEN
@@ -23,7 +27,24 @@ class GraphServiceTest {
 
     // THEN
     assertThat(graph.nodes())
-        .containsExactly(new GraphNode("root-directory", "directory", tempDir.getFileName().toString()));
+        .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure"));
+    assertThat(graph.edges()).isEmpty();
+  }
+
+  @Test
+  void rootGraphSkipsEmptyPackagesWithoutJavaAndWithoutSeveralSubpackages() throws IOException {
+    // GIVEN
+    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "empty", "nested")));
+    createJavaFile("de", "aventiure", "core", "CoreType.java");
+    createJavaFile("de", "aventiure", "world", "WorldType.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var graph = graphService.rootGraph();
+
+    // THEN
+    assertThat(graph.nodes())
+        .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure"));
     assertThat(graph.edges()).isEmpty();
   }
 
@@ -37,5 +58,11 @@ class GraphServiceTest {
     assertThatExceptionOfType(WorkspacePathNotFoundException.class)
         .isThrownBy(graphService::rootGraph)
         .withMessage("Der Workspace-Pfad " + missingDirectory + " wurde nicht gefunden.");
+  }
+
+  private void createJavaFile(final String... pathSegments) throws IOException {
+    var path = tempDir.resolve(Path.of(pathSegments[0], java.util.Arrays.copyOfRange(pathSegments, 1, pathSegments.length)));
+    Files.createDirectories(path.getParent());
+    Files.writeString(path, "class Test {}");
   }
 }

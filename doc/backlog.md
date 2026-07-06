@@ -3,33 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass möglichst schnell ein laufendes Skeleton entsteht, das im Browser sichtbar und überprüfbar ist.
 
-## Erste Package-Übersicht aus Aventiure anzeigen
-
-Ziel:
-Der Nutzer sieht am aktuellen Analysepfad erstmals eine fachliche Package-Übersicht statt technischer Verzeichnisse.
-
-Warum:
-Das ist der erste fachliche Nutzwert des Tools: Die Architektur wird in Java-Begriffen sichtbar und nicht mehr als Dateisystemstruktur.
-
-Rahmen:
-
-- Die Package-Hierarchie darf zunächst aus der Verzeichnisstruktur abgeleitet werden.
-- Mittelfristig soll sie aus den echten Java-`package`-Deklarationen entstehen.
-- Ein Package gilt in dieser Story als nichtleer, wenn es direkt `.java`-Dateien enthält ODER MEHRERE SUBPACKAGES.
-- Leere Packages werden nicht als eigene Knoten angezeigt.
-- Der erste sichtbare Knoten ist das erste nichtleere Package.
-- Packages mit nur einem relevanten Kind werden sofort zu einem Package-Knoten zusammengefasst.
-- Der erste sichtbare Package-Knoten zeigt den notwendigen fachlichen Kontext, z. B. `de.aventiure`.
-- Der sichtbare Graph enthält keinen Knotentyp `Verzeichnis` mehr.
-- Es werden noch keine Klassen, Interfaces, Enums oder Abhängigkeiten angezeigt.
-
-Akzeptanzkriterien:
-
-- Beim Start ist das erste nichtleere Package sichtbar.
-- Der Graph enthält keine Verzeichnis-Knoten.
-- Der erste sichtbare Package-Knoten enthält den nötigen Package-Kontext, z. B. `de.aventiure`.
-- Der Knotentyp "Verzeichnis" ist entfernt.
-
 ## In ein Package-Gebiet per Doppelklick weiter hinein navigieren
 
 Ziel:

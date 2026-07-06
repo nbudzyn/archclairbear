@@ -10,7 +10,7 @@ public class GraphJsonAssert extends AbstractAssert<GraphJsonAssert, JsonNode> {
     super(actual, GraphJsonAssert.class);
   }
 
-  public GraphJsonAssert hasSingleDirectoryNode(final String expectedId, final String expectedLabel) {
+  public GraphJsonAssert hasSinglePackageNode(final String expectedId, final String expectedLabel) {
     isNotNull();
 
     var nodes = requireArray("nodes");
@@ -19,7 +19,7 @@ public class GraphJsonAssert extends AbstractAssert<GraphJsonAssert, JsonNode> {
     }
 
     var node = nodes.get(0);
-    assertFieldEquals(node, "type", "directory");
+    assertFieldEquals(node, "type", "package");
     assertFieldEquals(node, "id", expectedId);
     assertFieldEquals(node, "label", expectedLabel);
 

@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,8 +34,18 @@ class GraphControllerIT {
 
   @Test
   void rootGraphReturnsMinimalGraphJson() throws Exception {
+    // GIVEN
+    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "common")));
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "common", "CommonType.java")), "class CommonType {}");
+    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "story")));
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "story", "StoryType.java")), "class StoryType {}");
+    var controller = new GraphController(new GraphService(tempDir));
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
     // WHEN
-    var response = mockMvc.perform(get("/api/graph/root"))
+    var response = standaloneMockMvc.perform(get("/api/graph/root"))
         // THEN
         .andExpect(status().isOk())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
@@ -44,7 +55,7 @@ class GraphControllerIT {
 
     var root = objectMapper.readTree(response);
     assertThat(root) //
-        .hasSingleDirectoryNode("root-directory", "java") //
+        .hasSinglePackageNode("de.aventiure", "de.aventiure") //
         .hasNoEdges();
   }
 
