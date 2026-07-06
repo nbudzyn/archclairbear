@@ -60,6 +60,64 @@ class GraphControllerIT {
   }
 
   @Test
+  void packageGraphReturnsChildrenForExpandedPackage() throws Exception {
+    // GIVEN
+    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being")));
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "BeingLayer.java")), "class BeingLayer {}");
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being", "Being.java")), "class Being {}");
+    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "lay06b_world")));
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay06b_world", "World.java")), "class World {}");
+    var controller = new GraphController(new GraphService(tempDir));
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
+    // WHEN
+    var response = standaloneMockMvc.perform(get("/api/graph/package").param("packageName", "de.aventiure"))
+        // THEN
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    var root = objectMapper.readTree(response);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes")).hasSize(2);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("label").asText()).isEqualTo("lay05_being");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("label").asText()).isEqualTo("lay06b_world");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("parentId").asText()).isEqualTo("de.aventiure");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("parentId").asText()).isEqualTo("de.aventiure");
+    org.assertj.core.api.Assertions.assertThat(root.path("edges")).isEmpty();
+  }
+
+  @Test
+  void packageGraphReturnsImmediateChildrenEvenWithoutJavaFiles() throws Exception {
+    // GIVEN
+    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being")));
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "BeingLayer.java")), "class BeingLayer {}");
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being", "Being.java")), "class Being {}");
+    var controller = new GraphController(new GraphService(tempDir));
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
+    // WHEN
+    var response = standaloneMockMvc.perform(get("/api/graph/package").param("packageName", "de.aventiure.lay05_being"))
+        // THEN
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    var root = objectMapper.readTree(response);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes")).hasSize(1);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("label").asText()).isEqualTo("model");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("parentId").asText()).isEqualTo("de.aventiure.lay05_being");
+    org.assertj.core.api.Assertions.assertThat(root.path("edges")).isEmpty();
+  }
+
+  @Test
   void cytoscapeWebjarIsServedFromClasspath() throws Exception {
     // WHEN
     mockMvc.perform(get("/webjars/cytoscape/3.33.1/dist/cytoscape.min.js"))

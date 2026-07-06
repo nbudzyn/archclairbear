@@ -49,6 +49,41 @@ class GraphServiceTest {
   }
 
   @Test
+  void packageGraphReturnsVisibleChildrenForExpandedPackage() throws IOException {
+    // GIVEN
+    createJavaFile("de", "aventiure", "lay05_being", "BeingLayer.java");
+    createJavaFile("de", "aventiure", "lay05_being", "model", "being", "Being.java");
+    createJavaFile("de", "aventiure", "lay06b_world", "World.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var graph = graphService.packageGraph("de.aventiure");
+
+    // THEN
+    assertThat(graph.nodes())
+        .containsExactly(
+            new GraphNode("de.aventiure.lay05_being", "package", "lay05_being", "de.aventiure"),
+            new GraphNode("de.aventiure.lay06b_world", "package", "lay06b_world", "de.aventiure"));
+    assertThat(graph.edges()).isEmpty();
+  }
+
+  @Test
+  void packageGraphReturnsImmediateChildPackagesRegardlessOfJavaContent() throws IOException {
+    // GIVEN
+    createJavaFile("de", "aventiure", "lay05_being", "BeingLayer.java");
+    createJavaFile("de", "aventiure", "lay05_being", "model", "being", "Being.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var graph = graphService.packageGraph("de.aventiure.lay05_being");
+
+    // THEN
+    assertThat(graph.nodes())
+        .containsExactly(new GraphNode("de.aventiure.lay05_being.model", "package", "model", "de.aventiure.lay05_being"));
+    assertThat(graph.edges()).isEmpty();
+  }
+
+  @Test
   void rootGraphFailsForMissingWorkspaceDirectory() {
     // GIVEN
     var missingDirectory = tempDir.resolve("missing");

@@ -1,6 +1,7 @@
 package de.nb.archclairbear.graph;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -17,5 +18,10 @@ class GraphController {
   @GetMapping("/api/graph/root")
   GraphResponse rootGraph() {
     return service.rootGraph();
+  }
+
+  @GetMapping("/api/graph/package")
+  GraphResponse packageGraph(@RequestParam final String packageName) {
+    return service.packageGraph(packageName);
   }
 }

@@ -17,6 +17,7 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
         id: 'de.aventiure',
         type: 'package',
         label: 'de.aventiure',
+        parentId: null,
       },
     ],
     edges: [],
@@ -30,6 +31,26 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
         message: 'Cytoscape should render visible pixels in the graph container.',
       })
       .toBe(true);
+});
+
+test('package graph can be expanded with a double click into nested package boxes', async ({ page }) => {
+  // GIVEN
+  const packageGraphResponse = page.waitForResponse((response) => (
+    response.url().includes('/api/graph/package?packageName=de.aventiure') && response.ok()
+  ));
+
+  // WHEN
+  await page.goto('/');
+  await expect(page.locator('#cy canvas').first()).toBeVisible();
+  const graphBounds = await page.locator('#cy').boundingBox();
+  await page.mouse.dblclick(graphBounds.x + (graphBounds.width / 2), graphBounds.y + (graphBounds.height / 2));
+  const graphData = await (await packageGraphResponse).json();
+
+  // THEN
+  expect(graphData.nodes.length).toBeGreaterThan(0);
+  expect(graphData.nodes.every((node) => node.type === 'package')).toBe(true);
+  expect(graphData.nodes.every((node) => node.parentId === 'de.aventiure')).toBe(true);
+  expect(graphData.edges).toEqual([]);
 });
 
 test('load errors are shown in the browser', async ({ page }) => {

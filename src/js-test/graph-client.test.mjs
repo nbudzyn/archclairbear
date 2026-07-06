@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { GraphDataValidationError } from '../main/resources/static/graph-data.mjs';
-import { startGraphApp } from '../main/resources/static/graph-client.mjs';
+import { createPackageRequestUrl, installNodeDoubleClickHandler, startGraphApp } from '../main/resources/static/graph-client.mjs';
 
 test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', async () => {
   // GIVEN
@@ -70,10 +70,170 @@ test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', a
         id: 'de.aventiure',
         label: 'de.aventiure',
         type: 'package',
+        parentId: null,
       },
     ],
     edges: [],
   });
+});
+
+test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sichtbaren Graphen als Kind-Box', async () => {
+  // GIVEN
+  const statusMessage = { textContent: '' };
+  const errorMessage = { textContent: '' };
+  const statusElement = { hidden: true, querySelector: () => statusMessage };
+  const errorElement = { hidden: true, querySelector: () => errorMessage };
+  const appendCalls = [];
+  const loadCalls = [];
+  const tapHandlers = [];
+  const originalConsoleError = console.error;
+  let now = 1000;
+  // WHEN
+  console.error = () => {};
+
+  try {
+    await startGraphApp({
+      container: { id: 'cy' },
+      errorElement,
+      fetchImpl: async () => {
+        throw new Error('fetchImpl should not be used in this test.');
+      },
+      graphErrorMessage: errorMessage,
+      graphStatus: statusElement,
+      graphStatusMessage: statusMessage,
+      loadGraphImpl: async (_fetchImpl, requestUrl) => {
+        loadCalls.push(requestUrl);
+        if (requestUrl === '/api/graph/root') {
+          return {
+            nodes: [
+              {
+                id: 'de.aventiure',
+                label: 'de.aventiure',
+                type: 'package',
+              },
+            ],
+            edges: [],
+          };
+        }
+
+        return {
+          nodes: [
+            {
+              id: 'de.aventiure.lay05_being',
+              label: 'lay05_being',
+              type: 'package',
+              parentId: 'de.aventiure',
+            },
+          ],
+          edges: [],
+        };
+      },
+      renderGraphImpl: () => ({
+        appendGraph(graph) {
+          appendCalls.push(graph);
+        },
+        cy: {
+          on(eventName, selector, handler) {
+            tapHandlers.push({ eventName, selector, handler });
+          },
+        },
+        destroy() {},
+      }),
+      timeSource: () => now,
+      requestUrl: '/api/graph/root',
+      windowObject: {
+        addEventListener() {},
+        removeEventListener() {},
+      },
+      cytoscape: {},
+    });
+
+    tapHandlers[0].handler({
+      target: {
+        data(fieldName) {
+          return fieldName === 'id' ? 'de.aventiure' : undefined;
+        },
+      },
+    });
+    now += 150;
+    tapHandlers[0].handler({
+      target: {
+        data(fieldName) {
+          return fieldName === 'id' ? 'de.aventiure' : undefined;
+        },
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  // THEN
+  assert.deepEqual(loadCalls, [
+    '/api/graph/root',
+    '/api/graph/package?packageName=de.aventiure',
+  ]);
+  assert.deepEqual(appendCalls, [
+    {
+      nodes: [
+        {
+          id: 'de.aventiure.lay05_being',
+          label: 'lay05_being',
+          type: 'package',
+          parentId: 'de.aventiure',
+        },
+      ],
+      edges: [],
+    },
+  ]);
+});
+
+test('createPackageRequestUrl kodiert den Package-Namen für Nachladeanfragen', () => {
+  // WHEN / THEN
+  assert.equal(createPackageRequestUrl('de.aventiure.lay05_being'), '/api/graph/package?packageName=de.aventiure.lay05_being');
+});
+
+test('installNodeDoubleClickHandler reagiert nur auf zwei schnelle Taps desselben Knotens', async () => {
+  // GIVEN
+  const cy = {
+    on(_eventName, _selector, handler) {
+      this.handler = handler;
+    },
+  };
+  const openedNodeIds = [];
+  let now = 1000;
+  // WHEN
+  installNodeDoubleClickHandler(cy, async (nodeId) => {
+    openedNodeIds.push(nodeId);
+  }, () => now);
+
+  cy.handler({
+    target: {
+      data() {
+        return 'de.aventiure';
+      },
+    },
+  });
+  now += 450;
+  cy.handler({
+    target: {
+      data() {
+        return 'de.aventiure';
+      },
+    },
+  });
+  now += 100;
+  cy.handler({
+    target: {
+      data() {
+        return 'de.aventiure';
+      },
+    },
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // THEN
+  assert.deepEqual(openedNodeIds, ['de.aventiure']);
 });
 
 test('startGraphApp zeigt bei ungültigen Daten eine verständliche Fehlermeldung', async () => {

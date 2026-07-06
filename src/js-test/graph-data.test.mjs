@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { GraphDataValidationError, createGraphElements, normalizeGraph } from '../main/resources/static/graph-data.mjs';
+import { GraphDataValidationError, createGraphElements, mergeGraphs, normalizeGraph } from '../main/resources/static/graph-data.mjs';
 
 test('normalizeGraph normalisiert gültige Graphdaten', () => {
   // GIVEN
@@ -12,13 +12,14 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
         label: 'de.aventiure',
         type: 'package',
       },
-    ],
-    edges: [
       {
-        source: 'de.aventiure',
-        target: 'package-a',
+        id: 'de.aventiure.lay05_being',
+        label: 'lay05_being',
+        type: 'package',
+        parentId: 'de.aventiure',
       },
     ],
+    edges: [],
   };
 
   // WHEN
@@ -26,7 +27,23 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
   const elements = createGraphElements(graph);
 
   // THEN
-  assert.deepEqual(normalized, graph);
+  assert.deepEqual(normalized, {
+    nodes: [
+      {
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
+        parentId: null,
+      },
+      {
+        id: 'de.aventiure.lay05_being',
+        label: 'lay05_being',
+        type: 'package',
+        parentId: 'de.aventiure',
+      },
+    ],
+    edges: [],
+  });
   assert.deepEqual(elements, [
     {
       data: {
@@ -37,9 +54,10 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
     },
     {
       data: {
-        id: 'edge-0-de.aventiure-package-a',
-        source: 'de.aventiure',
-        target: 'package-a',
+        id: 'de.aventiure.lay05_being',
+        label: 'lay05_being',
+        type: 'package',
+        parent: 'de.aventiure',
       },
     },
   ]);
@@ -55,6 +73,12 @@ test('normalizeGraph wirft bei ungültigen Graphdaten', () => {
             label: 'de.aventiure',
             type: 'package',
           },
+          {
+            id: 'de.aventiure.lay05_being',
+            label: 'lay05_being',
+            type: 'package',
+            parentId: 'de.aventiure',
+          },
         ],
         edges: [
           {
@@ -63,4 +87,52 @@ test('normalizeGraph wirft bei ungültigen Graphdaten', () => {
         ],
       }),
       GraphDataValidationError);
+});
+
+test('mergeGraphs ergänzt neue Package-Knoten als Kind-Boxen ohne Duplikate', () => {
+  // GIVEN
+  const previousGraph = {
+    nodes: [
+      {
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
+        parentId: null,
+      },
+    ],
+    edges: [],
+  };
+  const graphToMerge = {
+    nodes: [
+      {
+        id: 'de.aventiure.lay05_being',
+        label: 'lay05_being',
+        type: 'package',
+        parentId: 'de.aventiure',
+      },
+    ],
+    edges: [],
+  };
+
+  // WHEN
+  const mergedGraph = mergeGraphs(previousGraph, graphToMerge);
+
+  // THEN
+  assert.deepEqual(mergedGraph, {
+    nodes: [
+      {
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
+        parentId: null,
+      },
+      {
+        id: 'de.aventiure.lay05_being',
+        label: 'lay05_being',
+        type: 'package',
+        parentId: 'de.aventiure',
+      },
+    ],
+    edges: [],
+  });
 });

@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs';
-import { GraphDataValidationError, normalizeGraph } from './graph-data.mjs';
-import { renderGraph } from './graph-renderer.mjs?v=package-root-2';
+import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-12';
+import { GraphDataValidationError, diffGraphEdges, diffGraphNodes, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-12';
+import { renderGraph } from './graph-renderer.mjs?v=package-boxes-12';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
@@ -15,6 +15,7 @@ export async function startGraphApp({
   loadGraphImpl = loadGraph,
   renderGraphImpl = renderGraph,
   requestUrl = '/api/graph/root',
+  packageRequestUrlFactory = createPackageRequestUrl,
   windowObject = window,
   cytoscape = window.cytoscape,
 } = {}) {
@@ -28,16 +29,33 @@ export async function startGraphApp({
   graphStatusController.showLoading('Graphdaten werden geladen ...');
 
   try {
-    const graph = normalizeGraph(await loadGraphImpl(fetchImpl, requestUrl));
-    renderGraphImpl(graph, {
+    let graph = normalizeGraph(await loadGraphImpl(fetchImpl, requestUrl));
+    const renderState = renderGraphImpl(graph, {
       cytoscape,
       container,
       windowObject,
     });
+    if (renderState?.cy != null && typeof renderState.appendGraph === 'function') {
+      installNodeDoubleClickHandler(renderState.cy, async (nodeId) => {
+        try {
+          const expandedGraph = normalizeGraph(await loadGraphImpl(fetchImpl, packageRequestUrlFactory(nodeId)));
+          const mergedGraph = mergeGraphs(graph, expandedGraph);
+          const graphDelta = diffGraphs(graph, mergedGraph);
+
+          graph = mergedGraph;
+          renderState.appendGraph(graphDelta);
+        } catch (error) {
+          console.error(`Failed to expand package ${nodeId}.`, error);
+          graphStatusController.showError(createUserFacingErrorMessage(error));
+        }
+      });
+    }
     graphStatusController.hideStatus();
+    return renderState;
   } catch (error) {
     console.error('Failed to load root graph.', error);
     graphStatusController.showError(createUserFacingErrorMessage(error));
+    return null;
   }
 }
 
@@ -56,6 +74,30 @@ export async function loadGraph(fetchImpl = fetch, requestUrl = '/api/graph/root
   }
 
   return response.json();
+}
+
+export function createPackageRequestUrl(packageName) {
+  return `/api/graph/package?packageName=${encodeURIComponent(packageName)}`;
+}
+
+export function installNodeDoubleClickHandler(cy, onNodeDoubleClick, timeSource = () => Date.now()) {
+  let lastTap = null;
+
+  cy.on('tap', 'node', (event) => {
+    const nodeId = event.target.data('id');
+    const now = timeSource();
+
+    if (lastTap != null && lastTap.nodeId === nodeId && now - lastTap.timestamp <= 400) {
+      lastTap = null;
+      void onNodeDoubleClick(nodeId);
+      return;
+    }
+
+    lastTap = {
+      nodeId,
+      timestamp: now,
+    };
+  });
 }
 
 function createUserFacingErrorMessage(error) {
@@ -86,4 +128,11 @@ class GraphRequestError extends Error {
     this.userFacingMessage = userFacingMessage;
     this.status = status;
   }
+}
+
+function diffGraphs(previousGraph, nextGraph) {
+  return {
+    nodes: diffGraphNodes(previousGraph.nodes, nextGraph.nodes).added,
+    edges: diffGraphEdges(previousGraph.edges, nextGraph.edges).added,
+  };
 }

@@ -22,8 +22,37 @@ export function createGraphElements(graph) {
 
   return [
     ...normalizedGraph.nodes.map((node) => createNodeElement(node)),
-    ...normalizedGraph.edges.map((edge, index) => createEdgeElement(edge, index)),
+    ...normalizedGraph.edges.map((edge) => createEdgeElement(edge)),
   ];
+}
+
+export function mergeGraphs(previousGraph, graphToMerge) {
+  const previous = normalizeGraph(previousGraph);
+  const next = normalizeGraph(graphToMerge);
+  const mergedNodes = new Map(previous.nodes.map((node) => [node.id, node]));
+  const mergedEdges = new Map(previous.edges.map((edge) => [createEdgeId(edge), edge]));
+
+  next.nodes.forEach((node) => {
+    mergedNodes.set(node.id, node);
+  });
+  next.edges.forEach((edge) => {
+    mergedEdges.set(createEdgeId(edge), edge);
+  });
+
+  return {
+    nodes: [...mergedNodes.values()],
+    edges: [...mergedEdges.values()],
+  };
+}
+
+export function diffGraphEdges(previousEdges, nextEdges) {
+  const previousEdgeMap = new Map(previousEdges.map((edge) => [createEdgeId(edge), edge]));
+  const nextEdgeMap = new Map(nextEdges.map((edge) => [createEdgeId(edge), edge]));
+
+  return {
+    added: nextEdges.filter((edge) => !previousEdgeMap.has(createEdgeId(edge))),
+    removed: previousEdges.filter((edge) => !nextEdgeMap.has(createEdgeId(edge))),
+  };
 }
 
 export function diffGraphNodes(previousNodes, nextNodes) {
@@ -64,6 +93,7 @@ function normalizeNode(node) {
     id: node.id,
     label: node.label,
     type: node.type,
+    parentId: isString(node.parentId) ? node.parentId : null,
   };
 }
 
@@ -88,33 +118,39 @@ function createNodeElement(node) {
       id: node.id,
       label: node.label,
       type: node.type,
+      ...(node.parentId == null ? {} : { parent: node.parentId }),
     },
   };
 }
 
-function createEdgeElement(edge, index) {
+function createEdgeElement(edge) {
   return {
     data: {
-      id: createEdgeId(edge, index),
+      id: createEdgeId(edge),
       source: edge.source,
       target: edge.target,
     },
   };
 }
 
-function createEdgeId(edge, index) {
+function createEdgeId(edge) {
   const source = edge?.source ?? 'source';
   const target = edge?.target ?? 'target';
 
-  return `edge-${index}-${source}-${target}`;
+  return `edge-${source}-${target}`;
 }
 
 function isString(value) {
   return typeof value === 'string' && value.length > 0;
 }
 
+function isOptionalString(value) {
+  return value == null || isString(value);
+}
+
 function areNodesEqual(previousNode, nextNode) {
   return previousNode.id === nextNode.id
     && previousNode.label === nextNode.label
-    && previousNode.type === nextNode.type;
+    && previousNode.type === nextNode.type
+    && previousNode.parentId === nextNode.parentId;
 }
