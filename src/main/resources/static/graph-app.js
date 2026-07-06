@@ -1,3 +1,3 @@
-import { startGraphApp } from './graph-client.mjs?v=package-boxes-12';
+import { startGraphApp } from './graph-client.mjs?v=package-boxes-14';
 
 startGraphApp();

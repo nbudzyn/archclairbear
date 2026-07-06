@@ -50,6 +50,8 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
         id: 'de.aventiure',
         label: 'de.aventiure',
         type: 'package',
+        width: 220,
+        height: 92,
       },
     },
     {
@@ -57,6 +59,8 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
         id: 'de.aventiure.lay05_being',
         label: 'lay05_being',
         type: 'package',
+        width: 220,
+        height: 92,
         parent: 'de.aventiure',
       },
     },

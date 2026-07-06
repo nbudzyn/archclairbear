@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-12';
-import { GraphDataValidationError, diffGraphEdges, diffGraphNodes, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-12';
-import { renderGraph } from './graph-renderer.mjs?v=package-boxes-12';
+import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-14';
+import { GraphDataValidationError, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-14';
+import { renderGraph } from './graph-renderer.mjs?v=package-boxes-14';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
@@ -30,7 +30,7 @@ export async function startGraphApp({
 
   try {
     let graph = normalizeGraph(await loadGraphImpl(fetchImpl, requestUrl));
-    const renderState = renderGraphImpl(graph, {
+    const renderState = await renderGraphImpl(graph, {
       cytoscape,
       container,
       windowObject,
@@ -40,10 +40,9 @@ export async function startGraphApp({
         try {
           const expandedGraph = normalizeGraph(await loadGraphImpl(fetchImpl, packageRequestUrlFactory(nodeId)));
           const mergedGraph = mergeGraphs(graph, expandedGraph);
-          const graphDelta = diffGraphs(graph, mergedGraph);
 
           graph = mergedGraph;
-          renderState.appendGraph(graphDelta);
+          await renderState.appendGraph(graph);
         } catch (error) {
           console.error(`Failed to expand package ${nodeId}.`, error);
           graphStatusController.showError(createUserFacingErrorMessage(error));
@@ -128,11 +127,4 @@ class GraphRequestError extends Error {
     this.userFacingMessage = userFacingMessage;
     this.status = status;
   }
-}
-
-function diffGraphs(previousGraph, nextGraph) {
-  return {
-    nodes: diffGraphNodes(previousGraph.nodes, nextGraph.nodes).added,
-    edges: diffGraphEdges(previousGraph.edges, nextGraph.edges).added,
-  };
 }

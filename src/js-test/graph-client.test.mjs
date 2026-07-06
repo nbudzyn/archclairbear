@@ -177,6 +177,12 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
     {
       nodes: [
         {
+          id: 'de.aventiure',
+          label: 'de.aventiure',
+          type: 'package',
+          parentId: null,
+        },
+        {
           id: 'de.aventiure.lay05_being',
           label: 'lay05_being',
           type: 'package',

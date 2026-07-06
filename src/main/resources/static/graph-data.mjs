@@ -45,30 +45,6 @@ export function mergeGraphs(previousGraph, graphToMerge) {
   };
 }
 
-export function diffGraphEdges(previousEdges, nextEdges) {
-  const previousEdgeMap = new Map(previousEdges.map((edge) => [createEdgeId(edge), edge]));
-  const nextEdgeMap = new Map(nextEdges.map((edge) => [createEdgeId(edge), edge]));
-
-  return {
-    added: nextEdges.filter((edge) => !previousEdgeMap.has(createEdgeId(edge))),
-    removed: previousEdges.filter((edge) => !nextEdgeMap.has(createEdgeId(edge))),
-  };
-}
-
-export function diffGraphNodes(previousNodes, nextNodes) {
-  const previousNodeMap = new Map(previousNodes.map((node) => [node.id, node]));
-  const nextNodeMap = new Map(nextNodes.map((node) => [node.id, node]));
-
-  return {
-    added: nextNodes.filter((node) => !previousNodeMap.has(node.id)),
-    removed: previousNodes.filter((node) => !nextNodeMap.has(node.id)),
-    updated: nextNodes.filter((node) => {
-      const previousNode = previousNodeMap.get(node.id);
-      return previousNode != null && !areNodesEqual(previousNode, node);
-    }),
-  };
-}
-
 export class GraphDataValidationError extends Error {
   constructor(message) {
     super(message);
@@ -118,6 +94,8 @@ function createNodeElement(node) {
       id: node.id,
       label: node.label,
       type: node.type,
+      width: node.type === 'package' ? 220 : 260,
+      height: node.type === 'package' ? 92 : 120,
       ...(node.parentId == null ? {} : { parent: node.parentId }),
     },
   };
@@ -146,11 +124,4 @@ function isString(value) {
 
 function isOptionalString(value) {
   return value == null || isString(value);
-}
-
-function areNodesEqual(previousNode, nextNode) {
-  return previousNode.id === nextNode.id
-    && previousNode.label === nextNode.label
-    && previousNode.type === nextNode.type
-    && previousNode.parentId === nextNode.parentId;
 }
