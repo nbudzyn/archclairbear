@@ -16,7 +16,7 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
       {
         id: 'root-directory',
         type: 'directory',
-        label: 'Workspace',
+        label: 'aventiure',
       },
     ],
     edges: [],
