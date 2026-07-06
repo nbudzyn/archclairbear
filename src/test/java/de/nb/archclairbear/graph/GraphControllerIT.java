@@ -44,7 +44,7 @@ class GraphControllerIT {
 
     var root = objectMapper.readTree(response);
     assertThat(root) //
-        .hasSingleDirectoryNode("root-directory", "aventiure") //
+        .hasSingleDirectoryNode("root-directory", "java") //
         .hasNoEdges();
   }
 
