@@ -3,11 +3,17 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Browser-Test für das Zuklappen eines Packges-Nodes
+## Java-Typen in Packages anzeigen
 
-Ein Browser-Test testet das Zuklappen (nur einen ganz einfachen, stabilen Fall). Achtung: Man darf nicht in den Kind-Knoten klicken, sondern
-in die dünne Kante darüber, damit der Kindknoten verschwindet!
-Bedenken, dass sich beim Auf- und Zuklappen das Layout verschieben kann!
+Der Graph kann zusätzlich zu Packages auch Java-Typen anzeigen.
+Zu den Typen gehören zunächst Klassen, später bei Bedarf auch Interfaces und Enums.
+Die Typen sind graphisch von den Packages unterscheidbar, allerdings auch Boxen mit runden Ecken. Sie werden platzsparender dargestellt -
+und auch innerhalb der Packages (wie bisher auch).
+Zunächst werden als "Typen" einfach die Namen von .java-Dateien verwendet (später können wir das Verfeinern).
+Die Einklapp-Aufklapp-Logik funktioniert auch für Typen: Package aufklappen zeigt die Typen, Package zuklappen verbirgt die Typen.
+Es kann durchaus sein, dass ein Package sowohl Sub-Packages als auch Typen enthält (die sollen sich natürlich nicht überlagern).
+
+Sinnvolle Tests!
 
 ## Smooth animation when layout changes
 
@@ -22,11 +28,6 @@ Package-Knoten ohne weitere Kinder wirken nicht wie interaktive Aufklapp-Knoten.
 
 Die Package-Struktur wird nicht mehr nur aus Verzeichnissen abgeleitet, sondern aus den `package`-Deklarationen der Java-Dateien aufgebaut.
 Dadurch entspricht der Graph der fachlichen Java-Struktur auch dann, wenn Verzeichnisse und Package-Deklarationen auseinanderlaufen.
-
-## Java-Typen in Packages anzeigen
-
-Der Graph kann zusätzlich zu Packages auch Java-Typen anzeigen.
-Zu den Typen gehören zunächst Klassen, später bei Bedarf auch Interfaces und Enums.
 
 ## Abhängigkeiten als Pfeile darstellen
 
