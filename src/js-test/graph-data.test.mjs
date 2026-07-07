@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { GraphDataValidationError, createGraphElements, mergeGraphs, normalizeGraph } from '../main/resources/static/graph-data.mjs';
+import { GraphDataValidationError, collapseGraph, createGraphElements, mergeGraphs, normalizeGraph } from '../main/resources/static/graph-data.mjs';
 
 test('normalizeGraph normalisiert gültige Graphdaten', () => {
   // GIVEN
@@ -138,5 +138,76 @@ test('mergeGraphs ergänzt neue Package-Knoten als Kind-Boxen ohne Duplikate', (
       },
     ],
     edges: [],
+  });
+});
+
+test('collapseGraph entfernt einen Package-Knoten mit allen sichtbaren Nachfahren', () => {
+  // GIVEN
+  const graph = {
+    nodes: [
+      {
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
+        parentId: null,
+      },
+      {
+        id: 'de.aventiure.lay05_being',
+        label: 'lay05_being',
+        type: 'package',
+        parentId: 'de.aventiure',
+      },
+      {
+        id: 'de.aventiure.lay05_being.model',
+        label: 'model',
+        type: 'package',
+        parentId: 'de.aventiure.lay05_being',
+      },
+      {
+        id: 'de.aventiure.other',
+        label: 'other',
+        type: 'package',
+        parentId: 'de.aventiure',
+      },
+    ],
+    edges: [
+      {
+        source: 'de.aventiure.lay05_being',
+        target: 'de.aventiure.other',
+      },
+    ],
+  };
+
+  // WHEN
+  const collapsedGraph = collapseGraph(graph, 'de.aventiure.lay05_being');
+
+  // THEN
+  assert.deepEqual(collapsedGraph, {
+    nodes: [
+      {
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
+        parentId: null,
+      },
+      {
+        id: 'de.aventiure.lay05_being',
+        label: 'lay05_being',
+        type: 'package',
+        parentId: 'de.aventiure',
+      },
+      {
+        id: 'de.aventiure.other',
+        label: 'other',
+        type: 'package',
+        parentId: 'de.aventiure',
+      },
+    ],
+    edges: [
+      {
+        source: 'de.aventiure.lay05_being',
+        target: 'de.aventiure.other',
+      },
+    ],
   });
 });

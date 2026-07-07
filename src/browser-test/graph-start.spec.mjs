@@ -33,24 +33,40 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
       .toBe(true);
 });
 
-test('package graph can be expanded with a double click into nested package boxes', async ({ page }) => {
+test('package graph can be expanded with a double click', async ({ page }) => {
   // GIVEN
   const packageGraphResponse = page.waitForResponse((response) => (
     response.url().includes('/api/graph/package?packageName=de.aventiure') && response.ok()
   ));
+  let packageGraphRequestCount = 0;
+  page.on('request', (request) => {
+    if (request.url().includes('/api/graph/package?packageName=de.aventiure')) {
+      packageGraphRequestCount += 1;
+    }
+  });
 
   // WHEN
   await page.goto('/');
   await expect(page.locator('#cy canvas').first()).toBeVisible();
+  await expect.poll(
+      () => hasRenderedCanvasPixels(page),
+      {
+        message: 'Cytoscape should render visible pixels in the graph container.',
+      })
+      .toBe(true);
+  const initialGraphSnapshot = (await page.locator('#cy').screenshot()).toString('base64');
   const graphBounds = await page.locator('#cy').boundingBox();
   await page.mouse.dblclick(graphBounds.x + (graphBounds.width / 2), graphBounds.y + (graphBounds.height / 2));
   const graphData = await (await packageGraphResponse).json();
+  await expect.poll(async () => (await page.locator('#cy').screenshot()).toString('base64'))
+      .not.toBe(initialGraphSnapshot);
 
   // THEN
   expect(graphData.nodes.length).toBeGreaterThan(0);
   expect(graphData.nodes.every((node) => node.type === 'package')).toBe(true);
   expect(graphData.nodes.every((node) => node.parentId === 'de.aventiure')).toBe(true);
   expect(graphData.edges).toEqual([]);
+  expect(packageGraphRequestCount).toBe(1);
 });
 
 test('load errors are shown in the browser', async ({ page }) => {
@@ -85,6 +101,10 @@ async function hasRenderedCanvasPixels(page) {
       }
     }
 
-    return false;
+  return false;
   }));
+}
+
+async function getCanvasDataUrl(page) {
+  return page.locator('#cy canvas').first().evaluate((canvas) => canvas.toDataURL());
 }

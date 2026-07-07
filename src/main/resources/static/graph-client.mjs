@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-14';
-import { GraphDataValidationError, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-14';
-import { renderGraph } from './graph-renderer.mjs?v=package-boxes-14';
+import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-15';
+import { GraphDataValidationError, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-15';
+import { renderGraph } from './graph-renderer.mjs?v=package-boxes-15';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
@@ -38,13 +38,17 @@ export async function startGraphApp({
     if (renderState?.cy != null && typeof renderState.appendGraph === 'function') {
       installNodeDoubleClickHandler(renderState.cy, async (nodeId) => {
         try {
-          const expandedGraph = normalizeGraph(await loadGraphImpl(fetchImpl, packageRequestUrlFactory(nodeId)));
-          const mergedGraph = mergeGraphs(graph, expandedGraph);
+          if (hasVisibleChildNodes(graph, nodeId)) {
+            graph = collapseGraph(graph, nodeId);
+            await renderState.appendGraph(graph);
+            return;
+          }
 
-          graph = mergedGraph;
+          const expandedGraph = normalizeGraph(await loadGraphImpl(fetchImpl, packageRequestUrlFactory(nodeId)));
+          graph = mergeGraphs(graph, expandedGraph);
           await renderState.appendGraph(graph);
         } catch (error) {
-          console.error(`Failed to expand package ${nodeId}.`, error);
+          console.error(`Failed to toggle package ${nodeId}.`, error);
           graphStatusController.showError(createUserFacingErrorMessage(error));
         }
       });
@@ -97,6 +101,10 @@ export function installNodeDoubleClickHandler(cy, onNodeDoubleClick, timeSource 
       timestamp: now,
     };
   });
+}
+
+function hasVisibleChildNodes(graph, nodeId) {
+  return graph.nodes.some((node) => node.parentId === nodeId);
 }
 
 function createUserFacingErrorMessage(error) {

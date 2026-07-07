@@ -17,10 +17,16 @@
   (z. B. Playwright-Auswertung in Node/JS statt im Gradle-Buildscript).
 - Für Layoutänderungen bevorzugt erst die Layout-Engine bestimmen und dann die Renderer-Integration bauen; manuelle Reflow-Heuristiken nur als
   Übergangslösung.
+- Port-Strategie:
+  - `8080` ist für menschliche manuelle GUI-Starts reserviert.
+  - `8081` ist für automatisierte Tests und testgetriebene Browserläufe reserviert.
+  - `8082` ist für manuelle Browser-Checks durch die KI reserviert.
 - Wenn ein lokales Browser- oder Test-Server-Skript über Port `8081` oder `8082` scheitert, zuerst prüfen, ob noch ein alter Serverprozess
   läuft.
 - Bei statischen Browser-Modulen immer Cache-Busting und alle abhängigen Versionen gemeinsam aktualisieren
   (`graph-app.js`, `graph-client.mjs`, `graph-renderer.mjs`, Landing-Page-Test).
+- Cache-Busting-Regel: Jede Änderung an statischen Browser-Assets bekommt eine neue gemeinsame Versionskennung; die zusammengehörigen
+  Imports, HTML-Referenzen und betroffenen Tests werden immer im selben Schritt mitgezogen.
 
 ## Tests
 
@@ -44,6 +50,21 @@
 - Auf Windows `.cmd`-Starter aus Node nicht direkt spawnen, wenn es vermeidbar ist. Für lokale Node-Tools lieber deren JS-Entry-Point mit
   `process.execPath` starten.
 
+### Verifikationsroute
+
+- Die Verifikationsroute richtet sich nach der Art der Änderung.
+- Grundregel: immer mit der kleinsten fachlich sinnvollen Teststufe beginnen und nur bei Bedarf breiter werden.
+- Bei reiner JavaScript- oder Client-Logik zuerst `localJsTest`.
+- Bei reinen Server- oder API-Änderungen zuerst `localTest`.
+- Bei Browser- oder GUI-Änderungen zuerst die fachlich kleinste passende Teststufe, danach die weiteren betroffenen Stufen.
+- Bei GUI-Änderungen am Ende immer alle relevanten Testarten laufen lassen:
+  - `localJsTest`
+  - `localTest`
+  - `localBrowserTest`
+  - manueller KI-Browser-Test auf Port `8082`
+- Ein manueller KI-Browser-Test ersetzt keine automatisierten Tests, sondern ergänzt sie.
+- Playwright gehört zur automatisierten Browser-Teststrecke; für den manuellen KI-Browser-Test ist es keine Pflicht, solange der Browser lokal direkt prüfbar ist.
+
 ### Tests durch die KI
 
 - Im ersten Schritt immer die passenden token-sparenden lokalen Testskripte verwenden, bei Bedarf mit `-Stacktrace`.
@@ -51,14 +72,15 @@
 - Java: `.\localTest.ps1`, bei Bedarf `.\localTest.ps1 -Stacktrace`.
 - JavaScript: `.\localJsTest.ps1`, bei Bedarf `.\localJsTest.ps1 -Stacktrace`. Die JS-Tests laufen mit `node:test` im Einprozessmodus `--test-isolation=none`.
 - Browser: `.\localBrowserTest.ps1`, bei Bedarf mit `-Stacktrace`.
-- Für KI-Prüfstarts `server.port=8081`.
+- Für automatisierte Browser-Prüfstarts `server.port=8081`.
+- Für manuelle Browser-Checks durch die KI `server.port=8082`.
 
 ### Browser-Tests
 
 - Einmalig die npm-Abhängigkeiten mit `npm install` installieren.
 - Wenn Playwright noch keinen Chromium-Browser findet, einmalig `npx playwright install chromium` ausführen.
 - Der lokale Browser-Testlauf startet die Anwendung selbst und beendet sie nach dem Testlauf wieder.
-- Für token-sparende KI-Prüfläufe immer `.\localBrowserTest.ps1` verwenden. Bei Erfolg gibt das Skript nur `OK` aus; bei Fehlern nennt es
+- Für token-sparende automatisierte Browser-Prüfläufe immer `.\localBrowserTest.ps1` verwenden. Bei Erfolg gibt das Skript nur `OK` aus; bei Fehlern nennt es
   die fehlgeschlagenen Browser-Tests mit einer kurzen Fehlermeldung.
 - Für Details zu Playwright-Fehlern, Trace-Pfaden und vollständiger Ausgabe `.\localBrowserTest.ps1 -Stacktrace` verwenden.
 - Gradle-Task: `.\gradlew.bat --console=plain browserTest`.

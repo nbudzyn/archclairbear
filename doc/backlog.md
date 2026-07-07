@@ -3,22 +3,11 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Package-Knoten wieder zuklappen
+## Browser-Test für das Zuklappen eines Packges-Nodes
 
-Der Nutzer kann einen geöffneten Package-Knoten wieder schließen.
-Dabei verschwinden die aktuell sichtbaren Nachfahren dieses Knotens, während andere geöffnete Bereiche des Graphen sichtbar bleiben.
-Es wird zunächst kein Aufklappzustand über erneutes Öffnen hinweg gemerkt.
-
-Tests (auch auf GUI-Ebene!)
-
-- Doppelklick auf einen Knoten, der gar nicht aufgeklappt ist und der aufgeklappt werden kann -> Klappt den Knoten auf (wie bisher)
-- Doppelklick auf einen Knoten, der gar nicht aufgeklappt ist und der nicht aufgeklappt werden kann -> Nichts passiert (wie bisher)
-- Doppelklick auf einen Knoten, der aufgeklappt ist und dessen Kinder alle Blätter sind: -> Klappt den Knoten wieder ein (Kinder nicht mehr
-  angezeigt)
-- Doppelklick auf einen Knoten, der aufgeklappt ist und dessen Kinder nicht alle Blätter sind: -> Klappt den Knoten wieder ein (Kinder und
-  Kindeskinder nicht mehr angezeigt)
-
-Beim Schreiben der Tests bedenken, dass sich das Layout verschieben kann.
+Ein Browser-Test testet das Zuklappen (nur einen ganz einfachen, stabilen Fall). Achtung: Man darf nicht in den Kind-Knoten klicken, sondern
+in die dünne Kante darüber, damit der Kindknoten verschwindet!
+Bedenken, dass sich beim Auf- und Zuklappen das Layout verschieben kann!
 
 ## Smooth animation when layout changes
 

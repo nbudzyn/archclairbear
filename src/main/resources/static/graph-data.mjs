@@ -45,6 +45,16 @@ export function mergeGraphs(previousGraph, graphToMerge) {
   };
 }
 
+export function collapseGraph(graph, rootNodeId) {
+  const normalizedGraph = normalizeGraph(graph);
+  const idsToRemove = collectDescendantIds(normalizedGraph, rootNodeId);
+
+  return {
+    nodes: normalizedGraph.nodes.filter((node) => !idsToRemove.has(node.id)),
+    edges: normalizedGraph.edges.filter((edge) => !idsToRemove.has(edge.source) && !idsToRemove.has(edge.target)),
+  };
+}
+
 export class GraphDataValidationError extends Error {
   constructor(message) {
     super(message);
@@ -116,6 +126,28 @@ function createEdgeId(edge) {
   const target = edge?.target ?? 'target';
 
   return `edge-${source}-${target}`;
+}
+
+function collectDescendantIds(graph, rootNodeId) {
+  const idsToRemove = new Set();
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+
+    graph.nodes.forEach((node) => {
+      if (
+        node.id !== rootNodeId
+        && !idsToRemove.has(node.id)
+        && (node.parentId === rootNodeId || (node.parentId != null && idsToRemove.has(node.parentId)))
+      ) {
+        idsToRemove.add(node.id);
+        changed = true;
+      }
+    });
+  }
+
+  return idsToRemove;
 }
 
 function isString(value) {

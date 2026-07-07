@@ -19,6 +19,7 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 - Baut ein hierarchisches Graphmodell.
 - Stellt die Graphdaten bereit.
 - Unterstützt Initial-Load und Nachladen.
+- Bleibt im Web-/Session-Sinn stateless: kein `HttpSession`-Zustand, kein serverseitiges Merken von Aufklappzuständen oder benutzerspezifischem Graphzustand.
 
 ### Client
 
