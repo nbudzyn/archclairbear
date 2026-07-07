@@ -68,10 +68,11 @@ class GraphServiceTest {
   }
 
   @Test
-  void packageGraphReturnsImmediateChildPackagesRegardlessOfJavaContent() throws IOException {
+  void packageGraphReturnsImmediateChildPackagesAndTypes() throws IOException {
     // GIVEN
     createJavaFile("de", "aventiure", "lay05_being", "BeingLayer.java");
     createJavaFile("de", "aventiure", "lay05_being", "model", "being", "Being.java");
+    createJavaFile("de", "aventiure", "lay05_being", "Action.java");
     var graphService = new GraphService(tempDir);
 
     // WHEN
@@ -79,7 +80,10 @@ class GraphServiceTest {
 
     // THEN
     assertThat(graph.nodes())
-        .containsExactly(new GraphNode("de.aventiure.lay05_being.model", "package", "model", "de.aventiure.lay05_being"));
+        .containsExactly(
+            new GraphNode("de.aventiure.lay05_being.model", "package", "model", "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.Action", "type", "Action", "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.BeingLayer", "type", "BeingLayer", "de.aventiure.lay05_being"));
     assertThat(graph.edges()).isEmpty();
   }
 

@@ -91,11 +91,12 @@ class GraphControllerIT {
   }
 
   @Test
-  void packageGraphReturnsImmediateChildrenEvenWithoutJavaFiles() throws Exception {
+  void packageGraphReturnsImmediateChildPackagesAndTypes() throws Exception {
     // GIVEN
     Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being")));
     Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "BeingLayer.java")), "class BeingLayer {}");
     Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being", "Being.java")), "class Being {}");
+    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "Action.java")), "class Action {}");
     var controller = new GraphController(new GraphService(tempDir));
     var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
         .setControllerAdvice(new GraphExceptionHandler())
@@ -111,9 +112,16 @@ class GraphControllerIT {
         .getContentAsString();
 
     var root = objectMapper.readTree(response);
-    org.assertj.core.api.Assertions.assertThat(root.path("nodes")).hasSize(1);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes")).hasSize(3);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("type").asText()).isEqualTo("package");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("label").asText()).isEqualTo("model");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("parentId").asText()).isEqualTo("de.aventiure.lay05_being");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("type").asText()).isEqualTo("type");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("label").asText()).isEqualTo("Action");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("parentId").asText()).isEqualTo("de.aventiure.lay05_being");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("type").asText()).isEqualTo("type");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("label").asText()).isEqualTo("BeingLayer");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("parentId").asText()).isEqualTo("de.aventiure.lay05_being");
     org.assertj.core.api.Assertions.assertThat(root.path("edges")).isEmpty();
   }
 

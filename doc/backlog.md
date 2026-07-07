@@ -3,17 +3,18 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Java-Typen in Packages anzeigen
+## Java-Typen und Packages aus Code lesen
 
-Der Graph kann zusätzlich zu Packages auch Java-Typen anzeigen.
-Zu den Typen gehören zunächst Klassen, später bei Bedarf auch Interfaces und Enums.
-Die Typen sind graphisch von den Packages unterscheidbar, allerdings auch Boxen mit runden Ecken. Sie werden platzsparender dargestellt -
-und auch innerhalb der Packages (wie bisher auch).
-Zunächst werden als "Typen" einfach die Namen von .java-Dateien verwendet (später können wir das Verfeinern).
-Die Einklapp-Aufklapp-Logik funktioniert auch für Typen: Package aufklappen zeigt die Typen, Package zuklappen verbirgt die Typen.
-Es kann durchaus sein, dass ein Package sowohl Sub-Packages als auch Typen enthält (die sollen sich natürlich nicht überlagern).
+Die angezeigten Packages und Typen (Klassen, Interfaces, Enums) werden aus dem Code gelesen.
 
-Sinnvolle Tests!
+- Die Package-Struktur wird nicht mehr aus Verzeichnissen abgeleitet!
+- Die .java-Dateinamen werden irrelevant
+  Innere Typen (verschachtelt) werden zunächst nicht angezeigt.
+
+Wir verwenden eine aktuelle, gut gepflegte Open-Source-Bibliothek, die mit den neuen Java-Versionen arbeiten kann und voraussichtlich auch
+in Zukunft gut gepflegt werden wird. Bibliothek auf Sicherheits-Risiken prüfen und Risiken auszuschließen.
+
+Tests!
 
 ## Smooth animation when layout changes
 
@@ -23,11 +24,6 @@ When the layout changes (box moves somewhere else on double-click), the layout s
 
 Der Nutzer kann erkennen, welche Package-Knoten weitere sichtbare Package-Kinder haben.
 Package-Knoten ohne weitere Kinder wirken nicht wie interaktive Aufklapp-Knoten.
-
-## Packages aus Java-Code lesen
-
-Die Package-Struktur wird nicht mehr nur aus Verzeichnissen abgeleitet, sondern aus den `package`-Deklarationen der Java-Dateien aufgebaut.
-Dadurch entspricht der Graph der fachlichen Java-Struktur auch dann, wenn Verzeichnisse und Package-Deklarationen auseinanderlaufen.
 
 ## Abhängigkeiten als Pfeile darstellen
 

@@ -5,6 +5,8 @@
 - Vor Gradle-Aufrufen immer explizit Freigabe holen.
 - Das gilt für `gradle`, `gradlew.bat`, `.\localTest.ps1`, `.\localJsTest.ps1` und `.\localBrowserTest.ps1`.
 - Die Wrapper verwenden das Standard-Gradle-User-Home im Benutzerverzeichnis (`C:\Users\...\ .gradle`).
+- Bei `functions.exec_command` keine PowerShell-Exe in `cmd` hinein verschachteln, wenn der PowerShell-Interpreter bereits der Shell-Kontext ist.
+  Statt `C:\Program Files\PowerShell\7\pwsh.exe -Command ...` den PowerShell-Befehl direkt übergeben oder den `shell`-Parameter nutzen.
 
 ## Arbeitsweise
 
@@ -49,6 +51,8 @@
 - Playwright-spezifische Auswertung und Output-Filterung in kleinen Node-Skripten halten; Gradle soll diese Skripte nur aufrufen.
 - Auf Windows `.cmd`-Starter aus Node nicht direkt spawnen, wenn es vermeidbar ist. Für lokale Node-Tools lieber deren JS-Entry-Point mit
   `process.execPath` starten.
+- Für manuelle Browser-Checks die Chrome-Devtools-MCP-Werkzeuge verwenden, also `mcp__chrome_devtools` mit Page-Snapshot, Click,
+  Screenshot und `evaluate_script`, statt Playwright als Umweg für die Handprüfung zu benutzen.
 
 ### Verifikationsroute
 

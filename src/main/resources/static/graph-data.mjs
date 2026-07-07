@@ -99,13 +99,15 @@ function normalizeEdge(edge) {
 }
 
 function createNodeElement(node) {
+  const dimensions = getGraphNodeDimensions(node.type);
+
   return {
     data: {
       id: node.id,
       label: node.label,
       type: node.type,
-      width: node.type === 'package' ? 220 : 260,
-      height: node.type === 'package' ? 92 : 120,
+      width: dimensions.width,
+      height: dimensions.height,
       ...(node.parentId == null ? {} : { parent: node.parentId }),
     },
   };
@@ -156,4 +158,18 @@ function isString(value) {
 
 function isOptionalString(value) {
   return value == null || isString(value);
+}
+
+export function getGraphNodeDimensions(nodeType) {
+  if (nodeType === 'package') {
+    return {
+      width: 220,
+      height: 92,
+    };
+  }
+
+  return {
+    width: 180,
+    height: 64,
+  };
 }

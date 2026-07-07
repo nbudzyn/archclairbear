@@ -69,6 +69,82 @@ test('package graph can be expanded with a double click', async ({ page }) => {
   expect(packageGraphRequestCount).toBe(1);
 });
 
+test('expanded package renders type nodes inside the package box', async ({ page }) => {
+  // GIVEN
+  await page.route('**/api/graph/root', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      nodes: [
+        {
+          id: 'de.aventiure',
+          label: 'de.aventiure',
+          type: 'package',
+          parentId: null,
+        },
+      ],
+      edges: [],
+    }),
+  }));
+
+  const packageGraphResponse = page.waitForResponse((response) => (
+    response.url().includes('/api/graph/package?packageName=de.aventiure') && response.ok()
+  ));
+  await page.route('**/api/graph/package?packageName=de.aventiure', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      nodes: [
+        {
+          id: 'de.aventiure.lay05_being',
+          label: 'lay05_being',
+          type: 'package',
+          parentId: 'de.aventiure',
+        },
+        {
+          id: 'de.aventiure.Action',
+          label: 'Action',
+          type: 'type',
+          parentId: 'de.aventiure',
+        },
+      ],
+      edges: [],
+    }),
+  }));
+
+  // WHEN
+  await page.goto('/');
+  await expect(page.locator('#cy canvas').first()).toBeVisible();
+  await expect.poll(
+      () => hasRenderedCanvasPixels(page),
+      {
+        message: 'Cytoscape should render visible pixels in the graph container.',
+      })
+      .toBe(true);
+  const initialGraphSnapshot = (await page.locator('#cy').screenshot()).toString('base64');
+  const graphBounds = await page.locator('#cy').boundingBox();
+  await page.mouse.dblclick(graphBounds.x + (graphBounds.width / 2), graphBounds.y + (graphBounds.height / 2));
+  const graphData = await (await packageGraphResponse).json();
+  await expect.poll(async () => (await page.locator('#cy').screenshot()).toString('base64'))
+      .not.toBe(initialGraphSnapshot);
+
+  // THEN
+  expect(graphData.nodes).toEqual([
+    {
+      id: 'de.aventiure.lay05_being',
+      label: 'lay05_being',
+      type: 'package',
+      parentId: 'de.aventiure',
+    },
+    {
+      id: 'de.aventiure.Action',
+      label: 'Action',
+      type: 'type',
+      parentId: 'de.aventiure',
+    },
+  ]);
+});
+
 test('package graph can be collapsed with a double click on the package border', async ({ page }) => {
   // GIVEN
   const packageGraphResponse = page.waitForResponse((response) => (

@@ -1,9 +1,13 @@
-import { createGraphElements } from './graph-data.mjs?v=package-boxes-15';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=package-boxes-16';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
 const BASE_NODE_TEXT_MAX_WIDTH = 150;
 const MIN_RENDERED_NODE_TEXT_MAX_WIDTH = 132;
+const BASE_TYPE_NODE_FONT_SIZE = 11;
+const MIN_RENDERED_TYPE_NODE_FONT_SIZE = 9;
+const BASE_TYPE_NODE_TEXT_MAX_WIDTH = 126;
+const MIN_RENDERED_TYPE_NODE_TEXT_MAX_WIDTH = 112;
 const PACKAGE_BOX_WIDTH = 220;
 const PACKAGE_BOX_HEIGHT = 92;
 
@@ -122,6 +126,21 @@ function buildGraphStyle() {
       },
     },
     {
+      selector: 'node[type = "type"]',
+      style: {
+        shape: 'round-rectangle',
+        'background-color': '#162b3a',
+        'border-color': 'rgba(124, 212, 255, 0.3)',
+        'border-width': 1.2,
+        color: '#ecf4ff',
+        'font-size': 11,
+        'font-weight': '500',
+        'text-max-width': 126,
+        'text-valign': 'center',
+        'text-margin-y': 0,
+      },
+    },
+    {
       selector: 'node[type = "package"]:childless',
       style: {
         'text-valign': 'center',
@@ -144,11 +163,15 @@ function fitGraph(cy) {
 function updateNodeLabelSizing(cy) {
   const zoom = cy.zoom();
   const textStyle = calculateZoomAdjustedNodeTextStyle(zoom);
+  const typeTextStyle = calculateZoomAdjustedTypeNodeTextStyle(zoom);
 
   cy.style()
       .selector('node')
       .style('font-size', textStyle.fontSize)
       .style('text-max-width', textStyle.textMaxWidth)
+      .selector('node[type = "type"]')
+      .style('font-size', typeTextStyle.fontSize)
+      .style('text-max-width', typeTextStyle.textMaxWidth)
       .update();
 }
 
@@ -180,11 +203,12 @@ export function buildElkGraph(graph) {
 
   const buildElkNode = (node) => {
     const childNodes = nodesByParentId.get(node.id) ?? [];
+    const dimensions = getGraphNodeDimensions(node.type);
 
     return {
       id: node.id,
-      width: node.type === 'package' ? PACKAGE_BOX_WIDTH : 260,
-      height: node.type === 'package' ? PACKAGE_BOX_HEIGHT : 120,
+      width: dimensions.width,
+      height: dimensions.height,
       ...(childNodes.length === 0 ? {} : { children: childNodes.map((childNode) => buildElkNode(childNode)) }),
     };
   };
@@ -257,5 +281,14 @@ export function calculateZoomAdjustedNodeTextStyle(zoom) {
   return {
     fontSize: Math.max(BASE_NODE_FONT_SIZE, MIN_RENDERED_NODE_FONT_SIZE / effectiveZoom),
     textMaxWidth: Math.max(BASE_NODE_TEXT_MAX_WIDTH, MIN_RENDERED_NODE_TEXT_MAX_WIDTH / effectiveZoom),
+  };
+}
+
+export function calculateZoomAdjustedTypeNodeTextStyle(zoom) {
+  const effectiveZoom = zoom > 0 ? zoom : 1;
+
+  return {
+    fontSize: Math.max(BASE_TYPE_NODE_FONT_SIZE, MIN_RENDERED_TYPE_NODE_FONT_SIZE / effectiveZoom),
+    textMaxWidth: Math.max(BASE_TYPE_NODE_TEXT_MAX_WIDTH, MIN_RENDERED_TYPE_NODE_TEXT_MAX_WIDTH / effectiveZoom),
   };
 }

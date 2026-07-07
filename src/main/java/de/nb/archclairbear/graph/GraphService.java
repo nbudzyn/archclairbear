@@ -46,7 +46,7 @@ class GraphService {
       return new GraphResponse(List.of(), List.of());
     }
 
-    var nodes = collectImmediateChildPackages(packageDirectory, packageName);
+    var nodes = collectImmediateChildNodes(packageDirectory, packageName);
 
     return new GraphResponse(nodes, List.of());
   }
@@ -140,13 +140,24 @@ class GraphService {
     return current;
   }
 
-  private List<GraphNode> collectImmediateChildPackages(final Path packageDirectory, final String packageName) {
+  private List<GraphNode> collectImmediateChildNodes(final Path packageDirectory, final String packageName) {
     try (var childPaths = Files.list(packageDirectory)) {
-      return childPaths
+      var childPathList = childPaths.toList();
+
+      var childPackages = childPathList.stream()
           .filter(Files::isDirectory)
           .sorted(Comparator.comparing(path -> path.getFileName().toString()))
           .map(path -> createPackageNode(packageName, path))
           .toList();
+
+      var childTypes = childPathList.stream()
+          .filter(Files::isRegularFile)
+          .filter(GraphService::isVisibleJavaTypeFile)
+          .sorted(Comparator.comparing(path -> path.getFileName().toString()))
+          .map(path -> createTypeNode(packageName, path))
+          .toList();
+
+      return java.util.stream.Stream.concat(childPackages.stream(), childTypes.stream()).toList();
     } catch (final IOException e) {
       throw new IllegalStateException("Workspace-Pfad konnte nicht gelesen werden: " + packageDirectory, e);
     }
@@ -155,6 +166,20 @@ class GraphService {
   private GraphNode createPackageNode(final String parentPackageName, final Path childDirectory) {
     var childPackageName = parentPackageName + "." + childDirectory.getFileName().toString();
     return new GraphNode(childPackageName, "package", childDirectory.getFileName().toString(), parentPackageName);
+  }
+
+  private GraphNode createTypeNode(final String parentPackageName, final Path typeFile) {
+    var typeFileName = typeFile.getFileName().toString();
+    var typeName = typeFileName.substring(0, typeFileName.length() - ".java".length());
+    var typeId = parentPackageName + "." + typeName;
+    return new GraphNode(typeId, "type", typeName, parentPackageName);
+  }
+
+  private static boolean isVisibleJavaTypeFile(final Path path) {
+    var fileName = path.getFileName().toString();
+    return fileName.endsWith(".java")
+        && !"package-info.java".equals(fileName)
+        && !"module-info.java".equals(fileName);
   }
 
   /**

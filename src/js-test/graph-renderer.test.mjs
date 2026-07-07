@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { buildElkGraph, calculateZoomAdjustedNodeTextStyle } from '../main/resources/static/graph-renderer.mjs';
+import { buildElkGraph, calculateZoomAdjustedNodeTextStyle, calculateZoomAdjustedTypeNodeTextStyle } from '../main/resources/static/graph-renderer.mjs';
 
 test('calculateZoomAdjustedNodeTextStyle hält die Mindestschriftgröße bei kleinem Zoom', () => {
   // WHEN
@@ -22,6 +22,17 @@ test('calculateZoomAdjustedNodeTextStyle bleibt bei normalem Zoom auf der Basisg
   assert.deepEqual(textStyle, {
     fontSize: 12,
     textMaxWidth: 150,
+  });
+});
+
+test('calculateZoomAdjustedTypeNodeTextStyle bleibt bei normalem Zoom auf der Typ-Basisgröße', () => {
+  // WHEN
+  const textStyle = calculateZoomAdjustedTypeNodeTextStyle(1);
+
+  // THEN
+  assert.deepEqual(textStyle, {
+    fontSize: 11,
+    textMaxWidth: 126,
   });
 });
 
@@ -50,6 +61,12 @@ test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
         id: 'model',
         label: 'model',
         type: 'package',
+        parentId: 'lay04b_object',
+      },
+      {
+        id: 'lay04b_object.Action',
+        label: 'Action',
+        type: 'type',
         parentId: 'lay04b_object',
       },
     ],
@@ -84,6 +101,11 @@ test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
                 id: 'model',
                 width: 220,
                 height: 92,
+              },
+              {
+                id: 'lay04b_object.Action',
+                width: 180,
+                height: 64,
               },
             ],
           },

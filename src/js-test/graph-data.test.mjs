@@ -18,6 +18,12 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
         type: 'package',
         parentId: 'de.aventiure',
       },
+      {
+        id: 'de.aventiure.lay05_being.Action',
+        label: 'Action',
+        type: 'type',
+        parentId: 'de.aventiure.lay05_being',
+      },
     ],
     edges: [],
   };
@@ -40,6 +46,12 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
         label: 'lay05_being',
         type: 'package',
         parentId: 'de.aventiure',
+      },
+      {
+        id: 'de.aventiure.lay05_being.Action',
+        label: 'Action',
+        type: 'type',
+        parentId: 'de.aventiure.lay05_being',
       },
     ],
     edges: [],
@@ -64,7 +76,17 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
         parent: 'de.aventiure',
       },
     },
-  ]);
+    {
+      data: {
+        id: 'de.aventiure.lay05_being.Action',
+        label: 'Action',
+        type: 'type',
+        width: 180,
+        height: 64,
+        parent: 'de.aventiure.lay05_being',
+      },
+    },
+    ]);
 });
 
 test('normalizeGraph wirft bei ungültigen Graphdaten', () => {
@@ -161,6 +183,12 @@ test('collapseGraph entfernt einen Package-Knoten mit allen sichtbaren Nachfahre
         id: 'de.aventiure.lay05_being.model',
         label: 'model',
         type: 'package',
+        parentId: 'de.aventiure.lay05_being',
+      },
+      {
+        id: 'de.aventiure.lay05_being.Action',
+        label: 'Action',
+        type: 'type',
         parentId: 'de.aventiure.lay05_being',
       },
       {

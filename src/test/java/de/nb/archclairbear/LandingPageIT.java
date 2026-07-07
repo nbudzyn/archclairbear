@@ -44,7 +44,7 @@ class LandingPageIT {
     assertThat(doc) //
         .contains("ArchClairBear") //
         .contains("Cytoscape") //
-        .contains("Packages lassen sich per Doppelklick auf- und wieder zuklappen.") //
+        .contains("Packages und Typen lassen sich per Doppelklick auf- und wieder zuklappen.") //
         .contains("Graphdaten werden geladen") //
         .doesNotHaveElement(".placeholder");
 
@@ -57,7 +57,7 @@ class LandingPageIT {
         .hasElement("#cy") //
         .hasElement("script[src=\"/webjars/cytoscape/3.33.1/dist/cytoscape.min.js\"]") //
         .hasElement("script[src=\"/vendor/elkjs/elk.bundled.js\"]") //
-        .hasElement("script[src=\"/graph-app.js?v=package-boxes-15\"]");
+        .hasElement("script[src=\"/graph-app.js?v=package-boxes-16\"]");
   }
 
   @Test
