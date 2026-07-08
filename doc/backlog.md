@@ -3,17 +3,12 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Beschriftung (Label) von AUFGEKLAPPTEN Type-Knoten nicht mittig, sondern oben am Rand (genau wie bei aufgeklappten Package-Knoten)
-
-Die Beschriftung (Label) von AUFGEKLAPPTEN Type-Knoten soll nicht mittig sitzen, sondern oben am Rand (genau wie bei aufgeklappten
-Package-Knoten).
-
-- Die Beschriftung von ZUGEKLAPPTEN Knoten hingegen soll immer mittig sitzen (bei Package- und Type-Knoten).
-
 ## Beschriftung (Label) von AUFGEKLAPPTEN Knoten lesbar
 
-Die Beschriftung (Label) von AUFGEKLAPPTEN Knoten soll ganz lesbar sein - im Moment wird sie durch die inneren Knoten überdeckt.
-Der aufgeklappte Knoten braucht doppelt so viel "inneren Rand" - das dürfte alles sein.
+Die Beschriftung (Label) von AUFGEKLAPPTEN Knoten soll ganz lesbar sein - im Moment wird die untere Hälfte durch die inneren Knoten
+überdeckt.
+
+- Der aufgeklappte (äußere) Knoten braucht doppelt so viel "inneren Rand" - das dürfte alles sein.
 
 ## Abhängigkeiten als Pfeile darstellen
 
