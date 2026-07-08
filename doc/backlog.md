@@ -3,18 +3,23 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Java-Typen und Packages aus Code lesen
+## Abhängigkeiten als Pfeile darstellen
 
-Die angezeigten Packages und Typen (Klassen, Interfaces, Enums) werden aus dem Code gelesen.
+Der Graph zeigt statische Abhängigkeiten als gerichtete Pfeile.
+Zuerst können Abhängigkeiten zwischen Java-Typen sichtbar werden; anschließend können zugeklappte Packages aggregierte
+Package-Abhängigkeiten darstellen.
 
-- Die Package-Struktur wird nicht mehr aus Verzeichnissen abgeleitet!
-- Die .java-Dateinamen werden irrelevant
-  Innere Typen (verschachtelt) werden zunächst nicht angezeigt.
+## Top-Level-Typen unterscheiden
 
-Wir verwenden eine aktuelle, gut gepflegte Open-Source-Bibliothek, die mit den neuen Java-Versionen arbeiten kann und voraussichtlich auch
-in Zukunft gut gepflegt werden wird. Bibliothek auf Sicherheits-Risiken prüfen und Risiken auszuschließen.
+Der Client erfährt, ob ein Typ ein `class`, `interface`, `enum`, `record` oder Annotation-Typ ist.
 
-Tests!
+- Die Typen werden in diesem Schritt noch nicht unterschiedlich gerendert.
+- Die Information wird nur fachlich transportiert und für spätere Darstellungen vorbereitet.
+- Verschachtelte Typen bleiben auch hier zunächst außen vor.
+
+## Verschachtelte Typen verschachelt anzeigen
+
+Verschachtelte Typen (nicht Top-Level) werden verschachtelt angezeigt.
 
 ## Smooth animation when layout changes
 
@@ -24,12 +29,6 @@ When the layout changes (box moves somewhere else on double-click), the layout s
 
 Der Nutzer kann erkennen, welche Package-Knoten weitere sichtbare Package-Kinder haben.
 Package-Knoten ohne weitere Kinder wirken nicht wie interaktive Aufklapp-Knoten.
-
-## Abhängigkeiten als Pfeile darstellen
-
-Der Graph zeigt statische Abhängigkeiten als gerichtete Pfeile.
-Zuerst können Abhängigkeiten zwischen Java-Typen sichtbar werden; anschließend können zugeklappte Packages aggregierte
-Package-Abhängigkeiten darstellen.
 
 ## Workspace-Pfad konfigurierbar machen
 

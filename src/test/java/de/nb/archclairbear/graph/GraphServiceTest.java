@@ -16,10 +16,14 @@ class GraphServiceTest {
   private Path tempDir;
 
   @Test
-  void rootGraphReturnsCollapsedFirstVisiblePackage() throws IOException {
+  void rootGraphReturnsTheCommonRootPackageFromPackageDeclarations() throws IOException {
     // GIVEN
-    createJavaFile("de", "aventiure", "common", "CommonType.java");
-    createJavaFile("de", "aventiure", "story", "StoryType.java");
+    createJavaSource(
+        "package de.aventiure.lay05_being; class First {}",
+        "nested", "layout", "First.java");
+    createJavaSource(
+        "package de.aventiure.lay05_being.model; class Second {}",
+        "another", "layout", "Second.java");
     var graphService = new GraphService(tempDir);
 
     // WHEN
@@ -27,52 +31,40 @@ class GraphServiceTest {
 
     // THEN
     assertThat(graph.nodes())
-        .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure"));
+        .containsExactly(new GraphNode("de.aventiure.lay05_being", "package", "de.aventiure.lay05_being"));
     assertThat(graph.edges()).isEmpty();
+    assertThat(graph.statusMessage()).isNull();
   }
 
   @Test
-  void rootGraphSkipsEmptyPackagesWithoutJavaAndWithoutSeveralSubpackages() throws IOException {
+  void packageGraphReturnsTopLevelTypesFromThePackageAndSkipsNestedTypes() throws IOException {
     // GIVEN
-    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "empty", "nested")));
-    createJavaFile("de", "aventiure", "core", "CoreType.java");
-    createJavaFile("de", "aventiure", "world", "WorldType.java");
-    var graphService = new GraphService(tempDir);
+    createJavaSource(
+        """
+            package de.aventiure.lay05_being;
 
-    // WHEN
-    var graph = graphService.rootGraph();
+            enum Kind {
+              A
+            }
 
-    // THEN
-    assertThat(graph.nodes())
-        .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure"));
-    assertThat(graph.edges()).isEmpty();
-  }
+            record SampleRecord(int value) {
+            }
 
-  @Test
-  void packageGraphReturnsVisibleChildrenForExpandedPackage() throws IOException {
-    // GIVEN
-    createJavaFile("de", "aventiure", "lay05_being", "BeingLayer.java");
-    createJavaFile("de", "aventiure", "lay05_being", "model", "being", "Being.java");
-    createJavaFile("de", "aventiure", "lay06b_world", "World.java");
-    var graphService = new GraphService(tempDir);
+            @interface Marker {
+            }
 
-    // WHEN
-    var graph = graphService.packageGraph("de.aventiure");
+            class PackagePrivateType {
+            }
 
-    // THEN
-    assertThat(graph.nodes())
-        .containsExactly(
-            new GraphNode("de.aventiure.lay05_being", "package", "lay05_being", "de.aventiure"),
-            new GraphNode("de.aventiure.lay06b_world", "package", "lay06b_world", "de.aventiure"));
-    assertThat(graph.edges()).isEmpty();
-  }
-
-  @Test
-  void packageGraphReturnsImmediateChildPackagesAndTypes() throws IOException {
-    // GIVEN
-    createJavaFile("de", "aventiure", "lay05_being", "BeingLayer.java");
-    createJavaFile("de", "aventiure", "lay05_being", "model", "being", "Being.java");
-    createJavaFile("de", "aventiure", "lay05_being", "Action.java");
+            class Outer {
+              class Nested {
+              }
+            }
+            """,
+        "wrong", "layout", "Types.java");
+    createJavaSource(
+        "package de.aventiure.lay05_being.model; class ChildType {}",
+        "another", "layout", "ChildType.java");
     var graphService = new GraphService(tempDir);
 
     // WHEN
@@ -82,9 +74,47 @@ class GraphServiceTest {
     assertThat(graph.nodes())
         .containsExactly(
             new GraphNode("de.aventiure.lay05_being.model", "package", "model", "de.aventiure.lay05_being"),
-            new GraphNode("de.aventiure.lay05_being.Action", "type", "Action", "de.aventiure.lay05_being"),
-            new GraphNode("de.aventiure.lay05_being.BeingLayer", "type", "BeingLayer", "de.aventiure.lay05_being"));
+            new GraphNode("de.aventiure.lay05_being.Kind", "type", "Kind", "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.Marker", "type", "Marker", "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.Outer", "type", "Outer", "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.PackagePrivateType", "type", "PackagePrivateType", "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.SampleRecord", "type", "SampleRecord", "de.aventiure.lay05_being"));
     assertThat(graph.edges()).isEmpty();
+    assertThat(graph.statusMessage()).isNull();
+  }
+
+  @Test
+  void rootGraphReturnsTheDefaultPackageWhenNoPackageDeclarationExists() throws IOException {
+    // GIVEN
+    createJavaSource("class DefaultThing {}", "DefaultThing.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var graph = graphService.rootGraph();
+
+    // THEN
+    assertThat(graph.nodes())
+        .containsExactly(new GraphNode("(default)", "package", "(default)"));
+    assertThat(graph.edges()).isEmpty();
+    assertThat(graph.statusMessage()).isNull();
+  }
+
+  @Test
+  void rootGraphReportsPartialAnalysisWithAStatusHintWhenAFileHasParseProblems() throws IOException {
+    // GIVEN
+    createJavaSource("package de.aventiure; class ValidType {}", "ValidType.java");
+    createJavaSource("package de.aventiure; class BrokenType { void oops( }", "BrokenType.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var graph = graphService.rootGraph();
+
+    // THEN
+    assertThat(graph.nodes())
+        .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure"));
+    assertThat(graph.edges()).isEmpty();
+    assertThat(graph.statusMessage())
+        .isEqualTo("Teilweise analysiert: 1 Datei konnte nicht vollständig gelesen werden.");
   }
 
   @Test
@@ -99,9 +129,9 @@ class GraphServiceTest {
         .withMessage("Der Workspace-Pfad " + missingDirectory + " wurde nicht gefunden.");
   }
 
-  private void createJavaFile(final String... pathSegments) throws IOException {
+  private void createJavaSource(final String source, final String... pathSegments) throws IOException {
     var path = tempDir.resolve(Path.of(pathSegments[0], java.util.Arrays.copyOfRange(pathSegments, 1, pathSegments.length)));
     Files.createDirectories(path.getParent());
-    Files.writeString(path, "class Test {}");
+    Files.writeString(path, source);
   }
 }

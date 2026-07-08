@@ -14,9 +14,12 @@ Es hilft beim:
 
 ## Knotentypen
 
-- Verzeichnisbaum
 - Package
-- Klasse, Interface, Enum
+- Klasse
+- Interface
+- Enum
+- Record
+- Annotation
 
 ## Interaktionsmodell
 

@@ -2,27 +2,27 @@
 
 **English**
 
-ArchClairBear is a planned browser-based architecture explorer for Java codebases.
+ArchClairBear is a browser-based architecture explorer for Java codebases.
 
-The idea is to:
+It:
 
-- read Java source code from a local workspace,
-- analyze static dependencies on the server,
-- build a hierarchical graph of directories, packages, and types,
-- send graph data to the browser,
-- and let the client render and navigate the structure with expand/collapse, hover, zoom, pan, and drag.
+- reads Java source code from a fixed, configured workspace path,
+- analyzes the code on the server with JavaParser,
+- builds a hierarchical graph of packages and top-level types from `package` declarations,
+- sends graph data to the browser,
+- and lets the client render and navigate the structure with expand/collapse, hover, zoom, pan, and drag.
 
 **Deutsch**
 
-ArchClairBear ist ein geplanter browserbasierter Architektur-Explorer für Java-Codebasen.
+ArchClairBear ist ein browserbasierter Architektur-Explorer für Java-Codebasen.
 
-Die Idee ist:
+Er:
 
-- Java-Quelltext aus einem lokalen Workspace zu lesen,
-- statische Abhängigkeiten serverseitig zu analysieren,
-- einen hierarchischen Graphen aus Verzeichnissen, Packages und Typen aufzubauen,
-- Graphdaten an den Browser zu senden,
-- und dort die Struktur mit Auf- und Zuklappen, Hover, Zoom, Pan und Drag darzustellen und zu erkunden.
+- liest Java-Quelltext aus einem fest konfigurierten Workspace-Pfad,
+- analysiert den Quelltext serverseitig mit JavaParser,
+- baut einen hierarchischen Graphen aus Packages und Top-Level-Typen auf Basis der `package`-Deklaration auf,
+- sendet Graphdaten an den Browser,
+- und stellt dort die Struktur mit Auf- und Zuklappen, Hover, Zoom, Pan und Drag dar.
 
 ## Entwicklung
 

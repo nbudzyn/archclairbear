@@ -29,7 +29,8 @@ export async function startGraphApp({
   graphStatusController.showLoading('Graphdaten werden geladen ...');
 
   try {
-    let graph = normalizeGraph(await loadGraphImpl(fetchImpl, requestUrl));
+    const loadedGraph = await loadGraphImpl(fetchImpl, requestUrl);
+    let graph = normalizeGraph(loadedGraph);
     const renderState = await renderGraphImpl(graph, {
       cytoscape,
       container,
@@ -44,16 +45,26 @@ export async function startGraphApp({
             return;
           }
 
-          const expandedGraph = normalizeGraph(await loadGraphImpl(fetchImpl, packageRequestUrlFactory(nodeId)));
+          const expandedLoadedGraph = await loadGraphImpl(fetchImpl, packageRequestUrlFactory(nodeId));
+          const expandedGraph = normalizeGraph(expandedLoadedGraph);
           graph = mergeGraphs(graph, expandedGraph);
           await renderState.appendGraph(graph);
+          if (typeof expandedLoadedGraph.statusMessage === 'string' && expandedLoadedGraph.statusMessage.length > 0) {
+            graphStatusController.showStatus(expandedLoadedGraph.statusMessage);
+          } else {
+            graphStatusController.hideStatus();
+          }
         } catch (error) {
           console.error(`Failed to toggle package ${nodeId}.`, error);
           graphStatusController.showError(createUserFacingErrorMessage(error));
         }
       });
     }
-    graphStatusController.hideStatus();
+    if (typeof loadedGraph.statusMessage === 'string' && loadedGraph.statusMessage.length > 0) {
+      graphStatusController.showStatus(loadedGraph.statusMessage);
+    } else {
+      graphStatusController.hideStatus();
+    }
     return renderState;
   } catch (error) {
     console.error('Failed to load root graph.', error);

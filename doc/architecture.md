@@ -7,16 +7,16 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 ## Grobe Aufteilung
 
 - Server: Spring Boot
-- Client: HTML/CSS/JavaScript mit Cytoscape; evtl. später TypeScript
+- Client: HTML/CSS/JavaScript mit Cytoscape
 
 ## Zuständigkeiten
 
 ### Server
 
 - Spring Boot
-- Liest Java-Quelltext aus einem lokalen Workspace-Pfad.
-- Analysiert den Quelltext und extrahiert statische Abhängigkeiten.
-- Baut ein hierarchisches Graphmodell.
+- Liest Java-Quelltext aus einem fest konfigurierten Workspace-Pfad.
+- Analysiert den Quelltext mit JavaParser und extrahiert statische Abhängigkeiten.
+- Baut ein hierarchisches Graphmodell aus Packages und Top-Level-Typen auf Basis der `package`-Deklaration.
 - Stellt die Graphdaten bereit.
 - Unterstützt Initial-Load und Nachladen.
 - Bleibt im Web-/Session-Sinn stateless: kein `HttpSession`-Zustand, kein serverseitiges Merken von Aufklappzuständen oder benutzerspezifischem Graphzustand.
@@ -38,13 +38,13 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 ## Datenübertragung
 
 - Kein roher Quelltext als primäre Nutzlast an den Browser.
-- Stattdessen analysierte Graphdaten.
+- Stattdessen analysierte Graphdaten mit Packages und Top-Level-Typen.
 - Zuerst ein Initial-Graph für die Übersicht.
-- Danach Nachladeanfragen für tiefere Ebenen und Details.
+- Danach Nachladeanfragen für direkt geöffnete Packages und deren Inhalte.
 
 ## Graphmodell
 
-- Knoten stehen für Verzeichnisbäume, Packages und konkrete Typen.
+- Knoten stehen für Packages und konkrete Top-Level-Typen.
 - Kanten stehen für statische Abhängigkeiten zwischen einzelnen Knoten.
 - Der Graph ist hierarchisch und kann pro Knoten auf- und zugeklappt werden.
 - Geöffnete Packages dürfen als Boxen in Boxen dargestellt werden; Überlappungen zwischen Geschwistern sollen vermieden werden.

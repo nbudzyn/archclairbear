@@ -77,6 +77,58 @@ test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', a
   });
 });
 
+test('startGraphApp zeigt einen kleinen Statushinweis aus den Graphdaten', async () => {
+  // GIVEN
+  const statusMessage = { textContent: '' };
+  const errorMessage = { textContent: '' };
+  const statusElement = { hidden: true, querySelector: () => statusMessage };
+  const errorElement = { hidden: true, querySelector: () => errorMessage };
+  const originalConsoleError = console.error;
+
+  // WHEN
+  console.error = () => {};
+
+  try {
+    await startGraphApp({
+      container: { id: 'cy' },
+      errorElement,
+      fetchImpl: async () => {
+        throw new Error('fetchImpl should not be used in this test.');
+      },
+      graphErrorMessage: errorMessage,
+      graphStatus: statusElement,
+      graphStatusMessage: statusMessage,
+      loadGraphImpl: async () => ({
+        nodes: [
+          {
+            id: 'de.aventiure',
+            label: 'de.aventiure',
+            type: 'package',
+          },
+        ],
+        edges: [],
+        statusMessage: 'Teilweise analysiert: 1 Datei konnte nicht vollständig gelesen werden.',
+      }),
+      renderGraphImpl: () => ({
+        destroy() {},
+      }),
+      requestUrl: '/api/graph/root',
+      windowObject: {
+        addEventListener() {},
+        removeEventListener() {},
+      },
+      cytoscape: {},
+    });
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  // THEN
+  assert.equal(statusElement.hidden, false);
+  assert.equal(errorElement.hidden, true);
+  assert.equal(statusMessage.textContent, 'Teilweise analysiert: 1 Datei konnte nicht vollständig gelesen werden.');
+});
+
 test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sichtbaren Graphen als Kind-Box', async () => {
   // GIVEN
   const statusMessage = { textContent: '' };

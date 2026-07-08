@@ -35,10 +35,14 @@ class GraphControllerIT {
   @Test
   void rootGraphReturnsMinimalGraphJson() throws Exception {
     // GIVEN
-    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "common")));
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "common", "CommonType.java")), "class CommonType {}");
-    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "story")));
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "story", "StoryType.java")), "class StoryType {}");
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "common")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "common", "CommonType.java")),
+        "package de.aventiure.common; class CommonType {}");
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "story")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "story", "StoryType.java")),
+        "package de.aventiure.story; class StoryType {}");
     var controller = new GraphController(new GraphService(tempDir));
     var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
         .setControllerAdvice(new GraphExceptionHandler())
@@ -62,11 +66,17 @@ class GraphControllerIT {
   @Test
   void packageGraphReturnsChildrenForExpandedPackage() throws Exception {
     // GIVEN
-    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being")));
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "BeingLayer.java")), "class BeingLayer {}");
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being", "Being.java")), "class Being {}");
-    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "lay06b_world")));
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay06b_world", "World.java")), "class World {}");
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "lay05_being", "model", "being")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "lay05_being", "BeingLayer.java")),
+        "package de.aventiure.lay05_being; class BeingLayer {}");
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "lay05_being", "model", "being", "Being.java")),
+        "package de.aventiure.lay05_being.model.being; class Being {}");
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "lay06b_world")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "lay06b_world", "World.java")),
+        "package de.aventiure.lay06b_world; class World {}");
     var controller = new GraphController(new GraphService(tempDir));
     var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
         .setControllerAdvice(new GraphExceptionHandler())
@@ -93,10 +103,16 @@ class GraphControllerIT {
   @Test
   void packageGraphReturnsImmediateChildPackagesAndTypes() throws Exception {
     // GIVEN
-    Files.createDirectories(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being")));
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "BeingLayer.java")), "class BeingLayer {}");
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "model", "being", "Being.java")), "class Being {}");
-    Files.writeString(tempDir.resolve(Path.of("de", "aventiure", "lay05_being", "Action.java")), "class Action {}");
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "lay05_being", "model", "being")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "lay05_being", "BeingLayer.java")),
+        "package de.aventiure.lay05_being; class BeingLayer {}");
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "lay05_being", "model", "being", "Being.java")),
+        "package de.aventiure.lay05_being.model.being; class Being {}");
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "lay05_being", "Action.java")),
+        "package de.aventiure.lay05_being; class Action {}");
     var controller = new GraphController(new GraphService(tempDir));
     var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
         .setControllerAdvice(new GraphExceptionHandler())
