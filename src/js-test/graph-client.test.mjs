@@ -35,6 +35,7 @@ test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', a
               id: 'de.aventiure',
               label: 'de.aventiure',
               type: 'package',
+              expandable: true,
             },
           ],
           edges: [],
@@ -70,6 +71,7 @@ test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', a
         id: 'de.aventiure',
         label: 'de.aventiure',
         type: 'package',
+        expandable: true,
         parentId: null,
       },
     ],
@@ -104,6 +106,7 @@ test('startGraphApp zeigt einen kleinen Statushinweis aus den Graphdaten', async
             id: 'de.aventiure',
             label: 'de.aventiure',
             type: 'package',
+            expandable: true,
           },
         ],
         edges: [],
@@ -158,11 +161,12 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
         if (requestUrl === '/api/graph/root') {
           return {
             nodes: [
-              {
-                id: 'de.aventiure',
-                label: 'de.aventiure',
-                type: 'package',
-              },
+            {
+              id: 'de.aventiure',
+              label: 'de.aventiure',
+              type: 'package',
+              expandable: true,
+            },
             ],
             edges: [],
           };
@@ -174,6 +178,7 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
               id: 'de.aventiure.lay05_being',
               label: 'lay05_being',
               type: 'package',
+              expandable: false,
               parentId: 'de.aventiure',
             },
           ],
@@ -232,12 +237,14 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
           id: 'de.aventiure',
           label: 'de.aventiure',
           type: 'package',
+          expandable: true,
           parentId: null,
         },
         {
           id: 'de.aventiure.lay05_being',
           label: 'lay05_being',
           type: 'package',
+          expandable: false,
           parentId: 'de.aventiure',
         },
       ],
@@ -276,11 +283,12 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
         if (requestUrl === '/api/graph/root') {
           return {
             nodes: [
-              {
-                id: 'de.aventiure',
-                label: 'de.aventiure',
-                type: 'package',
-              },
+            {
+              id: 'de.aventiure',
+              label: 'de.aventiure',
+              type: 'package',
+              expandable: true,
+            },
             ],
             edges: [],
           };
@@ -289,12 +297,13 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
         if (requestUrl === '/api/graph/package?packageName=de.aventiure') {
           return {
             nodes: [
-              {
-                id: 'de.aventiure.Outer',
-                label: 'Outer',
-                type: 'type',
-                parentId: 'de.aventiure',
-              },
+            {
+              id: 'de.aventiure.Outer',
+              label: 'Outer',
+              type: 'type',
+              expandable: true,
+              parentId: 'de.aventiure',
+            },
             ],
             edges: [],
           };
@@ -306,6 +315,7 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
               id: 'de.aventiure.Outer.Inner',
               label: 'Inner',
               type: 'type',
+              expandable: true,
               parentId: 'de.aventiure.Outer',
             },
           ],
@@ -400,12 +410,14 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
           id: 'de.aventiure',
           label: 'de.aventiure',
           type: 'package',
+          expandable: true,
           parentId: null,
         },
         {
           id: 'de.aventiure.Outer',
           label: 'Outer',
           type: 'type',
+          expandable: true,
           parentId: 'de.aventiure',
         },
       ],
@@ -417,24 +429,112 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
           id: 'de.aventiure',
           label: 'de.aventiure',
           type: 'package',
+          expandable: true,
           parentId: null,
         },
         {
           id: 'de.aventiure.Outer',
           label: 'Outer',
           type: 'type',
+          expandable: true,
           parentId: 'de.aventiure',
         },
         {
           id: 'de.aventiure.Outer.Inner',
           label: 'Inner',
           type: 'type',
+          expandable: true,
           parentId: 'de.aventiure.Outer',
         },
       ],
       edges: [],
     },
   ]);
+});
+
+test('startGraphApp lädt keinen nicht aufklappbaren Knoten nach', async () => {
+  // GIVEN
+  const statusMessage = { textContent: '' };
+  const errorMessage = { textContent: '' };
+  const statusElement = { hidden: true, querySelector: () => statusMessage };
+  const errorElement = { hidden: true, querySelector: () => errorMessage };
+  const appendCalls = [];
+  const loadCalls = [];
+  const tapHandlers = [];
+  const originalConsoleError = console.error;
+  let now = 1000;
+
+  // WHEN
+  console.error = () => {};
+
+  try {
+    await startGraphApp({
+      container: { id: 'cy' },
+      errorElement,
+      fetchImpl: async () => {
+        throw new Error('fetchImpl should not be used in this test.');
+      },
+      graphErrorMessage: errorMessage,
+      graphStatus: statusElement,
+      graphStatusMessage: statusMessage,
+      loadGraphImpl: async (_fetchImpl, requestUrl) => {
+        loadCalls.push(requestUrl);
+        return {
+          nodes: [
+            {
+              id: 'de.aventiure',
+              label: 'de.aventiure',
+              type: 'package',
+              expandable: false,
+            },
+          ],
+          edges: [],
+        };
+      },
+      renderGraphImpl: () => ({
+        appendGraph(graph) {
+          appendCalls.push(graph);
+        },
+        cy: {
+          on(eventName, selector, handler) {
+            tapHandlers.push({ eventName, selector, handler });
+          },
+        },
+        destroy() {},
+      }),
+      timeSource: () => now,
+      requestUrl: '/api/graph/root',
+      windowObject: {
+        addEventListener() {},
+        removeEventListener() {},
+      },
+      cytoscape: {},
+    });
+
+    const handler = tapHandlers[0].handler;
+    handler({
+      target: {
+        data(fieldName) {
+          return fieldName === 'id' ? 'de.aventiure' : undefined;
+        },
+      },
+    });
+    now += 150;
+    handler({
+      target: {
+        data(fieldName) {
+          return fieldName === 'id' ? 'de.aventiure' : undefined;
+        },
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  // THEN
+  assert.deepEqual(loadCalls, ['/api/graph/root']);
+  assert.deepEqual(appendCalls, []);
 });
 
 test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wieder zu', async () => {
@@ -467,11 +567,12 @@ test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wied
         if (requestUrl === '/api/graph/root') {
           return {
             nodes: [
-              {
-                id: 'de.aventiure',
-                label: 'de.aventiure',
-                type: 'package',
-              },
+            {
+              id: 'de.aventiure',
+              label: 'de.aventiure',
+              type: 'package',
+              expandable: true,
+            },
             ],
             edges: [],
           };
@@ -483,6 +584,7 @@ test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wied
               id: 'de.aventiure.lay05_being',
               label: 'lay05_being',
               type: 'package',
+              expandable: false,
               parentId: 'de.aventiure',
             },
           ],
@@ -559,12 +661,14 @@ test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wied
           id: 'de.aventiure',
           label: 'de.aventiure',
           type: 'package',
+          expandable: true,
           parentId: null,
         },
         {
           id: 'de.aventiure.lay05_being',
           label: 'lay05_being',
           type: 'package',
+          expandable: false,
           parentId: 'de.aventiure',
         },
       ],
@@ -576,6 +680,7 @@ test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wied
           id: 'de.aventiure',
           label: 'de.aventiure',
           type: 'package',
+          expandable: true,
           parentId: null,
         },
       ],
@@ -661,11 +766,12 @@ test('startGraphApp zeigt bei ungültigen Daten eine verständliche Fehlermeldun
       graphStatusMessage: statusMessage,
       loadGraphImpl: async () => ({
         nodes: [
-          {
-            id: 'de.aventiure',
-            label: 'de.aventiure',
-            type: 'package',
-          },
+            {
+              id: 'de.aventiure',
+              label: 'de.aventiure',
+              type: 'package',
+              expandable: true,
+            },
         ],
         edges: [
           {

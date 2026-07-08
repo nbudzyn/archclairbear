@@ -6,10 +6,6 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
-import com.github.javaparser.ast.body.AnnotationDeclaration;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.EnumDeclaration;
-import com.github.javaparser.ast.body.RecordDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -54,7 +50,7 @@ class GraphService {
     }
 
     return new GraphResponse(
-        List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null)),
+        List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null, workspaceIndex.packages())),
         List.of(),
         workspaceIndex.statusMessage());
   }
@@ -71,7 +67,7 @@ class GraphService {
 
     var nodes = new ArrayList<GraphNode>();
     packageContent.childPackageNames().stream()
-        .map(childPackageName -> createPackageNode(childPackageName, normalizedPackageName))
+        .map(childPackageName -> createPackageNode(childPackageName, normalizedPackageName, workspaceIndex.packages()))
         .forEach(nodes::add);
     packageContent.types().stream()
         .map(typeInfo -> createTypeNode(typeInfo, normalizedPackageName))
@@ -269,19 +265,25 @@ class GraphService {
     return String.join(".", prefixSegments);
   }
 
-  private GraphNode createPackageNode(final String packageName, final String parentPackageName) {
+  private GraphNode createPackageNode(
+      final String packageName,
+      final String parentPackageName,
+      final Map<String, PackageContent> packageContents) {
     var packageLabel = parentPackageName == null
         ? displayPackageName(packageName)
         : relativePackageName(packageName, parentPackageName);
     var packageId = displayPackageName(packageName);
+    var packageContent = packageContents.get(packageName);
+    var expandable = packageContent != null
+        && (!packageContent.childPackageNames().isEmpty() || !packageContent.types().isEmpty());
 
     return parentPackageName == null
-        ? new GraphNode(packageId, "package", packageLabel)
-        : new GraphNode(packageId, "package", packageLabel, displayPackageName(parentPackageName));
+        ? new GraphNode(packageId, "package", packageLabel, expandable, null)
+        : new GraphNode(packageId, "package", packageLabel, expandable, displayPackageName(parentPackageName));
   }
 
   private GraphNode createTypeNode(final TypeInfo typeInfo, final String packageName) {
-    return new GraphNode(typeInfo.id(), "type", typeInfo.name(), packageName);
+    return new GraphNode(typeInfo.id(), "type", typeInfo.name(), !typeInfo.nestedTypes().isEmpty(), packageName);
   }
 
   private TypeInfo createTypeInfo(

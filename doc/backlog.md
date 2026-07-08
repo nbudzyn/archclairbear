@@ -3,9 +3,12 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Aufklappbare Knoten erkennbar machen
+## Beschriftung (Label) von AUFGEKLAPPTEN Type-Knoten nicht mittig, sondern oben am Rand (genau wie bei aufgeklappten Package-Knoten)
 
-Der Nutzer kann erkennen, welche Knoten (Package oder Typ) weitere sichtbare Package-Kinder haben (wo ein Aufklappen etwas bewirkt)
+Die Beschriftung (Label) von AUFGEKLAPPTEN Type-Knoten soll nicht mittig sitzen, sondern oben am Rand (genau wie bei aufgeklappten
+Package-Knoten).
+
+- Die Beschriftung von ZUGEKLAPPTEN Knoten hingegen soll immer mittig sitzen (bei Package- und Type-Knoten).
 
 ## Abhängigkeiten als Pfeile darstellen
 

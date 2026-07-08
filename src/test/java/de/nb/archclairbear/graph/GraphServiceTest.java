@@ -31,7 +31,7 @@ class GraphServiceTest {
 
     // THEN
     assertThat(graph.nodes())
-        .containsExactly(new GraphNode("de.aventiure.lay05_being", "package", "de.aventiure.lay05_being"));
+        .containsExactly(new GraphNode("de.aventiure.lay05_being", "package", "de.aventiure.lay05_being", true, null));
     assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
@@ -73,12 +73,12 @@ class GraphServiceTest {
     // THEN
     assertThat(graph.nodes())
         .containsExactly(
-            new GraphNode("de.aventiure.lay05_being.model", "package", "model", "de.aventiure.lay05_being"),
-            new GraphNode("de.aventiure.lay05_being.Kind", "type", "Kind", "de.aventiure.lay05_being"),
-            new GraphNode("de.aventiure.lay05_being.Marker", "type", "Marker", "de.aventiure.lay05_being"),
-            new GraphNode("de.aventiure.lay05_being.Outer", "type", "Outer", "de.aventiure.lay05_being"),
-            new GraphNode("de.aventiure.lay05_being.PackagePrivateType", "type", "PackagePrivateType", "de.aventiure.lay05_being"),
-            new GraphNode("de.aventiure.lay05_being.SampleRecord", "type", "SampleRecord", "de.aventiure.lay05_being"));
+            new GraphNode("de.aventiure.lay05_being.model", "package", "model", true, "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.Kind", "type", "Kind", false, "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.Marker", "type", "Marker", false, "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.Outer", "type", "Outer", true, "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.PackagePrivateType", "type", "PackagePrivateType", false, "de.aventiure.lay05_being"),
+            new GraphNode("de.aventiure.lay05_being.SampleRecord", "type", "SampleRecord", false, "de.aventiure.lay05_being"));
     assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
@@ -124,14 +124,14 @@ class GraphServiceTest {
     // THEN
     assertThat(outerGraph.nodes())
         .containsExactly(
-            new GraphNode("de.aventiure.Outer.Inner", "type", "Inner", "de.aventiure.Outer"),
-            new GraphNode("de.aventiure.Outer.PrivateInner", "type", "PrivateInner", "de.aventiure.Outer"));
+            new GraphNode("de.aventiure.Outer.Inner", "type", "Inner", true, "de.aventiure.Outer"),
+            new GraphNode("de.aventiure.Outer.PrivateInner", "type", "PrivateInner", false, "de.aventiure.Outer"));
     assertThat(outerGraph.edges()).isEmpty();
     assertThat(outerGraph.statusMessage()).isNull();
 
     assertThat(innerGraph.nodes())
         .containsExactly(
-            new GraphNode("de.aventiure.Outer.Inner.Deep", "type", "Deep", "de.aventiure.Outer.Inner"));
+            new GraphNode("de.aventiure.Outer.Inner.Deep", "type", "Deep", false, "de.aventiure.Outer.Inner"));
     assertThat(innerGraph.edges()).isEmpty();
     assertThat(innerGraph.statusMessage()).isNull();
   }
@@ -147,7 +147,7 @@ class GraphServiceTest {
 
     // THEN
     assertThat(graph.nodes())
-        .containsExactly(new GraphNode("(default)", "package", "(default)"));
+        .containsExactly(new GraphNode("(default)", "package", "(default)", true, null));
     assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
@@ -164,7 +164,7 @@ class GraphServiceTest {
 
     // THEN
     assertThat(graph.nodes())
-        .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure"));
+        .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure", true, null));
     assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage())
         .isEqualTo("Teilweise analysiert: 1 Datei konnte nicht vollständig gelesen werden.");

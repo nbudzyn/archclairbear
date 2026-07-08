@@ -46,6 +46,10 @@ export async function startGraphApp({
             return;
           }
 
+          if (!isNodeExpandable(graph, nodeId)) {
+            return;
+          }
+
           const requestUrlToLoad = nodeType === 'type'
               ? typeRequestUrlFactory(nodeId)
               : packageRequestUrlFactory(nodeId);
@@ -125,6 +129,10 @@ export function installNodeDoubleClickHandler(cy, onNodeDoubleClick, timeSource 
 
 function hasVisibleChildNodes(graph, nodeId) {
   return graph.nodes.some((node) => node.parentId === nodeId);
+}
+
+function isNodeExpandable(graph, nodeId) {
+  return graph.nodes.some((node) => node.id === nodeId && node.expandable === true);
 }
 
 function createUserFacingErrorMessage(error) {

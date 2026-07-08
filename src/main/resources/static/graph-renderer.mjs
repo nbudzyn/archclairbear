@@ -86,7 +86,7 @@ function buildGraphStyle() {
     {
       selector: 'node',
       style: {
-        label: 'data(label)',
+        label: 'data(displayLabel)',
         color: '#f3f7ff',
         'font-size': BASE_NODE_FONT_SIZE,
         'font-weight': '600',

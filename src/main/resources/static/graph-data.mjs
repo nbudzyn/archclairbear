@@ -19,9 +19,14 @@ export function normalizeGraph(graph) {
 
 export function createGraphElements(graph) {
   const normalizedGraph = normalizeGraph(graph);
+  const expandedNodeIds = new Set(
+      normalizedGraph.nodes
+          .filter((node) => node.parentId != null)
+          .map((node) => node.parentId),
+  );
 
   return [
-    ...normalizedGraph.nodes.map((node) => createNodeElement(node)),
+    ...normalizedGraph.nodes.map((node) => createNodeElement(node, expandedNodeIds.has(node.id))),
     ...normalizedGraph.edges.map((edge) => createEdgeElement(edge)),
   ];
 }
@@ -79,6 +84,7 @@ function normalizeNode(node) {
     id: node.id,
     label: node.label,
     type: node.type,
+    expandable: isOptionalBoolean(node.expandable) ? Boolean(node.expandable) : false,
     parentId: isString(node.parentId) ? node.parentId : null,
   };
 }
@@ -98,14 +104,16 @@ function normalizeEdge(edge) {
   };
 }
 
-function createNodeElement(node) {
+function createNodeElement(node, isExpanded) {
   const dimensions = getGraphNodeDimensions(node.type);
 
   return {
     data: {
       id: node.id,
       label: node.label,
+      displayLabel: node.expandable && !isExpanded ? `${node.label}…` : node.label,
       type: node.type,
+      expandable: node.expandable,
       width: dimensions.width,
       height: dimensions.height,
       ...(node.parentId == null ? {} : { parent: node.parentId }),
@@ -158,6 +166,10 @@ function isString(value) {
 
 function isOptionalString(value) {
   return value == null || isString(value);
+}
+
+function isOptionalBoolean(value) {
+  return value == null || typeof value === 'boolean';
 }
 
 export function getGraphNodeDimensions(nodeType) {

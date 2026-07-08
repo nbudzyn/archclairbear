@@ -30,8 +30,11 @@
   - `8081` ist für automatisierte Tests und testgetriebene Browserläufe reserviert.
   - `8082` ist für manuelle Browser-Checks durch die KI reserviert.
 - Für `localTest.ps1` in `functions.exec_command` die PowerShell direkt ausführen, nicht die EXE als normalen `cmd`-Text behandeln. Der sichere Aufruf ist z. B. `C:\Program Files\PowerShell\7\pwsh.exe -NoProfile -Command ".\localTest.ps1; exit $LASTEXITCODE"`.
+- Für `localJsTest.ps1` und `localBrowserTest.ps1` in `functions.exec_command` ebenfalls den Scriptaufruf direkt im bestehenden PowerShell-Kontext starten, nicht die PowerShell-EXE als Text im `cmd`-Kontext verschachteln.
 - Wenn ein lokales Browser- oder Test-Server-Skript über Port `8081` oder `8082` scheitert, zuerst prüfen, ob noch ein alter Serverprozess
   läuft.
+- Wenn ein Tool oder Script temporäre Dateien braucht, diese nach Möglichkeit im Projektverzeichnis ablegen, zum Beispiel unter `tmp/`, statt auf `C:\TMP` auszuweichen.
+- Das gilt auch für Screenshots, Browser-Artefakte und andere Prüfdateien.
 - Bei statischen Browser-Modulen immer Cache-Busting und alle abhängigen Versionen gemeinsam aktualisieren
   (`graph-app.js`, `graph-client.mjs`, `graph-renderer.mjs`, Landing-Page-Test).
 - Cache-Busting-Regel: Jede Änderung an statischen Browser-Assets bekommt eine neue gemeinsame Versionskennung; die zusammengehörigen
