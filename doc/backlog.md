@@ -10,6 +10,11 @@ Package-Knoten).
 
 - Die Beschriftung von ZUGEKLAPPTEN Knoten hingegen soll immer mittig sitzen (bei Package- und Type-Knoten).
 
+## Beschriftung (Label) von AUFGEKLAPPTEN Knoten lesbar
+
+Die Beschriftung (Label) von AUFGEKLAPPTEN Knoten soll ganz lesbar sein - im Moment wird sie durch die inneren Knoten überdeckt.
+Der aufgeklappte Knoten braucht doppelt so viel "inneren Rand" - das dürfte alles sein.
+
 ## Abhängigkeiten als Pfeile darstellen
 
 Der Graph zeigt statische Abhängigkeiten als gerichtete Pfeile.
