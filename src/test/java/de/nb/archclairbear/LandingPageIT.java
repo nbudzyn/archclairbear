@@ -57,7 +57,7 @@ class LandingPageIT {
         .hasElement("#cy") //
         .hasElement("script[src=\"/webjars/cytoscape/3.33.1/dist/cytoscape.min.js\"]") //
         .hasElement("script[src=\"/vendor/elkjs/elk.bundled.js\"]") //
-        .hasElement("script[src=\"/graph-app.js?v=package-boxes-17\"]");
+        .hasElement("script[src=\"/graph-app.js?v=package-boxes-18\"]");
   }
 
   @Test

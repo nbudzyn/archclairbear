@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=package-boxes-17';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=package-boxes-18';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
@@ -138,6 +138,14 @@ function buildGraphStyle() {
         'text-max-width': 126,
         'text-valign': 'center',
         'text-margin-y': 0,
+      },
+    },
+    {
+      selector: 'node[type = "type"]:parent',
+      style: {
+        'text-valign': 'top',
+        'text-halign': 'center',
+        'text-margin-y': 18,
       },
     },
     {

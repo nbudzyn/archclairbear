@@ -57,13 +57,10 @@
 - Wenn zusätzliche Browser-Abhängigkeiten aus `node_modules` kommen, sie über Spring Resource Handler unter einem stabilen Pfad exponieren
   und im HTML explizit einbinden.
 - Wenn statische JS-Module geändert werden und manuell im Browser geprüft wird, Cache-Busting oder frische Asset-URLs verwenden.
-- Für manuelle Browser-Checks nicht zuerst Playwright starten: direkt Chrome/Devtools verwenden und die App auf `server.port=8082` starten. Der Boot-Run-Aufruf ist dafür `.\gradlew.bat bootRun --args=--server.port=8082`.
 - Windows-Pfade in Properties mit echten Backslashes testen; Escaping-Fallen nicht nur über `TempDir` abdecken.
 - Playwright-spezifische Auswertung und Output-Filterung in kleinen Node-Skripten halten; Gradle soll diese Skripte nur aufrufen.
 - Auf Windows `.cmd`-Starter aus Node nicht direkt spawnen, wenn es vermeidbar ist. Für lokale Node-Tools lieber deren JS-Entry-Point mit
   `process.execPath` starten.
-- Für manuelle Browser-Checks die Chrome-Devtools-MCP-Werkzeuge verwenden, also `mcp__chrome_devtools` mit Page-Snapshot, Click,
-  Screenshot und `evaluate_script`, statt Playwright als Umweg für die Handprüfung zu benutzen.
 
 ### Verifikationsroute
 
@@ -78,7 +75,6 @@
   - `localBrowserTest`
   - manueller KI-Browser-Test auf Port `8082`
 - Ein manueller KI-Browser-Test ersetzt keine automatisierten Tests, sondern ergänzt sie.
-- Playwright gehört zur automatisierten Browser-Teststrecke; für den manuellen KI-Browser-Test ist es keine Pflicht, solange der Browser lokal direkt prüfbar ist.
 
 ### Tests durch die KI
 
@@ -88,7 +84,7 @@
 - JavaScript: `.\localJsTest.ps1`, bei Bedarf `.\localJsTest.ps1 -Stacktrace`. Die JS-Tests laufen mit `node:test` im Einprozessmodus `--test-isolation=none`.
 - Browser: `.\localBrowserTest.ps1`, bei Bedarf mit `-Stacktrace`.
 - Für automatisierte Browser-Prüfstarts `server.port=8081`.
-- Für manuelle Browser-Checks durch die KI `server.port=8082`.
+- Das genaue Vorgehen für manuelle Browser-Tests durch die KI steht in [manual-ai-browser-checks.md](manual-ai-browser-checks.md).
 
 ### Browser-Tests
 
