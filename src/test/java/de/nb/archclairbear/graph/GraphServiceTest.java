@@ -84,6 +84,59 @@ class GraphServiceTest {
   }
 
   @Test
+  void typeGraphReturnsImmediateNestedTypesRecursively() throws IOException {
+    // GIVEN
+    createJavaSource(
+        """
+            package de.aventiure;
+
+            class Outer {
+              class Inner {
+                class Deep {
+                }
+              }
+
+              private static class PrivateInner {
+              }
+
+              void method() {
+                class Local {
+                }
+
+                Runnable runnable = new Runnable() {
+                  @Override
+                  public void run() {
+                  }
+                };
+              }
+            }
+
+            class TopLevel {
+            }
+            """,
+        "nested", "layout", "Types.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var outerGraph = graphService.typeGraph("de.aventiure.Outer");
+    var innerGraph = graphService.typeGraph("de.aventiure.Outer.Inner");
+
+    // THEN
+    assertThat(outerGraph.nodes())
+        .containsExactly(
+            new GraphNode("de.aventiure.Outer.Inner", "type", "Inner", "de.aventiure.Outer"),
+            new GraphNode("de.aventiure.Outer.PrivateInner", "type", "PrivateInner", "de.aventiure.Outer"));
+    assertThat(outerGraph.edges()).isEmpty();
+    assertThat(outerGraph.statusMessage()).isNull();
+
+    assertThat(innerGraph.nodes())
+        .containsExactly(
+            new GraphNode("de.aventiure.Outer.Inner.Deep", "type", "Deep", "de.aventiure.Outer.Inner"));
+    assertThat(innerGraph.edges()).isEmpty();
+    assertThat(innerGraph.statusMessage()).isNull();
+  }
+
+  @Test
   void rootGraphReturnsTheDefaultPackageWhenNoPackageDeclarationExists() throws IOException {
     // GIVEN
     createJavaSource("class DefaultThing {}", "DefaultThing.java");

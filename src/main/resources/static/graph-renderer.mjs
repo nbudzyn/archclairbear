@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=package-boxes-16';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=package-boxes-17';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;

@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-16';
-import { GraphDataValidationError, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-16';
-import { renderGraph } from './graph-renderer.mjs?v=package-boxes-16';
+import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-17';
+import { GraphDataValidationError, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-17';
+import { renderGraph } from './graph-renderer.mjs?v=package-boxes-17';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
@@ -16,6 +16,7 @@ export async function startGraphApp({
   renderGraphImpl = renderGraph,
   requestUrl = '/api/graph/root',
   packageRequestUrlFactory = createPackageRequestUrl,
+  typeRequestUrlFactory = createTypeRequestUrl,
   windowObject = window,
   cytoscape = window.cytoscape,
 } = {}) {
@@ -37,7 +38,7 @@ export async function startGraphApp({
       windowObject,
     });
     if (renderState?.cy != null && typeof renderState.appendGraph === 'function') {
-      installNodeDoubleClickHandler(renderState.cy, async (nodeId) => {
+      installNodeDoubleClickHandler(renderState.cy, async (nodeId, nodeType) => {
         try {
           if (hasVisibleChildNodes(graph, nodeId)) {
             graph = collapseGraph(graph, nodeId);
@@ -45,7 +46,10 @@ export async function startGraphApp({
             return;
           }
 
-          const expandedLoadedGraph = await loadGraphImpl(fetchImpl, packageRequestUrlFactory(nodeId));
+          const requestUrlToLoad = nodeType === 'type'
+              ? typeRequestUrlFactory(nodeId)
+              : packageRequestUrlFactory(nodeId);
+          const expandedLoadedGraph = await loadGraphImpl(fetchImpl, requestUrlToLoad);
           const expandedGraph = normalizeGraph(expandedLoadedGraph);
           graph = mergeGraphs(graph, expandedGraph);
           await renderState.appendGraph(graph);
@@ -55,7 +59,7 @@ export async function startGraphApp({
             graphStatusController.hideStatus();
           }
         } catch (error) {
-          console.error(`Failed to toggle package ${nodeId}.`, error);
+          console.error(`Failed to toggle node ${nodeId}.`, error);
           graphStatusController.showError(createUserFacingErrorMessage(error));
         }
       });
@@ -94,16 +98,21 @@ export function createPackageRequestUrl(packageName) {
   return `/api/graph/package?packageName=${encodeURIComponent(packageName)}`;
 }
 
+export function createTypeRequestUrl(typeId) {
+  return `/api/graph/type?typeId=${encodeURIComponent(typeId)}`;
+}
+
 export function installNodeDoubleClickHandler(cy, onNodeDoubleClick, timeSource = () => Date.now()) {
   let lastTap = null;
 
   cy.on('tap', 'node', (event) => {
     const nodeId = event.target.data('id');
+    const nodeType = event.target.data('type');
     const now = timeSource();
 
     if (lastTap != null && lastTap.nodeId === nodeId && now - lastTap.timestamp <= 400) {
       lastTap = null;
-      void onNodeDoubleClick(nodeId);
+      void onNodeDoubleClick(nodeId, nodeType);
       return;
     }
 

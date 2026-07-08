@@ -11,6 +11,12 @@
 ## Arbeitsweise
 
 - Vor Änderungen die verbindlichen Dokumente lesen.
+- Der Code liegt unter dem Paket `de.nb.archclairbear`. Wenn noch `aitddadventure`-Pakete, Imports oder Tests auftauchen, zuerst nach `de.nb.archclairbear` umstellen statt die alte Struktur weiterzuführen.
+- Kurzer Architektur-Orientierungsanker:
+  - Server: `src/main/java/de/nb/archclairbear/graph` analysiert Java-Quelltext und liefert JSON-Graphdaten.
+  - Client: `src/main/resources/static/graph-client.mjs` steuert Laden, Auf-/Zuklappen und Fehlermeldungen.
+  - Renderer: `src/main/resources/static/graph-renderer.mjs` baut Cytoscape-Elemente und ELK-Layout.
+  - Tests: Java-Tests unter `src/test/java/de/nb/archclairbear`, JS-Tests unter `src/js-test`, Browser-Tests unter `src/browser-test`.
 - Neue Skripte und Build-Aufrufe nicht auf ein projektlokales Gradle-User-Home umbiegen.
 - Entwicklungswissen hier bündeln, nicht in Produktdokumenten oder im README doppeln.
 - Wenn ein Package leer wird, das leere Package-Verzeichnis löschen.
@@ -23,6 +29,7 @@
   - `8080` ist für menschliche manuelle GUI-Starts reserviert.
   - `8081` ist für automatisierte Tests und testgetriebene Browserläufe reserviert.
   - `8082` ist für manuelle Browser-Checks durch die KI reserviert.
+- Für `localTest.ps1` in `functions.exec_command` die PowerShell direkt ausführen, nicht die EXE als normalen `cmd`-Text behandeln. Der sichere Aufruf ist z. B. `C:\Program Files\PowerShell\7\pwsh.exe -NoProfile -Command ".\localTest.ps1; exit $LASTEXITCODE"`.
 - Wenn ein lokales Browser- oder Test-Server-Skript über Port `8081` oder `8082` scheitert, zuerst prüfen, ob noch ein alter Serverprozess
   läuft.
 - Bei statischen Browser-Modulen immer Cache-Busting und alle abhängigen Versionen gemeinsam aktualisieren
@@ -47,6 +54,7 @@
 - Wenn zusätzliche Browser-Abhängigkeiten aus `node_modules` kommen, sie über Spring Resource Handler unter einem stabilen Pfad exponieren
   und im HTML explizit einbinden.
 - Wenn statische JS-Module geändert werden und manuell im Browser geprüft wird, Cache-Busting oder frische Asset-URLs verwenden.
+- Für manuelle Browser-Checks nicht zuerst Playwright starten: direkt Chrome/Devtools verwenden und die App auf `server.port=8082` starten. Der Boot-Run-Aufruf ist dafür `.\gradlew.bat bootRun --args=--server.port=8082`.
 - Windows-Pfade in Properties mit echten Backslashes testen; Escaping-Fallen nicht nur über `TempDir` abdecken.
 - Playwright-spezifische Auswertung und Output-Filterung in kleinen Node-Skripten halten; Gradle soll diese Skripte nur aufrufen.
 - Auf Windows `.cmd`-Starter aus Node nicht direkt spawnen, wenn es vermeidbar ist. Für lokale Node-Tools lieber deren JS-Entry-Point mit

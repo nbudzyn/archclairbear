@@ -5,6 +5,7 @@ import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.AnnotationDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
@@ -79,6 +80,22 @@ class GraphService {
     return new GraphResponse(List.copyOf(nodes), List.of(), workspaceIndex.statusMessage());
   }
 
+  GraphResponse typeGraph(final String typeId) {
+    ensureWorkspaceDirectoryExists();
+
+    var workspaceIndex = getWorkspaceIndex();
+    var typeInfo = workspaceIndex.typesById().get(typeId);
+    if (typeInfo == null) {
+      return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage());
+    }
+
+    var nodes = typeInfo.nestedTypes().stream()
+        .map(nestedTypeInfo -> createTypeNode(nestedTypeInfo, typeInfo.id()))
+        .toList();
+
+    return new GraphResponse(List.copyOf(nodes), List.of(), workspaceIndex.statusMessage());
+  }
+
   private void ensureWorkspaceDirectoryExists() {
     if (!Files.exists(workspacePath)) {
       throw new WorkspacePathNotFoundException(workspacePath);
@@ -108,6 +125,7 @@ class GraphService {
   private WorkspaceIndex buildWorkspaceIndex() {
     var parser = createJavaParser();
     var packageContents = new HashMap<String, MutablePackageContent>();
+    var typesById = new HashMap<String, TypeInfo>();
     var parseProblemCount = 0;
 
     try (var sourceFiles = Files.walk(workspacePath)) {
@@ -117,7 +135,7 @@ class GraphService {
           .toList();
 
       for (var sourceFile : orderedSourceFiles) {
-        parseProblemCount += readSourceFile(parser, sourceFile, packageContents);
+        parseProblemCount += readSourceFile(parser, sourceFile, packageContents, typesById);
       }
     } catch (final IOException e) {
       throw new IllegalStateException("Workspace-Pfad konnte nicht gelesen werden: " + workspacePath, e);
@@ -131,6 +149,7 @@ class GraphService {
 
     return new WorkspaceIndex(
         immutablePackages,
+        Map.copyOf(typesById),
         visibleRootPackageName,
         createStatusMessage(parseProblemCount));
   }
@@ -138,7 +157,8 @@ class GraphService {
   private int readSourceFile(
       final JavaParser parser,
       final Path sourceFile,
-      final Map<String, MutablePackageContent> packageContents) {
+      final Map<String, MutablePackageContent> packageContents,
+      final Map<String, TypeInfo> typesById) {
     try {
       var parseResult = parser.parse(sourceFile);
       var compilationUnit = parseResult.getResult().orElse(null);
@@ -152,7 +172,7 @@ class GraphService {
               .orElse(null));
       var packageContent = packageContents.computeIfAbsent(packageName, MutablePackageContent::new);
 
-      addTypes(packageContent, compilationUnit);
+      addTypes(packageContent, compilationUnit, typesById);
       return parseResult.isSuccessful() ? 0 : 1;
     } catch (final ParseProblemException exception) {
       return 1;
@@ -161,13 +181,18 @@ class GraphService {
     }
   }
 
-  private void addTypes(final MutablePackageContent packageContent, final CompilationUnit compilationUnit) {
+  private void addTypes(
+      final MutablePackageContent packageContent,
+      final CompilationUnit compilationUnit,
+      final Map<String, TypeInfo> typesById) {
+    var packageNodeId = displayPackageName(packageContent.packageName);
+
     for (var typeDeclaration : compilationUnit.getTypes()) {
       if (!typeDeclaration.isTopLevelType()) {
         continue;
       }
 
-      packageContent.addType(TypeInfo.from(typeDeclaration));
+      packageContent.addType(createTypeInfo(typeDeclaration, packageNodeId, typesById));
     }
   }
 
@@ -256,9 +281,24 @@ class GraphService {
   }
 
   private GraphNode createTypeNode(final TypeInfo typeInfo, final String packageName) {
-    var packageId = displayPackageName(packageName);
-    var typeId = packageId + "." + typeInfo.name();
-    return new GraphNode(typeId, "type", typeInfo.name(), packageId);
+    return new GraphNode(typeInfo.id(), "type", typeInfo.name(), packageName);
+  }
+
+  private TypeInfo createTypeInfo(
+      final TypeDeclaration<?> typeDeclaration,
+      final String parentId,
+      final Map<String, TypeInfo> typesById) {
+    var typeId = parentId + "." + typeDeclaration.getNameAsString();
+    var nestedTypes = typeDeclaration.getMembers().stream()
+        .filter(this::isTypeDeclaration)
+        .map(bodyDeclaration -> (TypeDeclaration<?>) bodyDeclaration)
+        .map(nestedTypeDeclaration -> createTypeInfo(nestedTypeDeclaration, typeId, typesById))
+        .sorted(Comparator.comparing(TypeInfo::name))
+        .toList();
+    var typeInfo = new TypeInfo(typeId, typeDeclaration.getNameAsString(), nestedTypes);
+
+    typesById.put(typeId, typeInfo);
+    return typeInfo;
   }
 
   private JavaParser createJavaParser() {
@@ -331,10 +371,18 @@ class GraphService {
     return packageName.substring(parentPackageName.length() + 1);
   }
 
+  private boolean isTypeDeclaration(final BodyDeclaration<?> bodyDeclaration) {
+    return bodyDeclaration instanceof TypeDeclaration<?>;
+  }
+
   /**
    * Verdichteter Workspace-Index.
    */
-  private record WorkspaceIndex(Map<String, PackageContent> packages, String visibleRootPackageName, String statusMessage) {
+  private record WorkspaceIndex(
+      Map<String, PackageContent> packages,
+      Map<String, TypeInfo> typesById,
+      String visibleRootPackageName,
+      String statusMessage) {
   }
 
   /**
@@ -380,9 +428,6 @@ class GraphService {
   /**
    * Top-Level-Typ.
    */
-  private record TypeInfo(String name) {
-    private static TypeInfo from(final TypeDeclaration<?> typeDeclaration) {
-      return new TypeInfo(typeDeclaration.getNameAsString());
-    }
+  private record TypeInfo(String id, String name, List<TypeInfo> nestedTypes) {
   }
 }

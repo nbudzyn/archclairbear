@@ -8,6 +8,13 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 
 - Server: Spring Boot
 - Client: HTML/CSS/JavaScript mit Cytoscape
+- Code-Ort als Merkhilfe:
+  - Server-Logik: `src/main/java/de/nb/archclairbear/graph`
+  - Client-Steuerung: `src/main/resources/static/graph-client.mjs`
+  - Renderer/Layout: `src/main/resources/static/graph-renderer.mjs`
+  - Java-Tests: `src/test/java/de/nb/archclairbear`
+  - JS-Tests: `src/js-test`
+  - Browser-Tests: `src/browser-test`
 
 ## Zuständigkeiten
 
@@ -16,7 +23,7 @@ Einen browserbasierten Architektur-Explorer für Java-Codebasen bauen.
 - Spring Boot
 - Liest Java-Quelltext aus einem fest konfigurierten Workspace-Pfad.
 - Analysiert den Quelltext mit JavaParser und extrahiert statische Abhängigkeiten.
-- Baut ein hierarchisches Graphmodell aus Packages und Top-Level-Typen auf Basis der `package`-Deklaration.
+- Baut ein hierarchisches Graphmodell aus Packages und Typen auf Basis der `package`-Deklaration.
 - Stellt die Graphdaten bereit.
 - Unterstützt Initial-Load und Nachladen.
 - Bleibt im Web-/Session-Sinn stateless: kein `HttpSession`-Zustand, kein serverseitiges Merken von Aufklappzuständen oder benutzerspezifischem Graphzustand.

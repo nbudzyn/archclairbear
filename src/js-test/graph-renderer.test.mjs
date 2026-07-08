@@ -69,6 +69,12 @@ test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
         type: 'type',
         parentId: 'lay04b_object',
       },
+      {
+        id: 'lay04b_object.Action.Inner',
+        label: 'Inner',
+        type: 'type',
+        parentId: 'lay04b_object.Action',
+      },
     ],
     edges: [],
   });
@@ -106,6 +112,13 @@ test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
                 id: 'lay04b_object.Action',
                 width: 180,
                 height: 64,
+                children: [
+                  {
+                    id: 'lay04b_object.Action.Inner',
+                    width: 180,
+                    height: 64,
+                  },
+                ],
               },
             ],
           },

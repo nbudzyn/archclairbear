@@ -24,4 +24,9 @@ class GraphController {
   GraphResponse packageGraph(@RequestParam final String packageName) {
     return service.packageGraph(packageName);
   }
+
+  @GetMapping("/api/graph/type")
+  GraphResponse typeGraph(@RequestParam final String typeId) {
+    return service.typeGraph(typeId);
+  }
 }

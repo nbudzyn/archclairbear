@@ -142,6 +142,50 @@ class GraphControllerIT {
   }
 
   @Test
+  void typeGraphReturnsImmediateNestedTypes() throws Exception {
+    // GIVEN
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "de", "aventiure")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "de", "aventiure", "Types.java")),
+        """
+            package de.aventiure;
+
+            class Outer {
+              class Inner {
+                class Deep {
+                }
+              }
+
+              private class PrivateInner {
+              }
+            }
+            """);
+    var controller = new GraphController(new GraphService(tempDir));
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
+    // WHEN
+    var response = standaloneMockMvc.perform(get("/api/graph/type").param("typeId", "de.aventiure.Outer"))
+        // THEN
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    var root = objectMapper.readTree(response);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes")).hasSize(2);
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("type").asText()).isEqualTo("type");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("label").asText()).isEqualTo("Inner");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("parentId").asText()).isEqualTo("de.aventiure.Outer");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("type").asText()).isEqualTo("type");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("label").asText()).isEqualTo("PrivateInner");
+    org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("parentId").asText()).isEqualTo("de.aventiure.Outer");
+    org.assertj.core.api.Assertions.assertThat(root.path("edges")).isEmpty();
+  }
+
+  @Test
   void cytoscapeWebjarIsServedFromClasspath() throws Exception {
     // WHEN
     mockMvc.perform(get("/webjars/cytoscape/3.33.1/dist/cytoscape.min.js"))

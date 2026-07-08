@@ -3,13 +3,9 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Verschachtelte Typen verschachelt anzeigen
+## Aufklappbare Knoten erkennbar machen
 
-Verschachtelte Typen (nicht Top-Level) werden angezeigt - und zwar auch verschachtelt (z.B. eine Box für eine innere Klasse innerhalb der
-Box für eine Klasse).
-
-- Auch private Typen werden angezeigt, aber keine anonymen Typen (keine anonyme Klasse für var foo = new MyInterface() {...};).
-- Typen können mehrfach geschachelt werden.
+Der Nutzer kann erkennen, welche Knoten (Package oder Typ) weitere sichtbare Package-Kinder haben (wo ein Aufklappen etwas bewirkt)
 
 ## Abhängigkeiten als Pfeile darstellen
 
@@ -45,22 +41,16 @@ Das System stellt sicher, dass nach jedem Auf- und Zuklappen alle Pfeile aktuell
 
 Der Graph zeigt statische Abhängigkeiten von Typen, zu Typen und zwischen Typen als gerichtete Pfeile.
 
-## Top-Level-Typen unterscheiden
+## Typen unterscheiden
 
 Der Client erfährt, ob ein Typ ein `class`, `interface`, `enum`, `record` oder Annotation-Typ ist.
 
 - Die Typen werden in diesem Schritt noch nicht unterschiedlich gerendert.
 - Die Information wird nur fachlich transportiert und für spätere Darstellungen vorbereitet.
-- Verschachtelte Typen bleiben auch hier zunächst außen vor.
 
 ## Smooth animation when layout changes
 
 When the layout changes (box moves somewhere else on double-click), the layout should perform a smooth transition.
-
-## Aufklappbare Package-Knoten erkennbar machen
-
-Der Nutzer kann erkennen, welche Package-Knoten weitere sichtbare Package-Kinder haben.
-Package-Knoten ohne weitere Kinder wirken nicht wie interaktive Aufklapp-Knoten.
 
 ## Workspace-Pfad konfigurierbar machen
 

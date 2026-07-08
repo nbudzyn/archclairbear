@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { GraphDataValidationError } from '../main/resources/static/graph-data.mjs';
-import { createPackageRequestUrl, installNodeDoubleClickHandler, startGraphApp } from '../main/resources/static/graph-client.mjs';
+import { createPackageRequestUrl, createTypeRequestUrl, installNodeDoubleClickHandler, startGraphApp } from '../main/resources/static/graph-client.mjs';
 
 test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', async () => {
   // GIVEN
@@ -246,6 +246,197 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
   ]);
 });
 
+test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Typen nach', async () => {
+  // GIVEN
+  const statusMessage = { textContent: '' };
+  const errorMessage = { textContent: '' };
+  const statusElement = { hidden: true, querySelector: () => statusMessage };
+  const errorElement = { hidden: true, querySelector: () => errorMessage };
+  const appendCalls = [];
+  const loadCalls = [];
+  const tapHandlers = [];
+  const originalConsoleError = console.error;
+  let now = 1000;
+
+  // WHEN
+  console.error = () => {};
+
+  try {
+    await startGraphApp({
+      container: { id: 'cy' },
+      errorElement,
+      fetchImpl: async () => {
+        throw new Error('fetchImpl should not be used in this test.');
+      },
+      graphErrorMessage: errorMessage,
+      graphStatus: statusElement,
+      graphStatusMessage: statusMessage,
+      loadGraphImpl: async (_fetchImpl, requestUrl) => {
+        loadCalls.push(requestUrl);
+        if (requestUrl === '/api/graph/root') {
+          return {
+            nodes: [
+              {
+                id: 'de.aventiure',
+                label: 'de.aventiure',
+                type: 'package',
+              },
+            ],
+            edges: [],
+          };
+        }
+
+        if (requestUrl === '/api/graph/package?packageName=de.aventiure') {
+          return {
+            nodes: [
+              {
+                id: 'de.aventiure.Outer',
+                label: 'Outer',
+                type: 'type',
+                parentId: 'de.aventiure',
+              },
+            ],
+            edges: [],
+          };
+        }
+
+        return {
+          nodes: [
+            {
+              id: 'de.aventiure.Outer.Inner',
+              label: 'Inner',
+              type: 'type',
+              parentId: 'de.aventiure.Outer',
+            },
+          ],
+          edges: [],
+        };
+      },
+      renderGraphImpl: () => ({
+        appendGraph(graph) {
+          appendCalls.push(graph);
+        },
+        cy: {
+          on(eventName, selector, handler) {
+            tapHandlers.push({ eventName, selector, handler });
+          },
+        },
+        destroy() {},
+      }),
+      timeSource: () => now,
+      requestUrl: '/api/graph/root',
+      windowObject: {
+        addEventListener() {},
+        removeEventListener() {},
+      },
+      cytoscape: {},
+    });
+
+    const handler = tapHandlers[0].handler;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure';
+          }
+
+          return fieldName === 'type' ? 'package' : undefined;
+        },
+      },
+    });
+    now += 150;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure';
+          }
+
+          return fieldName === 'type' ? 'package' : undefined;
+        },
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    now += 50;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure.Outer';
+          }
+
+          return fieldName === 'type' ? 'type' : undefined;
+        },
+      },
+    });
+    now += 150;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure.Outer';
+          }
+
+          return fieldName === 'type' ? 'type' : undefined;
+        },
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  // THEN
+  assert.deepEqual(loadCalls, [
+    '/api/graph/root',
+    '/api/graph/package?packageName=de.aventiure',
+    '/api/graph/type?typeId=de.aventiure.Outer',
+  ]);
+  assert.deepEqual(appendCalls, [
+    {
+      nodes: [
+        {
+          id: 'de.aventiure',
+          label: 'de.aventiure',
+          type: 'package',
+          parentId: null,
+        },
+        {
+          id: 'de.aventiure.Outer',
+          label: 'Outer',
+          type: 'type',
+          parentId: 'de.aventiure',
+        },
+      ],
+      edges: [],
+    },
+    {
+      nodes: [
+        {
+          id: 'de.aventiure',
+          label: 'de.aventiure',
+          type: 'package',
+          parentId: null,
+        },
+        {
+          id: 'de.aventiure.Outer',
+          label: 'Outer',
+          type: 'type',
+          parentId: 'de.aventiure',
+        },
+        {
+          id: 'de.aventiure.Outer.Inner',
+          label: 'Inner',
+          type: 'type',
+          parentId: 'de.aventiure.Outer',
+        },
+      ],
+      edges: [],
+    },
+  ]);
+});
+
 test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wieder zu', async () => {
   // GIVEN
   const statusMessage = { textContent: '' };
@@ -396,6 +587,11 @@ test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wied
 test('createPackageRequestUrl kodiert den Package-Namen für Nachladeanfragen', () => {
   // WHEN / THEN
   assert.equal(createPackageRequestUrl('de.aventiure.lay05_being'), '/api/graph/package?packageName=de.aventiure.lay05_being');
+});
+
+test('createTypeRequestUrl kodiert den Typ-Namen für Nachladeanfragen', () => {
+  // WHEN / THEN
+  assert.equal(createTypeRequestUrl('de.aventiure.Outer.Inner'), '/api/graph/type?typeId=de.aventiure.Outer.Inner');
 });
 
 test('installNodeDoubleClickHandler reagiert nur auf zwei schnelle Taps desselben Knotens', async () => {
