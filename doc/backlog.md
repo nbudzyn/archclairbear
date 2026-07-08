@@ -9,6 +9,7 @@ Der Graph zeigt statische Abhängigkeiten als gerichtete Pfeile.
 
 - Pfeile gehen immer von einem Package und zu einem Package
 - Es gibt Pfeile gehen niemals von Typen aus. Pfeile führen niemals zu Typen hin.
+- Es gibt maximal eine Kante je Package-Paar und Richtung; spätere Gewichtung über eine Kantenstärke ist möglich.
 
 Pfeile zeigen die aggregierten Abhängigkeiten:
 
@@ -16,8 +17,9 @@ Pfeile zeigen die aggregierten Abhängigkeiten:
   einen Pfeil (gerichtet) von Package A zu Package B.
 - Das gilt insbesondere auch mittelbar: Die Typen können direkt in einem Package liegen oder in einem Sub-Package.
 - Auch, wenn ein INNERER Typ von einem anderen Package verwendet wird, gibt es einen Pfeil zum Packages des (inneren und äußeren) Typs.
-- Das System zeigt niemals Schleifen (self-loops). Auch dann nicht, wenn ein Package unaufgeklapptes Package in verschiedenen Sub-Packages
-  Typen haben, die voneinander abhängen.
+- Abhängigkeiten innerhalb eines Packages werden nicht als Pfeile dargestellt.
+- Das System zeigt niemals Schleifen (self-loops). Auch dann nicht, wenn ein Package in verschiedenen Sub-Packages Typen hat, die
+  voneinander abhängen.
 
 Pfeile sind immer möglichst spezifisch. Sie gehen also immer von dem untersten aufgeklappten Package aus, IN DEM DIE RELEVANTEN JAVA-DATEIEN
 LIEGEN, und sie zeigen immer auf das unterste aufgeklappte Package, IN DEM DIE RELEVANTEN JAVA-DATEIEN LIEGEN.
