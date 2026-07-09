@@ -3,25 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Roh-Abhängigkeiten auf den analysierten Initial-Baum filtern
-
-Der Initial-Load liefert nur Roh-Abhängigkeiten, deren Quelle und Ziel innerhalb des analysierten Package-Baums liegen.
-
-- Der analysierte Package-Baum ist genau der inital gelieferte Package-Knoten und alle seine Sub-Packages.
-- Beginnt der analysierte Baum bei `a.b`, bleiben nur Roh-Abhängigkeiten erhalten, deren Quell- und Zielpackage `a.b` sind oder mit
-  `a.b.` beginnen.
-- Roh-Abhängigkeiten nach außen werden nicht ausgeliefert.
-- Die Filterlogik wird als Java-Unit-Test isoliert geprüft. Der Test / die Tests prüfen in einzelnen Testmethoden:
-    - Wird der analysierte Package-Baum-Root korrekt berechnet?
-    - Zieladresse liegt außerhalb des Package-Baums -> Roh-Abhängigkeit wird nicht geliefert
-    - Quelladresse liegt außerhalb des Package-Baums -> Roh-Abhängigkeit wird nicht geliefert
-    - Ziel- und Quell-Adresse sind genau der Root-Knoten des Package-Baums -> Roh-Abhängigkeit wird geliefert (bei import)
-    - Ziel- und Quell-Adresse liegen mitten im Package-Baum -> Roh-Abhängigkeit wird geliefert (bei import)
-    - Ggf. weitere relevante Fälle
-- Der Root-Endpunkt ist zusätzlich per Controller-Test prüfbar; der Workspace- oder Analyseanteil kann dabei gemockt werden.
-- Falls es beim Initial-Load bereits Typen im default-Package gibt, findet keine Filterung statt (es bleiben alle Roh-Abhängigkeiten
-  erhalten).
-
 ## Sichtbare Package-Pfeile im Client aus Roh-Abhängigkeiten berechnen
 
 Der Client kann aus Roh-Abhängigkeiten und aktuell sichtbaren Packages renderbare Kanten berechnen.
