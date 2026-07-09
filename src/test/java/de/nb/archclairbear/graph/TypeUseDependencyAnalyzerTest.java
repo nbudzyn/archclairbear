@@ -176,6 +176,228 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForImportedSuperClass() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source extends Target {
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedSuperClassWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source extends b.bar.Target {
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedImplementedInterface() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source implements Target {
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedImplementedInterfaceWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source implements b.bar.Target {
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedTypeAnnotation() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        @Target
+        class Source {
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedTypeAnnotationWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        @b.bar.Target
+        class Source {
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedFieldAnnotation() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          @Target String value;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedFieldAnnotationWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          @b.bar.Target String value;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedMethodAnnotation() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          @Target void act() {
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedMethodAnnotationWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          @b.bar.Target void act() {
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedParameterAnnotation() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          void act(@Target String value) {
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedParameterAnnotationWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          void act(@b.bar.Target String value) {
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeDeduplicatesEqualTypeUseDependencies() {
     // GIVEN
     var compilationUnit = parse("""

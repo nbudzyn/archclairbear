@@ -3,16 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Vererbung, Interfaces und Annotationen als Package-Abhängigkeiten erkennen
-
-Der Server erkennt weitere Architekturbezüge als Roh-Abhängigkeiten.
-
-- `extends`
-- `implements`
-- Annotationen auf Typen, Feldern, Methoden und Parametern
-- Jeder erkannte Fall ist durch fokussierte Java-Unit-Tests der Analyseklasse oder package-private Methoden geprüft. Insbesondere jeweils
-  der Fall, dass es *keinen* Import gibt, sondern die Klasse explizit mit Package im Code genannt ist.
-
 ## Alle weiteren statischen Abhängigkeiten erkennen
 
 Der Server erkennt alle weiteren Architekturbezüge als Roh-Abhängigkeiten.

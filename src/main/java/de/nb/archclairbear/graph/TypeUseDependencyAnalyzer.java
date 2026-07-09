@@ -2,25 +2,33 @@ package de.nb.archclairbear.graph;
 
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Typverwendungs-Abhängigkeitsanalyse.
  */
 class TypeUseDependencyAnalyzer {
 
-  java.util.List<RawDependency> analyze(final CompilationUnit compilationUnit) {
+  List<RawDependency> analyze(final CompilationUnit compilationUnit) {
     var sourcePackage = compilationUnit.getPackageDeclaration()
         .map(packageDeclaration -> packageDeclaration.getNameAsString())
         .orElse("");
     var importedPackagesBySimpleName = importedPackagesBySimpleName(compilationUnit);
 
-    return compilationUnit.findAll(ClassOrInterfaceType.class).stream()
-        .map(type -> targetPackage(type, importedPackagesBySimpleName))
+    return Stream
+        .concat(
+            compilationUnit.findAll(ClassOrInterfaceType.class).stream()
+                .map(ClassOrInterfaceType::getNameWithScope),
+            compilationUnit.findAll(AnnotationExpr.class).stream()
+                .map(annotation -> annotation.getName().asString()))
+        .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName))
         .filter(Objects::nonNull)
         .filter(targetPackage -> !sourcePackage.equals(targetPackage))
         .map(targetPackage -> new RawDependency(sourcePackage, targetPackage))
@@ -42,14 +50,13 @@ class TypeUseDependencyAnalyzer {
   }
 
   private String targetPackage(
-      final ClassOrInterfaceType type,
+      final String typeName,
       final Map<String, String> importedPackagesBySimpleName) {
-    var nameWithScope = type.getNameWithScope();
-    if (nameWithScope.contains(".")) {
-      return packageFromQualifiedTypeName(nameWithScope);
+    if (typeName.contains(".")) {
+      return packageFromQualifiedTypeName(typeName);
     }
 
-    return importedPackagesBySimpleName.get(nameWithScope);
+    return importedPackagesBySimpleName.get(typeName);
   }
 
   private String packageFromQualifiedTypeName(final String qualifiedTypeName) {
