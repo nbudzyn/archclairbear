@@ -3,17 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Weitere Typverwendungen als Package-Abhängigkeiten erkennen
-
-Der Server erkennt weitere direkte statische Typverwendungen als Roh-Abhängigkeiten.
-
-- Felder
-- Methodenparameter
-- Rückgabewerte
-- generische Typverwendungen
-- Jeder erkannte Fall ist durch fokussierte Java-Unit-Tests der Analyseklasse oder package-private Methoden geprüft. Insbesondere jeweils
-  der Fall, dass es *keinen* Import gibt, sondern die Klasse explizit mit Package im Code genannt ist.
-
 ## Vererbung, Interfaces und Annotationen als Package-Abhängigkeiten erkennen
 
 Der Server erkennt weitere Architekturbezüge als Roh-Abhängigkeiten.

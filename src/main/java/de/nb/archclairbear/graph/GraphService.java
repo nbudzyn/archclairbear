@@ -31,6 +31,7 @@ class GraphService {
 
   private final Path workspacePath;
   private final ImportDependencyAnalyzer importDependencyAnalyzer = new ImportDependencyAnalyzer();
+  private final TypeUseDependencyAnalyzer typeUseDependencyAnalyzer = new TypeUseDependencyAnalyzer();
   private final InitialRawDependencyFilter initialRawDependencyFilter = new InitialRawDependencyFilter();
   private volatile WorkspaceIndex cachedIndex;
 
@@ -179,6 +180,7 @@ class GraphService {
 
       addTypes(packageContent, compilationUnit, typesById);
       rawDependencies.addAll(importDependencyAnalyzer.analyze(compilationUnit));
+      rawDependencies.addAll(typeUseDependencyAnalyzer.analyze(compilationUnit));
       return parseResult.isSuccessful() ? 0 : 1;
     } catch (final ParseProblemException exception) {
       return 1;
