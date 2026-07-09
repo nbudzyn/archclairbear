@@ -3,38 +3,92 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Abhängigkeiten als Pfeile darstellen
+## Keine Server-Edges mehr an den Client liefern
 
-In der GUI werden jetzt auch Abhängigkeiten dargestellt:
+Die Graph-Antworten enthalten vorerst keine renderbaren Kanten mehr.
+Falls der Server aktuell `edges` an den Client liefert, wird das entfernt.
 
-- Durch Pfeile A->B, wenn A von B direkt statisch abhängig ist.
-- Als statische Abhängigkeiten zählen alle direkten statischen Verweise, insbesondere Typverwendungen in Feldern, Parametern,
-  Rückgabewerten, `extends`/`implements`, Annotationen, Imports und generischen Typverwendungen.
-- Abhängigkeiten werden immer nur zwischen Packages gezeigt, niemals zwischen Typen.
-- Wenn ein Paket nicht angezeigt wird, weil ein direktes oder mittelbares Oberpaket nicht aufgeklappt ist, wird der Pfeil mit dem
-  niedrigsten angezeigten Oberpaket verbunden.
-    - Wenn mehrere Ebenen verborgen sind, wird der Pfeil immer am nächstsichtbaren Oberpackage befestigt.
-- Je sichtbares Paketpaar und Richtung gibt es maximal einen Pfeil, auch wenn mehrere Typabhängigkeiten dahinterliegen.
-- Wir zeigen keine Schleifen.
-- Immer, wenn ein Paket auf- oder zugeklappt wird, wird die Anzeige so aktualisiert, dass sie vollständig stimmt.
-- Die fachliche Darstellung ist rein visuell, aber auf dem Server durch Unit- und Mock-Tests prüfbar.
+- Der Server liefert für Root-, Package- und Type-Anfragen weiterhin Knoten.
+- Das Feld `edges` bleibt aus Kompatibilitätsgründen vorhanden, ist aber leer.
+- Vorhandene Client-Tests für leere `edges` bleiben grün.
+- Die Änderung ist durch Java-Unit- oder Controller-Tests prüfbar.
 
-Hinweis zur technischen Umsetzung:
+## Roh-Abhängigkeiten im Initial-Load transportieren
 
-- Der Server liefert beim Initial-Load die Roh-Abhängigkeiten des gesamten analysierten Baums.
-- Der Server schickt nur Roh-Abhängigkeiten, deren Quell- und Zielpackage im sichtbaren Package-Baum liegen. Wenn der sichtbare Baum z. B.
-  bei `a.b` beginnt, werden nur Abhängigkeiten behalten, deren Packages `a.b` sind oder mit `a.b.` beginnen.
-- Spätere Nachladeanfragen für Packages oder Typen liefern nur neue Knoten, aber keine weiteren Roh-Abhängigkeiten.
-- Der Client speichert die initial geladenen Roh-Abhängigkeiten und berechnet bei jedem Auf- und Zuklappen alle sichtbaren Package-Pfeile
-  vollständig neu.
+Der Initial-Load kann Roh-Abhängigkeiten zwischen Packages transportieren, ohne daraus bereits sichtbare Pfeile zu machen.
 
-Berechnung der sichtbaren Pfeile:
+- Die Root-Antwort enthält ein eigenes Feld für Roh-Abhängigkeiten.
+- Eine Roh-Abhängigkeit besteht aus Quellpackage und Zielpackage.
+- Package- und Type-Nachladeanfragen liefern keine Roh-Abhängigkeiten.
+- Die API-Struktur ist durch Java-Unit- oder Controller-Tests prüfbar.
+- Falls dafür eine neue Klasse oder ein package-private Mapper entsteht, wird diese Klasse bzw. Methode isoliert getestet; bei
+  Controller-Tests kann der Service gemockt werden.
 
-- Das System geht alle Roh-Abhängigkeiten durch.
-- Für jede Roh-Abhängigkeit ermittelt es das sichtbare Package, das die Quelle enthält, und das sichtbare Package, das das Ziel enthält.
-- Wenn beide sichtbaren Packages verschieden sind, fügt das System einen Pfeil vom sichtbaren Quellpackage zum sichtbaren
-  Zielpackage ein.
-    - Wenn derselbe Pfeil bereits existiert, wird kein zweiter Pfeil ergänzt.
+## Package-Abhängigkeiten aus Imports erkennen
+
+Der Server erkennt direkte Package-Abhängigkeiten aus Java-Imports.
+
+- Ein Import wie `import b.bar.Target;` in Package `a.foo` erzeugt die Roh-Abhängigkeit `a.foo -> b.bar`.
+- Imports aus demselben Package erzeugen keine Roh-Abhängigkeit.
+- Mehrere gleiche Import-Abhängigkeiten werden serverseitig dedupliziert.
+- Die Import-Auswertung ist als kleine Java-Einheit testbar, bevorzugt über eine eigene package-private Klasse oder Methode.
+
+## Roh-Abhängigkeiten auf den sichtbaren Initial-Baum filtern
+
+Der Initial-Load liefert nur Roh-Abhängigkeiten, deren Quelle und Ziel innerhalb des sichtbaren Package-Baums liegen.
+
+- Beginnt der sichtbare Baum bei `a.b`, bleiben nur Roh-Abhängigkeiten erhalten, deren Quell- und Zielpackage `a.b` sind oder mit
+  `a.b.` beginnen.
+- Roh-Abhängigkeiten nach außen werden nicht ausgeliefert.
+- Die Filterlogik ist als Java-Unit-Test isoliert prüfbar.
+- Der Root-Endpunkt ist zusätzlich per Controller-Test prüfbar; der Workspace- oder Analyseanteil kann dabei gemockt werden.
+
+## Sichtbare Package-Pfeile im Client aus Roh-Abhängigkeiten berechnen
+
+Der Client kann aus Roh-Abhängigkeiten und aktuell sichtbaren Packages renderbare Kanten berechnen.
+
+- Für jede Roh-Abhängigkeit ermittelt der Client das sichtbare Package, das die Quelle enthält, und das sichtbare Package, das das Ziel
+  enthält.
+- Wenn Quelle und Ziel auf dasselbe sichtbare Package fallen, wird keine Kante erzeugt.
+- Pro sichtbares Packagepaar und Richtung wird maximal eine Kante erzeugt.
+- Die Berechnung liegt in einer reinen JS-Funktion und ist per JS-Unit-Test prüfbar.
+
+## Package-Pfeile beim Auf- und Zuklappen neu berechnen
+
+Der Client hält die initial geladenen Roh-Abhängigkeiten und aktualisiert die sichtbaren Kanten nach jeder Änderung des sichtbaren Graphen.
+
+- Nach dem Aufklappen eines Packages werden die sichtbaren Kanten für den gesamten sichtbaren Graphen neu berechnet.
+- Nach dem Zuklappen eines Packages werden die sichtbaren Kanten ebenfalls neu berechnet.
+- Nachladeanfragen für Packages oder Typen müssen dafür keine Roh-Abhängigkeiten liefern.
+- Das Verhalten ist per JS-Unit-Test am Client-Zustand prüfbar.
+
+## Package-Pfeile rendern
+
+Die berechneten Package-Kanten werden in der GUI als gerichtete Pfeile angezeigt.
+
+- Cytoscape erhält Kanten zwischen sichtbaren Package-Knoten.
+- Der Renderer stellt die Kanten als Pfeile dar.
+- Der ELK-Graph enthält die sichtbaren Kanten für das Layout.
+- Das Verhalten ist durch JS-Renderer-Tests und einen manuellen Browser-Check prüfbar.
+
+## Weitere Typverwendungen als Package-Abhängigkeiten erkennen
+
+Der Server erkennt weitere direkte statische Typverwendungen als Roh-Abhängigkeiten.
+
+- Felder
+- Methodenparameter
+- Rückgabewerte
+- generische Typverwendungen
+- Jeder erkannte Fall ist durch fokussierte Java-Unit-Tests der Analyseklasse oder package-private Methoden prüfbar.
+
+## Vererbung, Interfaces und Annotationen als Package-Abhängigkeiten erkennen
+
+Der Server erkennt weitere Architekturbezüge als Roh-Abhängigkeiten.
+
+- `extends`
+- `implements`
+- Annotationen auf Typen, Feldern, Methoden und Parametern
+- Jeder erkannte Fall ist durch fokussierte Java-Unit-Tests der Analyseklasse oder package-private Methoden prüfbar.
 
 ## Typen unterscheiden
 
