@@ -1,3 +1,3 @@
-import { startGraphApp } from './graph-client.mjs?v=expanded-package-edges-24';
+import { startGraphApp } from './graph-client.mjs?v=stable-viewport-25';
 
 startGraphApp();

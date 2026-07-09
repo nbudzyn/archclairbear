@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=expanded-package-edges-24';
-import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=expanded-package-edges-24';
-import { renderGraph } from './graph-renderer.mjs?v=expanded-package-edges-24';
+import { createGraphStatusController } from './graph-status.mjs?v=stable-viewport-25';
+import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=stable-viewport-25';
+import { renderGraph } from './graph-renderer.mjs?v=stable-viewport-25';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
@@ -44,7 +44,7 @@ export async function startGraphApp({
         try {
           if (hasVisibleChildNodes(graph, nodeId)) {
             graph = withVisiblePackageEdges(collapseGraph(graph, nodeId), rawDependencies);
-            await renderState.appendGraph(graph);
+            await renderState.appendGraph(graph, { focusNodeId: nodeId });
             return;
           }
 
@@ -58,7 +58,7 @@ export async function startGraphApp({
           const expandedLoadedGraph = await loadGraphImpl(fetchImpl, requestUrlToLoad);
           const expandedGraph = normalizeGraph(expandedLoadedGraph);
           graph = withVisiblePackageEdges(mergeGraphs(graph, expandedGraph), rawDependencies);
-          await renderState.appendGraph(graph);
+          await renderState.appendGraph(graph, { focusNodeId: nodeId });
           if (typeof expandedLoadedGraph.statusMessage === 'string' && expandedLoadedGraph.statusMessage.length > 0) {
             graphStatusController.showStatus(expandedLoadedGraph.statusMessage);
           } else {

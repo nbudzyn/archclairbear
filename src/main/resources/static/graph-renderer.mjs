@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=expanded-package-edges-24';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=stable-viewport-25';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
@@ -52,7 +52,7 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
 
   return {
     cy,
-    async appendGraph(nextGraph) {
+    async appendGraph(nextGraph, { focusNodeId = null } = {}) {
       if (nextGraph.nodes.length === 0 && nextGraph.edges.length === 0) {
         return;
       }
@@ -61,9 +61,8 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
           createGraphElements(nextGraph),
           await layoutGraph(nextGraph, elk),
       );
-      cy.elements().remove();
-      cy.add(positionedGraphElements);
-      fitGraph(cy);
+      const anchoredGraphElements = keepNodeAtCurrentPosition(cy, positionedGraphElements, focusNodeId);
+      updateGraphElements(cy, anchoredGraphElements);
       updateNodeLabelSizing(cy);
     },
     destroy() {
@@ -289,6 +288,97 @@ function applyLayoutToElements(elements, positions) {
       },
     };
   });
+}
+
+function keepNodeAtCurrentPosition(cy, elements, focusNodeId) {
+  if (focusNodeId == null) {
+    return elements;
+  }
+
+  const focusedElement = getElementById(cy, focusNodeId);
+  const nextFocusedElement = elements.find((element) => element?.data?.id === focusNodeId);
+  if (
+    isEmptyElement(focusedElement)
+    || nextFocusedElement?.position == null
+    || typeof focusedElement.position !== 'function'
+  ) {
+    return elements;
+  }
+
+  const currentPosition = focusedElement.position();
+  if (!isPosition(currentPosition)) {
+    return elements;
+  }
+
+  const offsetX = currentPosition.x - nextFocusedElement.position.x;
+  const offsetY = currentPosition.y - nextFocusedElement.position.y;
+
+  return elements.map((element) => {
+    if (element.position == null) {
+      return element;
+    }
+
+    return {
+      ...element,
+      position: {
+        x: element.position.x + offsetX,
+        y: element.position.y + offsetY,
+      },
+    };
+  });
+}
+
+function updateGraphElements(cy, nextElements) {
+  const nextElementIds = new Set(nextElements.map((element) => element.data.id));
+  const existingElements = elementsAsArray(cy.elements());
+
+  existingElements
+      .filter((element) => !nextElementIds.has(element.id()))
+      .forEach((element) => element.remove());
+
+  const nextNodeElements = nextElements.filter((element) => element.data.source == null);
+  const nextEdgeElements = nextElements.filter((element) => element.data.source != null);
+
+  nextNodeElements.forEach((element) => upsertGraphElement(cy, element));
+  nextEdgeElements.forEach((element) => upsertGraphElement(cy, element));
+}
+
+function upsertGraphElement(cy, nextElement) {
+  const existingElement = getElementById(cy, nextElement.data.id);
+
+  if (isEmptyElement(existingElement)) {
+    cy.add(nextElement);
+    return;
+  }
+
+  existingElement.data(nextElement.data);
+  if (nextElement.position != null) {
+    existingElement.position(nextElement.position);
+  }
+}
+
+function getElementById(cy, elementId) {
+  if (typeof cy.getElementById === 'function') {
+    return cy.getElementById(elementId);
+  }
+
+  return typeof cy.$id === 'function' ? cy.$id(elementId) : null;
+}
+
+function elementsAsArray(elements) {
+  if (typeof elements.toArray === 'function') {
+    return elements.toArray();
+  }
+
+  return Array.from(elements);
+}
+
+function isEmptyElement(element) {
+  return element == null || (typeof element.empty === 'function' && element.empty());
+}
+
+function isPosition(value) {
+  return typeof value?.x === 'number' && typeof value?.y === 'number';
 }
 
 export function calculateZoomAdjustedNodeTextStyle(zoom) {

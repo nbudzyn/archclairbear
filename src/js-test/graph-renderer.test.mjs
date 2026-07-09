@@ -145,43 +145,12 @@ test('renderGraph richtet offene Typ-Knoten oben und geschlossene Typ-Knoten mit
 test('renderGraph rendert Package-Kanten und aktualisiert sie beim Nachladen', async () => {
   // GIVEN
   let initialElements = [];
-  let appendedElements = [];
+  let renderedElements = [];
   const cytoscape = (options) => {
     initialElements = options.elements;
+    const cy = createCytoscapeUpdateDouble(options);
 
-    return {
-      ready(callback) {
-        callback();
-      },
-      on() {},
-      style() {
-        return {
-          selector() {
-            return this;
-          },
-          style() {
-            return this;
-          },
-          update() {
-            return this;
-          },
-        };
-      },
-      zoom() {
-        return 1;
-      },
-      fit() {},
-      resize() {},
-      elements() {
-        return {
-          remove() {},
-        };
-      },
-      add(elements) {
-        appendedElements = elements;
-      },
-      destroy() {},
-    };
+    return cy;
   };
 
   // WHEN
@@ -223,6 +192,7 @@ test('renderGraph rendert Package-Kanten und aktualisiert sie beim Nachladen', a
       },
     ],
   });
+  renderedElements = renderState.cy.snapshotElements();
 
   // THEN
   assert.deepEqual(collectEdgeData(initialElements), [
@@ -232,13 +202,146 @@ test('renderGraph rendert Package-Kanten und aktualisiert sie beim Nachladen', a
       target: 'de.aventiure.common',
     },
   ]);
-  assert.deepEqual(collectEdgeData(appendedElements), [
+  assert.deepEqual(collectEdgeData(renderedElements), [
     {
       id: 'edge-de.aventiure.story-de.aventiure.ai',
       source: 'de.aventiure.story',
       target: 'de.aventiure.ai',
     },
   ]);
+});
+
+test('renderGraph verwendet bestehende Elemente beim Nachladen wieder und erhält den Viewport', async () => {
+  // GIVEN
+  let cy = null;
+  const fitCalls = [];
+  const removedElementIds = [];
+  const layoutPositions = [
+    new Map([
+      ['de.aventiure.story', { x: 10, y: 20 }],
+      ['de.aventiure.common', { x: 240, y: 20 }],
+    ]),
+    new Map([
+      ['de.aventiure.story', { x: 70, y: 80 }],
+      ['de.aventiure.common', { x: 300, y: 80 }],
+      ['de.aventiure.ai', { x: 530, y: 80 }],
+    ]),
+  ];
+  const cytoscape = (options) => {
+    cy = createCytoscapeUpdateDouble(options, {
+      fitCalls,
+      removedElementIds,
+    });
+
+    return cy;
+  };
+
+  // WHEN
+  const renderState = await renderGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [
+      {
+        source: 'de.aventiure.story',
+        target: 'de.aventiure.common',
+      },
+    ],
+  }, {
+    cytoscape,
+    container: {},
+    windowObject: {
+      addEventListener() {},
+      removeEventListener() {},
+      ELK: class {
+        async layout(elkGraph) {
+          return addPositionsFromMap(elkGraph, layoutPositions.shift());
+        }
+      },
+    },
+  });
+  const existingStoryElement = cy.storedElement('de.aventiure.story');
+  const storyPositionBeforeUpdate = { ...existingStoryElement.position };
+
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+      packageNode('de.aventiure.ai'),
+    ],
+    edges: [
+      {
+        source: 'de.aventiure.story',
+        target: 'de.aventiure.ai',
+      },
+    ],
+  }, {
+    focusNodeId: 'de.aventiure.story',
+  });
+
+  // THEN
+  assert.equal(cy.storedElement('de.aventiure.story'), existingStoryElement);
+  assert.deepEqual(cy.storedElement('de.aventiure.story').position, storyPositionBeforeUpdate);
+  assert.deepEqual(fitCalls, ['fit']);
+  assert.deepEqual(removedElementIds, ['edge-de.aventiure.story-de.aventiure.common']);
+  assert.deepEqual(collectEdgeData(cy.snapshotElements()), [
+    {
+      id: 'edge-de.aventiure.story-de.aventiure.ai',
+      source: 'de.aventiure.story',
+      target: 'de.aventiure.ai',
+    },
+  ]);
+});
+
+test('renderGraph entfernt nicht mehr sichtbare Knoten einzeln beim Zuklappen', async () => {
+  // GIVEN
+  const removedElementIds = [];
+  let cy = null;
+  const cytoscape = (options) => {
+    cy = createCytoscapeUpdateDouble(options, {
+      removedElementIds,
+    });
+
+    return cy;
+  };
+
+  // WHEN
+  const renderState = await renderGraph({
+    nodes: [
+      packageNode('de.aventiure'),
+      {
+        ...packageNode('de.aventiure.story'),
+        parentId: 'de.aventiure',
+      },
+    ],
+    edges: [],
+  }, {
+    cytoscape,
+    container: {},
+    windowObject: {
+      addEventListener() {},
+      removeEventListener() {},
+      ELK: class {
+        async layout(elkGraph) {
+          return addPositions(elkGraph);
+        }
+      },
+    },
+  });
+
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure'),
+    ],
+    edges: [],
+  }, {
+    focusNodeId: 'de.aventiure',
+  });
+
+  // THEN
+  assert.deepEqual(removedElementIds, ['de.aventiure.story']);
+  assert.deepEqual(cy.snapshotElements().map((element) => element.data.id), ['de.aventiure']);
 });
 
 test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
@@ -369,6 +472,17 @@ function addPositions(layoutNode) {
   };
 }
 
+function addPositionsFromMap(layoutNode, positionById) {
+  const position = positionById.get(layoutNode.id) ?? { x: 0, y: 0 };
+
+  return {
+    ...layoutNode,
+    x: position.x,
+    y: position.y,
+    children: (layoutNode.children ?? []).map((childNode) => addPositionsFromMap(childNode, positionById)),
+  };
+}
+
 function packageNode(id) {
   return {
     id,
@@ -381,4 +495,108 @@ function collectEdgeData(elements) {
   return elements
       .filter((element) => element?.data?.source != null)
       .map((element) => element.data);
+}
+
+function createCytoscapeUpdateDouble(options, {
+  fitCalls = [],
+  removedElementIds = [],
+} = {}) {
+  const elementsById = new Map();
+  const emptyElement = {
+    empty() {
+      return true;
+    },
+  };
+  const cy = {
+    ready(callback) {
+      callback();
+    },
+    on() {},
+    style() {
+      return {
+        selector() {
+          return this;
+        },
+        style() {
+          return this;
+        },
+        update() {
+          return this;
+        },
+      };
+    },
+    zoom() {
+      return 1;
+    },
+    fit() {
+      fitCalls.push('fit');
+    },
+    resize() {},
+    elements() {
+      return {
+        toArray() {
+          return [...elementsById.values()].map((element) => createElementApi(element, elementsById, removedElementIds));
+        },
+        remove() {
+          elementsById.clear();
+        },
+      };
+    },
+    add(elements) {
+      const elementList = Array.isArray(elements) ? elements : [elements];
+      elementList.forEach((element) => {
+        elementsById.set(element.data.id, structuredCloneForTest(element));
+      });
+    },
+    getElementById(elementId) {
+      const element = elementsById.get(elementId);
+
+      return element == null ? emptyElement : createElementApi(element, elementsById, removedElementIds);
+    },
+    storedElement(elementId) {
+      return elementsById.get(elementId);
+    },
+    snapshotElements() {
+      return [...elementsById.values()].map((element) => structuredCloneForTest(element));
+    },
+    destroy() {},
+  };
+  cy.add(options.elements);
+
+  return cy;
+}
+
+function createElementApi(element, elementsById, removedElementIds) {
+  return {
+    empty() {
+      return false;
+    },
+    id() {
+      return element.data.id;
+    },
+    data(nextData) {
+      if (nextData == null) {
+        return element.data;
+      }
+
+      element.data = nextData;
+      return this;
+    },
+    position(nextPosition) {
+      if (nextPosition == null) {
+        return element.position;
+      }
+
+      element.position = nextPosition;
+      return this;
+    },
+    remove() {
+      removedElementIds.push(element.data.id);
+      elementsById.delete(element.data.id);
+    },
+  };
+}
+
+function structuredCloneForTest(value) {
+  return JSON.parse(JSON.stringify(value));
 }

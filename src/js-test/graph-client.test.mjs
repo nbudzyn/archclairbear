@@ -139,6 +139,7 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
   const statusElement = { hidden: true, querySelector: () => statusMessage };
   const errorElement = { hidden: true, querySelector: () => errorMessage };
   const appendCalls = [];
+  const appendOptions = [];
   const loadCalls = [];
   const tapHandlers = [];
   const originalConsoleError = console.error;
@@ -186,8 +187,9 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
         };
       },
       renderGraphImpl: () => ({
-        appendGraph(graph) {
+        appendGraph(graph, options) {
           appendCalls.push(graph);
+          appendOptions.push(options);
         },
         cy: {
           on(eventName, selector, handler) {
@@ -251,6 +253,11 @@ test('startGraphApp lädt bei Doppelklick ein Package nach und ergänzt den sich
       edges: [],
     },
   ]);
+  assert.deepEqual(appendOptions, [
+    {
+      focusNodeId: 'de.aventiure',
+    },
+  ]);
 });
 
 test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Typen nach', async () => {
@@ -260,6 +267,7 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
   const statusElement = { hidden: true, querySelector: () => statusMessage };
   const errorElement = { hidden: true, querySelector: () => errorMessage };
   const appendCalls = [];
+  const appendOptions = [];
   const loadCalls = [];
   const tapHandlers = [];
   const originalConsoleError = console.error;
@@ -323,8 +331,9 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
         };
       },
       renderGraphImpl: () => ({
-        appendGraph(graph) {
+        appendGraph(graph, options) {
           appendCalls.push(graph);
+          appendOptions.push(options);
         },
         cy: {
           on(eventName, selector, handler) {
@@ -448,6 +457,14 @@ test('startGraphApp lädt bei Doppelklick auf einen Typ dessen verschachtelte Ty
         },
       ],
       edges: [],
+    },
+  ]);
+  assert.deepEqual(appendOptions, [
+    {
+      focusNodeId: 'de.aventiure',
+    },
+    {
+      focusNodeId: 'de.aventiure.Outer',
     },
   ]);
 });
