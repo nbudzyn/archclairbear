@@ -26,11 +26,10 @@ Es hilft beim:
 - Jeder Knoten kann unabhängig auf- und zugeklappt werden.
 - Mehrere Knoten können gleichzeitig in unterschiedlichen Detailstufen offen sein.
 - Der Nutzer soll sich beim Hineinzoomen keinen äußeren Kontext merken müssen.
-- Hover zeigt Details.
 - Zoom und Drag werden unterstützt.
 
 ## Abhängigkeitsdarstellung
 
 - Kanten verbinden immer genau einen Quellknoten mit genau einem Zielknoten.
 - Der Graph zeigt echte statische Abhängigkeiten aus der Codebasis.
-- Die optische Darstellung kann Stärke oder Typ ausdrücken.
+- Die optische Darstellung kann Stärke (geplant) oder Typ ausdrücken.
