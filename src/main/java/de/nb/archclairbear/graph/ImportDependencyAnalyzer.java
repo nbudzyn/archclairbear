@@ -41,7 +41,11 @@ class ImportDependencyAnalyzer {
       return packageFromQualifiedTypeName(importedName);
     }
 
-    var segmentsToRemove = segmentsToRemove(importDeclaration);
+    if (importDeclaration.isStatic()) {
+      return targetPackageFromStaticImport(importDeclaration, importedName);
+    }
+
+    var segmentsToRemove = importDeclaration.isAsterisk() ? 0 : 1;
     var targetPackageEnd = importedName.length();
 
     for (var removedSegments = 0; removedSegments < segmentsToRemove; removedSegments += 1) {
@@ -52,6 +56,22 @@ class ImportDependencyAnalyzer {
     }
 
     return importedName.substring(0, targetPackageEnd);
+  }
+
+  private String targetPackageFromStaticImport(
+      final ImportDeclaration importDeclaration,
+      final String importedName) {
+    var importedTypeName = importDeclaration.isAsterisk() ? importedName : removeLastSegment(importedName);
+    if (importedTypeName == null) {
+      return null;
+    }
+
+    return packageFromQualifiedTypeName(importedTypeName);
+  }
+
+  private String removeLastSegment(final String qualifiedName) {
+    var lastDotIndex = qualifiedName.lastIndexOf('.');
+    return lastDotIndex < 0 ? null : qualifiedName.substring(0, lastDotIndex);
   }
 
   private String packageFromQualifiedTypeName(final String qualifiedTypeName) {
@@ -74,11 +94,4 @@ class ImportDependencyAnalyzer {
     return !segment.isEmpty() && Character.isUpperCase(segment.charAt(0));
   }
 
-  private int segmentsToRemove(final ImportDeclaration importDeclaration) {
-    if (!importDeclaration.isStatic()) {
-      return importDeclaration.isAsterisk() ? 0 : 1;
-    }
-
-    return importDeclaration.isAsterisk() ? 1 : 2;
-  }
 }

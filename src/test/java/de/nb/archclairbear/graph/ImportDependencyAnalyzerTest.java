@@ -56,6 +56,40 @@ class ImportDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForStaticMemberImportFromNestedType() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import static b.bar.Outer.Inner.VALUE;
+        class Source {}
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForStaticWildcardImportFromNestedType() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import static b.bar.Outer.Inner.*;
+        class Source {}
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsMultipleDependenciesFromOneClass() {
     // GIVEN
     var compilationUnit = parse("""

@@ -550,6 +550,24 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForQualifiedStaticFieldAccessOnNestedTypeWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          String value = b.bar.Outer.Inner.VALUE;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsDependencyForImportedMethodReference() {
     // GIVEN
     var compilationUnit = parse("""
