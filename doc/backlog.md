@@ -3,15 +3,56 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Smoothe Animation, wenn sich das Layout ändert
+## Layoutwechsel beim Auf- und Zuklappen animieren
 
-Wenn sich das Layout ändert (also praktisch nach jedem Auf- oder Zuklappen) gibt es eine sanfte Animation, die den vorherigen Zustand in den
-neuen
-Zustand überführt.
+Beim Auf- oder Zuklappen eines Knotens bleibt der bisher sichtbare Graph als Kontext erhalten.
+Bereits sichtbare Knoten werden nicht abrupt entfernt und neu gezeichnet, sondern bewegen sich sanft von ihrer bisherigen Position zur neuen
+Layout-Position.
 
-- Der Benutzer soll verstehen, wo sich der aufgeklickte Knoten jetzt befindet.
-- Die Animation beginnt langsam, wird schneller und dann wieder langsamer.
-- Bestenfalls ist die GUI-Änderung nicht sehr groß.
+- Beim Auf- und Zuklappen werden bereits sichtbare Knoten animiert zur neuen Position bewegt.
+- Die Animation verwendet eine Ease-in-out-Bewegung: langsamer Start, schneller Mittelteil, langsames Ende.
+- Der Zoom- und Pan-Zustand des Nutzers bleibt während des Auf-/Zuklappens erhalten; es gibt kein automatisches `fit` nach jeder Interaktion.
+- Neu sichtbare Kind-Knoten erscheinen in der Nähe des aufgeklappten Knotens und bewegen sich in ihre Zielposition.
+- Der aufgeklappte oder zugeklappte Knoten bleibt während und nach der Animation sichtbar.
+- Die Lösung bleibt rein clientseitig; der Server merkt sich keinen UI-Zustand.
+
+Technische Hinweise:
+
+- Das Item ist mit der bestehenden Architektur aus Cytoscape und ELK umsetzbar.
+- ELK berechnet weiterhin das neue Ziel-Layout; Cytoscape rendert den bestehenden Graphen und animiert Knoten zu den neuen Zielpositionen.
+- Der Renderer sollte sichtbare Cytoscape-Elemente beim Graph-Update wiederverwenden, statt alle Elemente zu entfernen und neu hinzuzufügen.
+- Bereits vorhandene Knoten bekommen ihre aktuelle Cytoscape-Position als Animationsstart und die von ELK berechnete Position als Ziel.
+- Neue Knoten können initial nahe am aufgeklappten Elternknoten eingefügt und anschließend zur ELK-Zielposition animiert werden.
+- Entfernte Knoten sollten beim Zuklappen erst nach der sichtbaren Übergangsbewegung aus Cytoscape entfernt werden.
+- Nach dem Initial-Load und nach Browser-Resize darf weiterhin automatisch gefittet werden; nach Auf-/Zuklappen soll kein automatisches
+  `fit` laufen, damit Zoom und Pan des Nutzers stabil bleiben.
+- Die fachliche Layout-Entscheidung bleibt bei ELK. Cytoscape übernimmt nur Darstellung, Elementpflege und Animation.
+
+## Manuell verschobene Knoten beim Layoutwechsel erhalten
+
+Wenn der Nutzer einen Knoten per Drag verschoben hat, bleibt diese Position bei späterem Auf- oder Zuklappen erhalten.
+Das automatische Layout darf solche Knoten nicht wieder an ihre ELK-Position zurücksetzen.
+
+- Nach Drag eines Knotens wird dessen Position im Client unter der Knoten-ID gemerkt.
+- Beim Auf- oder Zuklappen behalten manuell verschobene sichtbare Knoten ihre Position.
+- Nicht manuell verschobene Knoten dürfen weiterhin von ELK neu positioniert werden.
+- Beim Neuladen der Seite darf der Zustand verloren gehen; keine Server- oder LocalStorage-Persistenz in diesem Item.
+
+Technische Hinweise:
+
+- Das Item ist mit der bestehenden Architektur aus Cytoscape und ELK umsetzbar.
+- Die gemerkten Positionen sind reiner Client-Zustand im Renderer, zum Beispiel als `Map` von Knoten-ID auf Cytoscape-Modellposition.
+- Cytoscape liefert die manuelle Endposition nach Drag; diese Position kann beim Drag-Ende des Knotens gespeichert werden.
+- ELK berechnet weiterhin das automatische Ziel-Layout für den sichtbaren Graphen.
+- Nach der ELK-Berechnung überschreibt der Renderer die ELK-Zielpositionen für manuell verschobene Knoten mit den gemerkten Positionen.
+- Manuell verschobene Knoten dürfen bei späteren Layoutwechseln nicht zur ELK-Zielposition animiert werden; sie bleiben an ihrer gemerkten
+  Position.
+- Für neu sichtbare oder nicht manuell verschobene Knoten bleibt das ELK-Ergebnis maßgeblich.
+- Bei aufgeklappten Compound-Knoten muss die Implementierung die Verschiebung als Gruppenverschiebung behandeln: Wird ein sichtbarer
+  Container verschoben, sollen seine sichtbaren Kinder relativ dazu konsistent bleiben.
+- Beim Zuklappen können gemerkte Positionen für unsichtbar gewordene Nachfahren im Client erhalten bleiben, solange die Seite nicht neu
+  geladen wird.
+- Die Lösung darf Layoutqualität lokal verschlechtern, wenn der Nutzer Knoten bewusst verschiebt; das ist Teil der manuellen Kontrolle.
 
 ## Workspace-Pfad konfigurierbar machen
 
