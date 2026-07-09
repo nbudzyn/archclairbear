@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=stable-viewport-25';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=animated-layout-26';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
@@ -10,6 +10,7 @@ const BASE_TYPE_NODE_TEXT_MAX_WIDTH = 126;
 const MIN_RENDERED_TYPE_NODE_TEXT_MAX_WIDTH = 112;
 const PACKAGE_BOX_WIDTH = 220;
 const PACKAGE_BOX_HEIGHT = 92;
+const LAYOUT_ANIMATION_DURATION_MS = 320;
 
 export async function renderGraph(graph, { cytoscape, container, windowObject = window }) {
   if (!cytoscape) {
@@ -62,7 +63,7 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
           await layoutGraph(nextGraph, elk),
       );
       const anchoredGraphElements = keepNodeAtCurrentPosition(cy, positionedGraphElements, focusNodeId);
-      updateGraphElements(cy, anchoredGraphElements);
+      await updateGraphElements(cy, anchoredGraphElements);
       updateNodeLabelSizing(cy);
     },
     destroy() {
@@ -328,7 +329,7 @@ function keepNodeAtCurrentPosition(cy, elements, focusNodeId) {
   });
 }
 
-function updateGraphElements(cy, nextElements) {
+async function updateGraphElements(cy, nextElements) {
   const nextElementIds = new Set(nextElements.map((element) => element.data.id));
   const existingElements = elementsAsArray(cy.elements());
 
@@ -339,8 +340,9 @@ function updateGraphElements(cy, nextElements) {
   const nextNodeElements = nextElements.filter((element) => element.data.source == null);
   const nextEdgeElements = nextElements.filter((element) => element.data.source != null);
 
-  nextNodeElements.forEach((element) => upsertGraphElement(cy, element));
+  const nodeAnimations = nextNodeElements.map((element) => upsertGraphElement(cy, element));
   nextEdgeElements.forEach((element) => upsertGraphElement(cy, element));
+  await Promise.all(nodeAnimations);
 }
 
 function upsertGraphElement(cy, nextElement) {
@@ -353,8 +355,48 @@ function upsertGraphElement(cy, nextElement) {
 
   existingElement.data(nextElement.data);
   if (nextElement.position != null) {
-    existingElement.position(nextElement.position);
+    return moveGraphNodeToPosition(existingElement, nextElement.position);
   }
+
+  return Promise.resolve();
+}
+
+function moveGraphNodeToPosition(element, position) {
+  if (typeof element.animate !== 'function') {
+    element.position(position);
+    return Promise.resolve();
+  }
+
+  let animationCompleted = false;
+  return new Promise((resolve) => {
+    let fallbackTimeout = null;
+
+    const finishAnimation = () => {
+      if (animationCompleted) {
+        return;
+      }
+
+      animationCompleted = true;
+      clearTimeout(fallbackTimeout);
+      resolve();
+    };
+
+    fallbackTimeout = setTimeout(finishAnimation, LAYOUT_ANIMATION_DURATION_MS + 80);
+
+    const animation = element.animate({
+      position,
+    }, {
+      duration: LAYOUT_ANIMATION_DURATION_MS,
+      easing: 'ease-in-out',
+      complete: finishAnimation,
+    });
+
+    if (animation == null || typeof animation.promise !== 'function') {
+      return;
+    }
+
+    animation.promise('complete').then(finishAnimation, finishAnimation);
+  });
 }
 
 function getElementById(cy, elementId) {

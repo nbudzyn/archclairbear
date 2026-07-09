@@ -294,6 +294,88 @@ test('renderGraph verwendet bestehende Elemente beim Nachladen wieder und erhäl
   ]);
 });
 
+test('renderGraph animiert bestehende Knoten beim Nachladen auf ihre neue Layout-Position', async () => {
+  // GIVEN
+  let cy = null;
+  const animateCalls = [];
+  const layoutPositions = [
+    new Map([
+      ['de.aventiure.story', { x: 10, y: 20 }],
+      ['de.aventiure.common', { x: 240, y: 20 }],
+    ]),
+    new Map([
+      ['de.aventiure.story', { x: 90, y: 120 }],
+      ['de.aventiure.common', { x: 320, y: 120 }],
+    ]),
+  ];
+  const cytoscape = (options) => {
+    cy = createCytoscapeUpdateDouble(options, {
+      animateCalls,
+    });
+
+    return cy;
+  };
+
+  // WHEN
+  const renderState = await renderGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [],
+  }, {
+    cytoscape,
+    container: {},
+    windowObject: {
+      addEventListener() {},
+      removeEventListener() {},
+      ELK: class {
+        async layout(elkGraph) {
+          return addPositionsFromMap(elkGraph, layoutPositions.shift());
+        }
+      },
+    },
+  });
+
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [],
+  });
+
+  // THEN
+  assert.deepEqual(animateCalls, [
+    {
+      id: 'de.aventiure.story',
+      position: {
+        x: 200,
+        y: 166,
+      },
+      duration: 320,
+      easing: 'ease-in-out',
+    },
+    {
+      id: 'de.aventiure.common',
+      position: {
+        x: 430,
+        y: 166,
+      },
+      duration: 320,
+      easing: 'ease-in-out',
+    },
+  ]);
+  assert.deepEqual(cy.storedElement('de.aventiure.story').position, {
+    x: 200,
+    y: 166,
+  });
+  assert.deepEqual(cy.storedElement('de.aventiure.common').position, {
+    x: 430,
+    y: 166,
+  });
+});
+
 test('renderGraph entfernt nicht mehr sichtbare Knoten einzeln beim Zuklappen', async () => {
   // GIVEN
   const removedElementIds = [];
@@ -500,6 +582,7 @@ function collectEdgeData(elements) {
 function createCytoscapeUpdateDouble(options, {
   fitCalls = [],
   removedElementIds = [],
+  animateCalls = [],
 } = {}) {
   const elementsById = new Map();
   const emptyElement = {
@@ -535,7 +618,12 @@ function createCytoscapeUpdateDouble(options, {
     elements() {
       return {
         toArray() {
-          return [...elementsById.values()].map((element) => createElementApi(element, elementsById, removedElementIds));
+          return [...elementsById.values()].map((element) => createElementApi(
+              element,
+              elementsById,
+              removedElementIds,
+              animateCalls,
+          ));
         },
         remove() {
           elementsById.clear();
@@ -551,7 +639,7 @@ function createCytoscapeUpdateDouble(options, {
     getElementById(elementId) {
       const element = elementsById.get(elementId);
 
-      return element == null ? emptyElement : createElementApi(element, elementsById, removedElementIds);
+      return element == null ? emptyElement : createElementApi(element, elementsById, removedElementIds, animateCalls);
     },
     storedElement(elementId) {
       return elementsById.get(elementId);
@@ -566,7 +654,7 @@ function createCytoscapeUpdateDouble(options, {
   return cy;
 }
 
-function createElementApi(element, elementsById, removedElementIds) {
+function createElementApi(element, elementsById, removedElementIds, animateCalls) {
   return {
     empty() {
       return false;
@@ -589,6 +677,22 @@ function createElementApi(element, elementsById, removedElementIds) {
 
       element.position = nextPosition;
       return this;
+    },
+    animate(animation, options) {
+      animateCalls.push({
+        id: element.data.id,
+        position: animation.position,
+        duration: options.duration,
+        easing: options.easing,
+      });
+      element.position = animation.position;
+      options.complete();
+
+      return {
+        promise() {
+          return Promise.resolve();
+        },
+      };
     },
     remove() {
       removedElementIds.push(element.data.id);

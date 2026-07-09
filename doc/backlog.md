@@ -3,26 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Bestehende Knoten beim Layoutwechsel animieren
-
-Beim Auf- oder Zuklappen eines Knotens bewegen sich bereits sichtbare Knoten sanft von ihrer bisherigen Position zur neuen Layout-Position.
-
-- Die Animation verwendet eine Ease-in-out-Bewegung: langsamer Start, schneller Mittelteil, langsames Ende.
-- Bereits sichtbare Kanten bleiben während der Bewegung konsistent sichtbar.
-- Der Zoom- und Pan-Zustand des Nutzers bleibt während der Animation erhalten.
-- Der aufgeklappte oder zugeklappte Knoten bleibt während und nach der Animation sichtbar.
-- Die Lösung bleibt rein clientseitig; der Server merkt sich keinen UI-Zustand.
-
-Technische Hinweise:
-
-- Das Item ist mit der bestehenden Architektur aus Cytoscape und ELK umsetzbar.
-- ELK berechnet weiterhin das neue Ziel-Layout; Cytoscape rendert den bestehenden Graphen und animiert Knoten zu den neuen Zielpositionen.
-- Bereits vorhandene Knoten bekommen ihre aktuelle Cytoscape-Position als Animationsstart und die von ELK berechnete Position als Ziel.
-- Kanten werden nicht separat gelayoutet; sie folgen den animierten Cytoscape-Knoten.
-- Nach dem Initial-Load und nach Browser-Resize darf weiterhin automatisch gefittet werden; nach Auf-/Zuklappen soll kein automatisches
-  `fit` laufen, damit Zoom und Pan des Nutzers stabil bleiben.
-- Die fachliche Layout-Entscheidung bleibt bei ELK. Cytoscape übernimmt nur Darstellung, Elementpflege und Animation.
-
 ## Neue und entfernte Knoten beim Layoutwechsel überführen
 
 Beim Auf- oder Zuklappen erscheinen und verschwinden Knoten so, dass der räumliche Zusammenhang des Graphen nachvollziehbar bleibt.
