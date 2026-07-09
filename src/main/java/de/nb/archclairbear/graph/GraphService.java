@@ -31,6 +31,7 @@ class GraphService {
 
   private final Path workspacePath;
   private final ImportDependencyAnalyzer importDependencyAnalyzer = new ImportDependencyAnalyzer();
+  private final InitialRawDependencyFilter initialRawDependencyFilter = new InitialRawDependencyFilter();
   private volatile WorkspaceIndex cachedIndex;
 
   @Autowired
@@ -50,9 +51,13 @@ class GraphService {
       return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage());
     }
 
+    var nodes = List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null, workspaceIndex.packages()));
+
     return new GraphResponse(
-        List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null, workspaceIndex.packages())),
-        workspaceIndex.rawDependencies(),
+        nodes,
+        initialRawDependencyFilter.filter(
+            workspaceIndex.rawDependencies(),
+            initialRawDependencyFilter.analyzedRootPackageName(nodes)),
         workspaceIndex.statusMessage());
   }
 

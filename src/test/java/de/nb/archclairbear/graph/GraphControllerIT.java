@@ -98,6 +98,43 @@ class GraphControllerIT {
   }
 
   @Test
+  void rootGraphDoesNotTransportRawDependenciesOutsideTheInitialPackageTree() throws Exception {
+    // GIVEN
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "story")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "story", "StoryType.java")),
+        """
+            package de.aventiure.story;
+            import de.aventiure.common.CommonType;
+            import de.outside.OtherType;
+            class StoryType {}
+            """);
+    Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "common")));
+    Files.writeString(
+        tempDir.resolve(Path.of("nested", "layout", "common", "CommonType.java")),
+        "package de.aventiure.common; class CommonType {}");
+    var controller = new GraphController(new GraphService(tempDir));
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
+    // WHEN
+    var response = standaloneMockMvc.perform(get("/api/graph/root"))
+        // THEN
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    var root = objectMapper.readTree(response);
+    assertThat(root) //
+        .hasSinglePackageNode("de.aventiure", "de.aventiure") //
+        .hasSingleRawDependency("de.aventiure.story", "de.aventiure.common") //
+        .hasNoEdgesField();
+  }
+
+  @Test
   void packageGraphReturnsChildrenForExpandedPackage() throws Exception {
     // GIVEN
     Files.createDirectories(tempDir.resolve(Path.of("nested", "layout", "lay05_being", "model", "being")));
