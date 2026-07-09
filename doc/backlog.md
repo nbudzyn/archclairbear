@@ -3,33 +3,13 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Sichtbare Package-Pfeile im Client aus Roh-Abhängigkeiten berechnen
-
-Der Client berechnet aus Roh-Abhängigkeiten und aktuell sichtbaren Packages renderbare Kanten.
-
-- Für jede Roh-Abhängigkeit ermittelt der Client das sichtbare Package für die Quelle und das sichtbare Package für das Ziel.
-    - Wenn Quelle / Ziel bereits sichtbar ist, dann ist das das gewünschte Package.
-    - Ansonsten das nächstsichtbare Oberpackage.
-        - BeispieL: Quelle ist a.b.c.d.e. Sichtbar sind a.b und a.b.c. Dann ist a.b.c das "nächstsichtbare Oberpackage".
-        - Gegenbeispiel. Wenn der Algorithmus a.b ermitelt hat, aber auch a.b.c sichtbar ist - dann hat der Algorithmus einen Fehler
-          gemacht.
-    - Sollte nur das Default-Package sichtbar sein, dann ist das Default-Package das nächstsichtbare Oberpackage.
-- Wenn Quelle und Ziel auf dasselbe sichtbare Package fallen, wird keine Kante erzeugt.
-- Pro sichtbares Packagepaar und Richtung wird maximal eine Kante erzeugt.
-- Die Berechnung liegt in einer reinen JS-Funktion und ist per JS-Unit-Test prüfbar. Der Test prüft mindestens die folgenden Fälle:
-    - Quelle ist a.b.c.d.e. Sichtbar sind nur a.b, a.b.c, a.b.c.d und a.b.c.d.e und a.b.x. Nächstsichtbares Oberpackage: a.b.c.d.e.
-    - Quelle ist a.b.c.d.e. Sichtbar sind nur a.b, a.b.c und a.b.c.d und a.b.x. Nächstsichtbares Oberpackage: a.b.c.d.
-    - Quelle ist a.b.c.d.e. Sichtbar sind nur a.b und a.b.c und a.b.x. Nächstsichtbares Oberpackage: a.b.c.
-    - Quelle ist a.b.c.d.e. Sichtbar ist nur a.b. Nächstsichtbares Oberpackage: a.b.
-    - Quelle ist a.b.c.d.e. Sichtbar ist nur a. Nächstsichtbares Oberpackage: a
-    - Quelle ist a.b.c.d.e. Sichtbar ist nur das Default-Package. Nächstsichtbares Oberpackage: das Default-Package
-    - Dieselben Fälle für das Ziel (falls das separat implementiert ist)
-    - Ggf. weitere Fälle
-
 ## Package-Pfeile beim Auf- und Zuklappen neu berechnen
 
-Der Client hält die initial geladenen Roh-Abhängigkeiten und aktualisiert die sichtbaren Kanten nach jeder Änderung des sichtbaren Graphen.
+Der Client speichert die initial geladenen Roh-Abhängigkeiten und aktualisiert die sichtbaren Kanten nach jeder Änderung des sichtbaren
+Graphen.
 
+- Es wird der implementierte Code zur Berechnung der sichtbaren Kanten verwendet: calculateVisiblePackageEdges (oder eine darüberliegende
+  Methode).
 - Nach dem Aufklappen eines Packages werden die sichtbaren Kanten für den gesamten sichtbaren Graphen neu berechnet.
 - Nach dem Zuklappen eines Packages werden die sichtbaren Kanten ebenfalls neu berechnet.
 - Nachladeanfragen für Packages oder Typen müssen dafür keine Roh-Abhängigkeiten liefern.

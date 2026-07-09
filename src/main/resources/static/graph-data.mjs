@@ -61,6 +61,38 @@ export function collapseGraph(graph, rootNodeId) {
   };
 }
 
+export function calculateVisiblePackageEdges(rawDependencies, graph) {
+  if (!Array.isArray(rawDependencies)) {
+    throw new GraphDataValidationError('Die Graphdaten vom Server sind ungültig.');
+  }
+
+  const normalizedGraph = normalizeGraph(graph);
+  const visiblePackageIds = new Set(
+      normalizedGraph.nodes
+          .filter((node) => node.type === 'package')
+          .map((node) => node.id),
+  );
+  const visibleEdges = new Map();
+
+  rawDependencies
+      .map((rawDependency) => normalizeRawDependency(rawDependency))
+      .forEach((rawDependency) => {
+        const source = findVisiblePackageId(rawDependency.sourcePackage, visiblePackageIds);
+        const target = findVisiblePackageId(rawDependency.targetPackage, visiblePackageIds);
+
+        if (source == null || target == null || source === target) {
+          return;
+        }
+
+        visibleEdges.set(`${source}->${target}`, {
+          source,
+          target,
+        });
+      });
+
+  return [...visibleEdges.values()];
+}
+
 export class GraphDataValidationError extends Error {
   constructor(message) {
     super(message);
@@ -102,6 +134,21 @@ function normalizeEdge(edge) {
   return {
     source: edge.source,
     target: edge.target,
+  };
+}
+
+function normalizeRawDependency(rawDependency) {
+  if (!isRecord(rawDependency)) {
+    throw new GraphDataValidationError('Die Graphdaten vom Server sind ungültig.');
+  }
+
+  if (!isPackageName(rawDependency.sourcePackage) || !isPackageName(rawDependency.targetPackage)) {
+    throw new GraphDataValidationError('Die Graphdaten vom Server sind ungültig.');
+  }
+
+  return {
+    sourcePackage: rawDependency.sourcePackage,
+    targetPackage: rawDependency.targetPackage,
   };
 }
 
@@ -165,12 +212,34 @@ function isString(value) {
   return typeof value === 'string' && value.length > 0;
 }
 
-function isOptionalString(value) {
-  return value == null || isString(value);
-}
-
 function isOptionalBoolean(value) {
   return value == null || typeof value === 'boolean';
+}
+
+function isPackageName(value) {
+  return typeof value === 'string';
+}
+
+function findVisiblePackageId(packageName, visiblePackageIds) {
+  const displayedPackageName = displayPackageName(packageName);
+
+  if (visiblePackageIds.has(displayedPackageName)) {
+    return displayedPackageName;
+  }
+
+  const segments = packageName.split('.');
+  for (let segmentCount = segments.length - 1; segmentCount > 0; segmentCount -= 1) {
+    const parentPackageName = segments.slice(0, segmentCount).join('.');
+    if (visiblePackageIds.has(parentPackageName)) {
+      return parentPackageName;
+    }
+  }
+
+  return visiblePackageIds.has('(default)') ? '(default)' : null;
+}
+
+function displayPackageName(packageName) {
+  return packageName === '' ? '(default)' : packageName;
 }
 
 export function getGraphNodeDimensions(nodeType) {

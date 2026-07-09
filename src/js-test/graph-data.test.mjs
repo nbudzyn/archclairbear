@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { GraphDataValidationError, collapseGraph, createGraphElements, mergeGraphs, normalizeGraph } from '../main/resources/static/graph-data.mjs';
+import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, createGraphElements, mergeGraphs, normalizeGraph } from '../main/resources/static/graph-data.mjs';
 
 test('normalizeGraph normalisiert gültige Graphdaten', () => {
   // GIVEN
@@ -329,3 +329,176 @@ test('collapseGraph entfernt einen Package-Knoten mit allen sichtbaren Nachfahre
     ],
   });
 });
+
+test('calculateVisiblePackageEdges verwendet das sichtbare Quell-Package selbst', () => {
+  // GIVEN
+  const graph = packageGraph('a.b', 'a.b.c', 'a.b.c.d', 'a.b.c.d.e', 'a.b.x', 'other');
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b.c.d.e',
+      targetPackage: 'other',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: 'a.b.c.d.e',
+      target: 'other',
+    },
+  ]);
+});
+
+test('calculateVisiblePackageEdges verwendet das nächste sichtbare Quell-Oberpackage', () => {
+  // GIVEN
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b.c.d.e',
+      targetPackage: 'other',
+    },
+  ];
+
+  // WHEN / THEN
+  assert.deepEqual(
+      calculateVisiblePackageEdges(rawDependencies, packageGraph('a.b', 'a.b.c', 'a.b.c.d', 'a.b.x', 'other')),
+      [
+        {
+          source: 'a.b.c.d',
+          target: 'other',
+        },
+      ]);
+  assert.deepEqual(
+      calculateVisiblePackageEdges(rawDependencies, packageGraph('a.b', 'a.b.c', 'a.b.x', 'other')),
+      [
+        {
+          source: 'a.b.c',
+          target: 'other',
+        },
+      ]);
+  assert.deepEqual(
+      calculateVisiblePackageEdges(rawDependencies, packageGraph('a.b', 'other')),
+      [
+        {
+          source: 'a.b',
+          target: 'other',
+        },
+      ]);
+  assert.deepEqual(
+      calculateVisiblePackageEdges(rawDependencies, packageGraph('a', 'other')),
+      [
+        {
+          source: 'a',
+          target: 'other',
+        },
+      ]);
+});
+
+test('calculateVisiblePackageEdges verwendet das Default-Package als sichtbares Quell-Oberpackage', () => {
+  // GIVEN
+  const graph = packageGraph('(default)', 'other');
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b.c.d.e',
+      targetPackage: 'other',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: '(default)',
+      target: 'other',
+    },
+  ]);
+});
+
+test('calculateVisiblePackageEdges verwendet das nächste sichtbare Ziel-Package', () => {
+  // GIVEN
+  const graph = packageGraph('source', 'a.b', 'a.b.c', 'a.b.x');
+  const rawDependencies = [
+    {
+      sourcePackage: 'source',
+      targetPackage: 'a.b.c.d.e',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: 'source',
+      target: 'a.b.c',
+    },
+  ]);
+});
+
+test('calculateVisiblePackageEdges erzeugt keine Kanten innerhalb desselben sichtbaren Packages', () => {
+  // GIVEN
+  const graph = packageGraph('a.b.c');
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b.c.source',
+      targetPackage: 'a.b.c.target',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, []);
+});
+
+test('calculateVisiblePackageEdges erzeugt pro sichtbarem Packagepaar und Richtung höchstens eine Kante', () => {
+  // GIVEN
+  const graph = packageGraph('a.b', 'x.y');
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b.first',
+      targetPackage: 'x.y.first',
+    },
+    {
+      sourcePackage: 'a.b.second',
+      targetPackage: 'x.y.second',
+    },
+    {
+      sourcePackage: 'x.y.second',
+      targetPackage: 'a.b.second',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: 'a.b',
+      target: 'x.y',
+    },
+    {
+      source: 'x.y',
+      target: 'a.b',
+    },
+  ]);
+});
+
+function packageGraph(...packageIds) {
+  return {
+    nodes: packageIds.map((packageId) => ({
+      id: packageId,
+      label: packageId,
+      type: 'package',
+      expandable: true,
+    })),
+    edges: [],
+  };
+}

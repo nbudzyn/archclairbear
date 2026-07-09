@@ -1,5 +1,12 @@
 # Entwicklung
 
+## Erster Schritt: Prüfung der Anforderungen
+
+Wenn das beauftrage Backlog-Item in sich widersprüchlich ist, brich die Entwicklung ab und informiere den User.
+Wenn das beauftrage Backlog-Item den Projekt-Vorgaben widerspricht, frage vor der Entwicklung den User: Sollen die Projekt-Vorgaben
+angepasst
+werden, soll das Backlog-Item angepasst werden oder handelt es sich um eine Ausnahme?
+
 ## Gradle
 
 - Vor Gradle-Aufrufen immer explizit Freigabe holen.

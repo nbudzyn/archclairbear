@@ -11,17 +11,17 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
   const graphData = await (await rootGraphResponse).json();
 
   // THEN
-  expect(graphData).toEqual({
-    nodes: [
-      {
-        id: 'de.aventiure',
-        type: 'package',
-        label: 'de.aventiure',
-        expandable: true,
-        parentId: null,
-      },
-    ],
-  });
+  expect(graphData.nodes).toEqual([
+    {
+      id: 'de.aventiure',
+      type: 'package',
+      label: 'de.aventiure',
+      expandable: true,
+      parentId: null,
+    },
+  ]);
+  expect(Array.isArray(graphData.rawDependencies)).toBe(true);
+  expect(graphData.edges).toBeUndefined();
 
   await expect(page.locator('#cy')).toBeVisible();
   await expect(page.locator('#cy canvas').first()).toBeVisible();
