@@ -19,6 +19,23 @@ In der GUI werden jetzt auch Abhängigkeiten dargestellt:
 - Immer, wenn ein Paket auf- oder zugeklappt wird, wird die Anzeige so aktualisiert, dass sie vollständig stimmt.
 - Die fachliche Darstellung ist rein visuell, aber auf dem Server durch Unit- und Mock-Tests prüfbar.
 
+Hinweis zur technischen Umsetzung:
+
+- Der Server liefert beim Initial-Load die Roh-Abhängigkeiten des gesamten analysierten Baums.
+- Der Server schickt nur Roh-Abhängigkeiten, deren Quell- und Zielpackage im sichtbaren Package-Baum liegen. Wenn der sichtbare Baum z. B.
+  bei `a.b` beginnt, werden nur Abhängigkeiten behalten, deren Packages `a.b` sind oder mit `a.b.` beginnen.
+- Spätere Nachladeanfragen für Packages oder Typen liefern nur neue Knoten, aber keine weiteren Roh-Abhängigkeiten.
+- Der Client speichert die initial geladenen Roh-Abhängigkeiten und berechnet bei jedem Auf- und Zuklappen alle sichtbaren Package-Pfeile
+  vollständig neu.
+
+Berechnung der sichtbaren Pfeile:
+
+- Das System geht alle Roh-Abhängigkeiten durch.
+- Für jede Roh-Abhängigkeit ermittelt es das sichtbare Package, das die Quelle enthält, und das sichtbare Package, das das Ziel enthält.
+- Wenn beide sichtbaren Packages verschieden sind, fügt das System einen Pfeil vom sichtbaren Quellpackage zum sichtbaren
+  Zielpackage ein.
+    - Wenn derselbe Pfeil bereits existiert, wird kein zweiter Pfeil ergänzt.
+
 ## Typen unterscheiden
 
 Der Client erfährt, ob ein Typ ein `class`, `interface`, `enum`, `record` oder Annotation-Typ ist.
