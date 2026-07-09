@@ -1,15 +1,15 @@
 # Arbeit an Requirements
 
-## Jeder Task
+## Jedes Backlog Item
 
-Jeder Task soll so klein sein, dass er verlässlich durch die KI umgesetzt (und automatisiert und manuell getestet) werden kann.
-Jeder Task aus dem Backlog soll einen fachlichen Mehrwert bringen.
+Jedes Backlog Item soll so klein sein, dass es verlässlich durch die KI umgesetzt (und automatisiert und manuell getestet) werden kann.
+Jedes Backlog Item soll einen fachlichen Mehrwert bringen.
 
-## Der oberste Task
+## Das oberste Backlog Item
 
-Der oberste Task soll keine fachlichen Fragen offen lassen und keine fachlichen Annahmen erfordern.
-Der oberste Task soll nicht in sich widersprüchlich sein.
+Das oberste Backlog Item soll keine fachlichen Fragen offen lassen und keine fachlichen Annahmen erfordern.
+Das oberste Backlog Item soll nicht in sich widersprüchlich sein.
 
 ## Sortierung
 
-Die Tasks sind nach geplanter Umsetzungsreihenfolge sortiert.
+Die Backlog Items sind nach geplanter Umsetzungsreihenfolge sortiert.

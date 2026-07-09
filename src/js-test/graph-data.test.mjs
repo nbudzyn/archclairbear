@@ -352,6 +352,76 @@ test('calculateVisiblePackageEdges verwendet das sichtbare Quell-Package selbst'
   ]);
 });
 
+test('calculateVisiblePackageEdges verwendet ein aufgeklapptes Quell-Package bei exakter Package-Übereinstimmung', () => {
+  // GIVEN
+  const graph = expandedPackageGraph(
+      packageNode('a.b'),
+      packageNode('a.b.c', 'a.b'),
+      packageNode('other'));
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b',
+      targetPackage: 'other',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: 'a.b',
+      target: 'other',
+    },
+  ]);
+});
+
+test('calculateVisiblePackageEdges verwendet ein sichtbares Quell-Kind unter einem aufgeklappten Package', () => {
+  // GIVEN
+  const graph = expandedPackageGraph(
+      packageNode('a.b'),
+      packageNode('a.b.c', 'a.b'),
+      packageNode('other'));
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b.c.d',
+      targetPackage: 'other',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: 'a.b.c',
+      target: 'other',
+    },
+  ]);
+});
+
+test('calculateVisiblePackageEdges verwirft eine Quell-Kante auf ein aufgeklapptes nicht exakt passendes Package', () => {
+  // GIVEN
+  const graph = expandedPackageGraph(
+      packageNode('a.b'),
+      packageNode('a.b.x', 'a.b'),
+      packageNode('other'));
+  const rawDependencies = [
+    {
+      sourcePackage: 'a.b.c.d',
+      targetPackage: 'other',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, []);
+});
+
 test('calculateVisiblePackageEdges verwendet das nächste sichtbare Quell-Oberpackage', () => {
   // GIVEN
   const rawDependencies = [
@@ -440,6 +510,76 @@ test('calculateVisiblePackageEdges verwendet das nächste sichtbare Ziel-Package
   ]);
 });
 
+test('calculateVisiblePackageEdges verwendet ein aufgeklapptes Ziel-Package bei exakter Package-Übereinstimmung', () => {
+  // GIVEN
+  const graph = expandedPackageGraph(
+      packageNode('source'),
+      packageNode('a.b'),
+      packageNode('a.b.c', 'a.b'));
+  const rawDependencies = [
+    {
+      sourcePackage: 'source',
+      targetPackage: 'a.b',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: 'source',
+      target: 'a.b',
+    },
+  ]);
+});
+
+test('calculateVisiblePackageEdges verwendet ein sichtbares Ziel-Kind unter einem aufgeklappten Package', () => {
+  // GIVEN
+  const graph = expandedPackageGraph(
+      packageNode('source'),
+      packageNode('a.b'),
+      packageNode('a.b.c', 'a.b'));
+  const rawDependencies = [
+    {
+      sourcePackage: 'source',
+      targetPackage: 'a.b.c.d',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, [
+    {
+      source: 'source',
+      target: 'a.b.c',
+    },
+  ]);
+});
+
+test('calculateVisiblePackageEdges verwirft eine Ziel-Kante auf ein aufgeklapptes nicht exakt passendes Package', () => {
+  // GIVEN
+  const graph = expandedPackageGraph(
+      packageNode('source'),
+      packageNode('a.b'),
+      packageNode('a.b.x', 'a.b'));
+  const rawDependencies = [
+    {
+      sourcePackage: 'source',
+      targetPackage: 'a.b.c.d',
+    },
+  ];
+
+  // WHEN
+  const edges = calculateVisiblePackageEdges(rawDependencies, graph);
+
+  // THEN
+  assert.deepEqual(edges, []);
+});
+
 test('calculateVisiblePackageEdges erzeugt keine Kanten innerhalb desselben sichtbaren Packages', () => {
   // GIVEN
   const graph = packageGraph('a.b.c');
@@ -493,12 +633,24 @@ test('calculateVisiblePackageEdges erzeugt pro sichtbarem Packagepaar und Richtu
 
 function packageGraph(...packageIds) {
   return {
-    nodes: packageIds.map((packageId) => ({
-      id: packageId,
-      label: packageId,
-      type: 'package',
-      expandable: true,
-    })),
+    nodes: packageIds.map((packageId) => packageNode(packageId)),
     edges: [],
+  };
+}
+
+function expandedPackageGraph(...nodes) {
+  return {
+    nodes,
+    edges: [],
+  };
+}
+
+function packageNode(packageId, parentId = null) {
+  return {
+    id: packageId,
+    label: packageId,
+    type: 'package',
+    expandable: true,
+    parentId,
   };
 }

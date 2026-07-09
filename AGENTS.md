@@ -23,4 +23,4 @@ FALLS du manuelle Browser-Tests ausführst, sind verbindlich:
 
 Änderungen immer zuerst an den verbindlichen Dokumenten abgleichen.
 
-Das Backlog mit Tasks liegt unter [/doc/backlog.md].
+Das Backlog mit einzelnen Backlog-Items liegt unter [/doc/backlog.md].

@@ -72,13 +72,18 @@ export function calculateVisiblePackageEdges(rawDependencies, graph) {
           .filter((node) => node.type === 'package')
           .map((node) => node.id),
   );
+  const expandedPackageIds = new Set(
+      normalizedGraph.nodes
+          .filter((node) => node.parentId != null)
+          .map((node) => node.parentId),
+  );
   const visibleEdges = new Map();
 
   rawDependencies
       .map((rawDependency) => normalizeRawDependency(rawDependency))
       .forEach((rawDependency) => {
-        const source = findVisiblePackageId(rawDependency.sourcePackage, visiblePackageIds);
-        const target = findVisiblePackageId(rawDependency.targetPackage, visiblePackageIds);
+        const source = findVisiblePackageId(rawDependency.sourcePackage, visiblePackageIds, expandedPackageIds);
+        const target = findVisiblePackageId(rawDependency.targetPackage, visiblePackageIds, expandedPackageIds);
 
         if (source == null || target == null || source === target) {
           return;
@@ -220,7 +225,7 @@ function isPackageName(value) {
   return typeof value === 'string';
 }
 
-function findVisiblePackageId(packageName, visiblePackageIds) {
+function findVisiblePackageId(packageName, visiblePackageIds, expandedPackageIds) {
   const displayedPackageName = displayPackageName(packageName);
 
   if (visiblePackageIds.has(displayedPackageName)) {
@@ -231,11 +236,11 @@ function findVisiblePackageId(packageName, visiblePackageIds) {
   for (let segmentCount = segments.length - 1; segmentCount > 0; segmentCount -= 1) {
     const parentPackageName = segments.slice(0, segmentCount).join('.');
     if (visiblePackageIds.has(parentPackageName)) {
-      return parentPackageName;
+      return expandedPackageIds.has(parentPackageName) ? null : parentPackageName;
     }
   }
 
-  return visiblePackageIds.has('(default)') ? '(default)' : null;
+  return visiblePackageIds.has('(default)') && !expandedPackageIds.has('(default)') ? '(default)' : null;
 }
 
 function displayPackageName(packageName) {

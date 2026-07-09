@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=visible-package-edges-23';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=expanded-package-edges-24';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;

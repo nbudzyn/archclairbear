@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=visible-package-edges-23';
-import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=visible-package-edges-23';
-import { renderGraph } from './graph-renderer.mjs?v=visible-package-edges-23';
+import { createGraphStatusController } from './graph-status.mjs?v=expanded-package-edges-24';
+import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=expanded-package-edges-24';
+import { renderGraph } from './graph-renderer.mjs?v=expanded-package-edges-24';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
