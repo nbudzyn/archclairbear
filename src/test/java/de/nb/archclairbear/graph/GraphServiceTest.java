@@ -168,6 +168,29 @@ class GraphServiceTest {
   }
 
   @Test
+  void rootGraphReturnsRawDependenciesFromImports() throws IOException {
+    // GIVEN
+    createJavaSource(
+        """
+            package de.aventiure.story;
+            import de.aventiure.common.CommonType;
+            class StoryType {}
+            """,
+        "story", "StoryType.java");
+    createJavaSource(
+        "package de.aventiure.common; class CommonType {}",
+        "common", "CommonType.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var graph = graphService.rootGraph();
+
+    // THEN
+    assertThat(graph.rawDependencies())
+        .containsExactly(new RawDependency("de.aventiure.story", "de.aventiure.common"));
+  }
+
+  @Test
   void rootGraphFailsForMissingWorkspaceDirectory() {
     // GIVEN
     var missingDirectory = tempDir.resolve("missing");

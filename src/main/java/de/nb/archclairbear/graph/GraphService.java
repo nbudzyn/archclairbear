@@ -30,6 +30,7 @@ class GraphService {
   private static final String JAVA_FILE_EXTENSION = ".java";
 
   private final Path workspacePath;
+  private final ImportDependencyAnalyzer importDependencyAnalyzer = new ImportDependencyAnalyzer();
   private volatile WorkspaceIndex cachedIndex;
 
   @Autowired
@@ -51,7 +52,7 @@ class GraphService {
 
     return new GraphResponse(
         List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null, workspaceIndex.packages())),
-        List.of(),
+        workspaceIndex.rawDependencies(),
         workspaceIndex.statusMessage());
   }
 
@@ -121,6 +122,7 @@ class GraphService {
   private WorkspaceIndex buildWorkspaceIndex() {
     var parser = createJavaParser();
     var packageContents = new HashMap<String, MutablePackageContent>();
+    var rawDependencies = new HashSet<RawDependency>();
     var typesById = new HashMap<String, TypeInfo>();
     var parseProblemCount = 0;
 
@@ -131,7 +133,7 @@ class GraphService {
           .toList();
 
       for (var sourceFile : orderedSourceFiles) {
-        parseProblemCount += readSourceFile(parser, sourceFile, packageContents, typesById);
+        parseProblemCount += readSourceFile(parser, sourceFile, packageContents, rawDependencies, typesById);
       }
     } catch (final IOException e) {
       throw new IllegalStateException("Workspace-Pfad konnte nicht gelesen werden: " + workspacePath, e);
@@ -145,6 +147,7 @@ class GraphService {
 
     return new WorkspaceIndex(
         immutablePackages,
+        freezeRawDependencies(rawDependencies),
         Map.copyOf(typesById),
         visibleRootPackageName,
         createStatusMessage(parseProblemCount));
@@ -154,6 +157,7 @@ class GraphService {
       final JavaParser parser,
       final Path sourceFile,
       final Map<String, MutablePackageContent> packageContents,
+      final Set<RawDependency> rawDependencies,
       final Map<String, TypeInfo> typesById) {
     try {
       var parseResult = parser.parse(sourceFile);
@@ -169,6 +173,7 @@ class GraphService {
       var packageContent = packageContents.computeIfAbsent(packageName, MutablePackageContent::new);
 
       addTypes(packageContent, compilationUnit, typesById);
+      rawDependencies.addAll(importDependencyAnalyzer.analyze(compilationUnit));
       return parseResult.isSuccessful() ? 0 : 1;
     } catch (final ParseProblemException exception) {
       return 1;
@@ -220,6 +225,14 @@ class GraphService {
     }
 
     return Map.copyOf(frozenPackages);
+  }
+
+  private List<RawDependency> freezeRawDependencies(final Set<RawDependency> rawDependencies) {
+    return rawDependencies.stream()
+        .sorted(Comparator
+            .comparing(RawDependency::sourcePackage)
+            .thenComparing(RawDependency::targetPackage))
+        .toList();
   }
 
   private String selectVisibleRootPackageName(final Map<String, PackageContent> packageContents) {
@@ -382,6 +395,7 @@ class GraphService {
    */
   private record WorkspaceIndex(
       Map<String, PackageContent> packages,
+      List<RawDependency> rawDependencies,
       Map<String, TypeInfo> typesById,
       String visibleRootPackageName,
       String statusMessage) {

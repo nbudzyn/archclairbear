@@ -3,25 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Package-Abhängigkeiten aus Imports erkennen
-
-Der Server erkennt direkte Package-Abhängigkeiten aus Java-Imports.
-
-- Ein Import wie `import b.bar.Target;` in Package `a.foo` erzeugt die Roh-Abhängigkeit `a.foo -> b.bar`.
-- Imports aus demselben Package erzeugen keine Roh-Abhängigkeit.
-- Mehrere gleiche Import-Abhängigkeiten werden serverseitig dedupliziert.
-- Direkte Schleifen wie `a.foo -> a.foo` entfallen.
-- Die Import-Auswertung ist als kleine Java-Einheit testbar, bevorzugt über eine eigene package-private Klasse oder Methode.
-    - Für jeden relevanten Fall gibt es einen separater Testmethode im Unit-Test:
-        - Keine Abhängigkeit
-        - Abhängigkeit
-        - Mehrere Abhängigkeiten aus derselben Klasse
-        - Mehrere Abhängkeiten aus verschiedenen Klassen
-        - Dedpulikation
-        - Entfernung von direkten Schleifen
-        - Ggf. weitere relevante Fälle
-- Die Roh-Abhängigkeiten werden beim initialen Laden (nur dann) an den Client geliefert (und dort nicht verwendet).
-
 ## Roh-Abhängigkeiten auf den sichtbaren Initial-Baum filtern
 
 Der Initial-Load liefert nur Roh-Abhängigkeiten, deren Quelle und Ziel innerhalb des sichtbaren Package-Baums liegen.
