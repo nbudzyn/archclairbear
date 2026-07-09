@@ -3,18 +3,14 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Abhängigkeiten auf Pattern-/Switch-/Record-Pattern-Fälle erkennen (bis Java 26)
+## Smoothe Animation, wenn sich das Layout ändert
 
-Der Server erkennt Abhängigkeiten auf Pattern-/Switch-/Record-Pattern-Fälle (bis Java 26).
-
-- Jeder erkannte Fall ist durch fokussierte Java-Unit-Tests der Analyseklasse oder package-private Methoden geprüft. Insbesondere jeweils
-  der Fall, dass es *keinen* Import gibt, sondern die Klasse explizit mit Package im Code genannt ist. - Systematisch testen!
-
-## Smooth animation when layout changes
-
-When the layout changes (box moves somewhere else on double-click), the layout should perform a smooth transition.
+Wenn sich das Layout ändert (also praktisch nach jedem Auf- oder Zuklappen) gibt es eine sanfte Animation, die den vorherigen Zustand in den
+neuen
+Zustand überführt.
 
 - Der Benutzer soll verstehen, wo sich der aufgeklickte Knoten jetzt befindet.
+- Die Animation beginnt langsam, wird schneller und dann wieder langsamer.
 - Bestenfalls ist die GUI-Änderung nicht sehr groß.
 
 ## Workspace-Pfad konfigurierbar machen

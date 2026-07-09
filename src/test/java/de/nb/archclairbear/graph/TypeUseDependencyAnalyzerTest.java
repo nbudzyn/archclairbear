@@ -2,12 +2,14 @@ package de.nb.archclairbear.graph;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import org.junit.jupiter.api.Test;
 
 class TypeUseDependencyAnalyzerTest {
   private final TypeUseDependencyAnalyzer analyzer = new TypeUseDependencyAnalyzer();
+  private final JavaParserFactory javaParserFactory = new JavaParserFactory();
 
   @Test
   void analyzeReturnsNoDependencyForSourceWithoutExternalTypeUse() {
@@ -679,6 +681,189 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForImportedInstanceofPattern() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          boolean matches(Object value) {
+            return value instanceof Target target;
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedInstanceofPatternWithoutImport() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        class Source {
+          boolean matches(Object value) {
+            return value instanceof b.bar.Target target;
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedSwitchPattern() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          String describe(Object value) {
+            return switch (value) {
+              case Target target -> target.toString();
+              default -> "";
+            };
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedSwitchPatternWithoutImport() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        class Source {
+          String describe(Object value) {
+            return switch (value) {
+              case b.bar.Target target -> target.toString();
+              default -> "";
+            };
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedRecordPattern() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          String describe(Object value) {
+            return switch (value) {
+              case Target(String name) -> name;
+              default -> "";
+            };
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedRecordPatternWithoutImport() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        class Source {
+          String describe(Object value) {
+            return switch (value) {
+              case b.bar.Target(String name) -> name;
+              default -> "";
+            };
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForNestedRecordPatternComponentsWithoutImports() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        class Source {
+          String describe(Object value) {
+            return switch (value) {
+              case b.bar.Outer(c.qux.Inner(String name)) -> name;
+              default -> "";
+            };
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(
+            new RawDependency("a.foo", "b.bar"),
+            new RawDependency("a.foo", "c.qux"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedSwitchCaseConstantWithoutImport() {
+    // GIVEN
+    var compilationUnit = parseWithProjectParser("""
+        package a.foo;
+        class Source {
+          String describe(Object value) {
+            return switch (value) {
+              case b.bar.Target.VALUE -> "target";
+              default -> "";
+            };
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsDependencyForQualifiedLowercaseMethodReferenceWithoutImport() {
     // GIVEN
     var compilationUnit = parse("""
@@ -774,5 +959,11 @@ class TypeUseDependencyAnalyzerTest {
 
   private CompilationUnit parse(final String source) {
     return StaticJavaParser.parse(source);
+  }
+
+  private CompilationUnit parseWithProjectParser(final String source) {
+    var result = javaParserFactory.create().parse(source);
+    return result.getResult()
+        .orElseThrow(() -> new ParseProblemException(result.getProblems()));
   }
 }

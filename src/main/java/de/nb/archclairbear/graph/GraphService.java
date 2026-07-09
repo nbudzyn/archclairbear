@@ -3,7 +3,6 @@ package de.nb.archclairbear.graph;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseProblemException;
 import com.github.javaparser.ParseResult;
-import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
@@ -34,6 +33,7 @@ class GraphService {
   private final TypeUseDependencyAnalyzer typeUseDependencyAnalyzer = new TypeUseDependencyAnalyzer();
   private final ModuleInfoDependencyAnalyzer moduleInfoDependencyAnalyzer = new ModuleInfoDependencyAnalyzer();
   private final InitialRawDependencyFilter initialRawDependencyFilter = new InitialRawDependencyFilter();
+  private final JavaParserFactory javaParserFactory = new JavaParserFactory();
   private volatile WorkspaceIndex cachedIndex;
 
   @Autowired
@@ -127,7 +127,7 @@ class GraphService {
   }
 
   private WorkspaceIndex buildWorkspaceIndex() {
-    var parser = createJavaParser();
+    var parser = javaParserFactory.create();
     var packageContents = new HashMap<String, MutablePackageContent>();
     var rawDependencies = new HashSet<RawDependency>();
     var typesById = new HashMap<String, TypeInfo>();
@@ -325,25 +325,6 @@ class GraphService {
 
     typesById.put(typeId, typeInfo);
     return typeInfo;
-  }
-
-  private JavaParser createJavaParser() {
-    var configuration = new ParserConfiguration();
-    try {
-      configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_26"));
-    } catch (final IllegalArgumentException exception) {
-      try {
-        configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_25"));
-      } catch (final IllegalArgumentException ignored) {
-        try {
-          configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_21"));
-        } catch (final IllegalArgumentException alsoIgnored) {
-          // Falls die Library keine neuere Sprachstufe kennt, bleibt die Default-Konfiguration aktiv.
-        }
-      }
-    }
-
-    return new JavaParser(configuration);
   }
 
   private boolean isVisibleJavaFile(final Path path) {

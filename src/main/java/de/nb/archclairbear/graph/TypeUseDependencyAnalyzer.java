@@ -6,6 +6,7 @@ import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.MethodReferenceExpr;
+import com.github.javaparser.ast.expr.PatternExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import java.util.Comparator;
 import java.util.List;
@@ -28,6 +29,8 @@ class TypeUseDependencyAnalyzer {
     return Stream
         .of(
             classOrInterfaceTypeNames(compilationUnit)
+                .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 2)),
+            patternTypeNames(compilationUnit)
                 .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 2)),
             annotationNames(compilationUnit)
                 .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 2)),
@@ -61,6 +64,11 @@ class TypeUseDependencyAnalyzer {
         .flatMap(ClassOrInterfaceType::getScope)
         .filter(scope -> scope == classOrInterfaceType)
         .isPresent();
+  }
+
+  private Stream<String> patternTypeNames(final CompilationUnit compilationUnit) {
+    return compilationUnit.findAll(PatternExpr.class).stream()
+        .map(pattern -> pattern.getType().toString());
   }
 
   private Stream<String> annotationNames(final CompilationUnit compilationUnit) {
