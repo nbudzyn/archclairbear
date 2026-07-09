@@ -51,8 +51,8 @@
 ## Graphmodell
 
 - Knoten stehen für Packages und Typen.
-- Kanten stehen für statische Abhängigkeiten zwischen einzelnen Packages (geplant).
+- Roh-Abhängigkeiten werden im Server aus dem Quelltext berechnet.
+- Der Client aggregiert diese Roh-Abhängigkeiten auf die jeweils sichtbaren Package-Knoten und rendert sie als gerichtete Pfeile.
 - Der Graph ist hierarchisch und kann pro Knoten auf- und zugeklappt werden.
 - Geöffnete Kind-Knoten werden als Boxen in Boxen dargestellt; Überlappungen zwischen Geschwistern sollen vermieden werden.
-
 

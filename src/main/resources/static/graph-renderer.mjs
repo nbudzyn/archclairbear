@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=visible-package-edges-21';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=visible-package-edges-23';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
@@ -18,8 +18,8 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
 
   const elk = createElkLayoutEngine(windowObject);
   const positionedElements = applyLayoutToElements(
-      createGraphElements(withoutRenderedEdges(graph)),
-      await layoutGraph(withoutRenderedEdges(graph), elk),
+      createGraphElements(graph),
+      await layoutGraph(graph, elk),
   );
 
   const cy = cytoscape({
@@ -57,10 +57,9 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
         return;
       }
 
-      const renderableGraph = withoutRenderedEdges(nextGraph);
       const positionedGraphElements = applyLayoutToElements(
-          createGraphElements(renderableGraph),
-          await layoutGraph(renderableGraph, elk),
+          createGraphElements(nextGraph),
+          await layoutGraph(nextGraph, elk),
       );
       cy.elements().remove();
       cy.add(positionedGraphElements);
@@ -71,13 +70,6 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
       windowObject.removeEventListener('resize', resizeHandler);
       cy.destroy();
     },
-  };
-}
-
-function withoutRenderedEdges(graph) {
-  return {
-    nodes: graph.nodes,
-    edges: [],
   };
 }
 
@@ -166,7 +158,14 @@ function buildGraphStyle() {
     {
       selector: 'edge',
       style: {
-        display: 'none',
+        width: 2,
+        'line-color': 'rgba(124, 212, 255, 0.64)',
+        'target-arrow-color': 'rgba(124, 212, 255, 0.86)',
+        'target-arrow-shape': 'triangle',
+        'curve-style': 'bezier',
+        'arrow-scale': 1.1,
+        'opacity': 0.82,
+        'events': 'no',
       },
     },
   ];
@@ -234,6 +233,7 @@ export function buildElkGraph(graph) {
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'DOWN',
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
       'elk.spacing.nodeNode': 40,
     },
     children: (nodesByParentId.get(null) ?? []).map((node) => buildElkNode(node)),

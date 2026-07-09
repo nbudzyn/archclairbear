@@ -3,14 +3,22 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Package-Pfeile rendern
+## Was aufgeklappt ist, kann kein Ziel sein.
 
-Die berechneten Package-Kanten werden in der GUI als gerichtete Pfeile angezeigt (nach jeder Änderung).
+Zusammenfassung der Pfeile im Client:
+Wenn ein Knoten aufgeklappt ist (also sichtbare Kinder hat), dann darf er nicht als Ziel für Pfeile verwendet werden, AUSSER DAS PACKAGE
+PASST GENAU!
+Er darf auch nicht als Quelle für Pfeile verwendet werden - AUSSER DAS PACKAGE PASST GENAU.
 
-- Cytoscape fügt Kanten zwischen den sichtbaren Package-Knoten ein.
-- Der Renderer stellt die Kanten als Pfeile dar.
-- Der ELK-Graph enthält die sichtbaren Kanten für das Layout.
-- Das Verhalten ist durch JS-Renderer-Tests und einen manuellen Browser-Check prüfbar.
+- Der fragliche Pfeil fällt einfach weg.
+- (Damit verhindern wir, dass z.b. ein Pfeil von a.b.server.krams nach a.b.common.stuff in der Anzeige nach a.b geroutet wird, weil
+  a.b.common nicht im Package-Root liegt. Den Pfeil anzuzeigen, wäre ziemlich verwirrend.)
+- Detaillierte (Unit-) Tests an entsprechender Stelle:
+    - Quelle ist nicht aufgeklappt
+    - Quelle ist aufgeklappt und passt genau
+    - Quelle ist aufgeklappt, passt nicht genau, aber ein Kind passt
+    - Quelle ist aufgeklappt, passt nicht genau und es passt auch kein Kind oder Kindeskind genau
+    - Dasselbe ggf. für Ziel
 
 ## Weitere Typverwendungen als Package-Abhängigkeiten erkennen
 

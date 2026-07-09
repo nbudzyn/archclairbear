@@ -150,6 +150,44 @@ test('expanded package renders type nodes inside the package box', async ({ page
 
 test('package graph can be collapsed with a double click on the package border', async ({ page }) => {
   // GIVEN
+  await page.route('**/api/graph/root', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      nodes: [
+        {
+          id: 'de.aventiure',
+          label: 'de.aventiure',
+          type: 'package',
+          expandable: true,
+          parentId: null,
+        },
+      ],
+    }),
+  }));
+  await page.route('**/api/graph/package?packageName=de.aventiure', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      nodes: [
+        {
+          id: 'de.aventiure.story',
+          label: 'story',
+          type: 'package',
+          expandable: false,
+          parentId: 'de.aventiure',
+        },
+        {
+          id: 'de.aventiure.common',
+          label: 'common',
+          type: 'package',
+          expandable: false,
+          parentId: 'de.aventiure',
+        },
+      ],
+    }),
+  }));
+
   const packageGraphResponse = page.waitForResponse((response) => (
     response.url().includes('/api/graph/package?packageName=de.aventiure') && response.ok()
   ));

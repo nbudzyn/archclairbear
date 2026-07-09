@@ -130,6 +130,115 @@ test('renderGraph richtet offene Typ-Knoten oben und geschlossene Typ-Knoten mit
     'text-halign': 'center',
     'text-margin-y': 18,
   });
+  assert.deepEqual(styleCalls[0].find((entry) => entry.selector === 'edge')?.style, {
+    width: 2,
+    'line-color': 'rgba(124, 212, 255, 0.64)',
+    'target-arrow-color': 'rgba(124, 212, 255, 0.86)',
+    'target-arrow-shape': 'triangle',
+    'curve-style': 'bezier',
+    'arrow-scale': 1.1,
+    'opacity': 0.82,
+    'events': 'no',
+  });
+});
+
+test('renderGraph rendert Package-Kanten und aktualisiert sie beim Nachladen', async () => {
+  // GIVEN
+  let initialElements = [];
+  let appendedElements = [];
+  const cytoscape = (options) => {
+    initialElements = options.elements;
+
+    return {
+      ready(callback) {
+        callback();
+      },
+      on() {},
+      style() {
+        return {
+          selector() {
+            return this;
+          },
+          style() {
+            return this;
+          },
+          update() {
+            return this;
+          },
+        };
+      },
+      zoom() {
+        return 1;
+      },
+      fit() {},
+      resize() {},
+      elements() {
+        return {
+          remove() {},
+        };
+      },
+      add(elements) {
+        appendedElements = elements;
+      },
+      destroy() {},
+    };
+  };
+
+  // WHEN
+  const renderState = await renderGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [
+      {
+        source: 'de.aventiure.story',
+        target: 'de.aventiure.common',
+      },
+    ],
+  }, {
+    cytoscape,
+    container: {},
+    windowObject: {
+      addEventListener() {},
+      removeEventListener() {},
+      ELK: class {
+        async layout(elkGraph) {
+          return addPositions(elkGraph);
+        }
+      },
+    },
+  });
+
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+      packageNode('de.aventiure.ai'),
+    ],
+    edges: [
+      {
+        source: 'de.aventiure.story',
+        target: 'de.aventiure.ai',
+      },
+    ],
+  });
+
+  // THEN
+  assert.deepEqual(collectEdgeData(initialElements), [
+    {
+      id: 'edge-de.aventiure.story-de.aventiure.common',
+      source: 'de.aventiure.story',
+      target: 'de.aventiure.common',
+    },
+  ]);
+  assert.deepEqual(collectEdgeData(appendedElements), [
+    {
+      id: 'edge-de.aventiure.story-de.aventiure.ai',
+      source: 'de.aventiure.story',
+      target: 'de.aventiure.ai',
+    },
+  ]);
 });
 
 test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
@@ -181,6 +290,7 @@ test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
     layoutOptions: {
       'elk.algorithm': 'layered',
       'elk.direction': 'DOWN',
+      'elk.hierarchyHandling': 'INCLUDE_CHILDREN',
       'elk.spacing.nodeNode': 40,
     },
     children: [
@@ -225,6 +335,31 @@ test('buildElkGraph baut verschachtelte Package-Boxen für ELK', () => {
   });
 });
 
+test('buildElkGraph übernimmt sichtbare Package-Kanten für das Layout', () => {
+  // WHEN
+  const elkGraph = buildElkGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [
+      {
+        source: 'de.aventiure.story',
+        target: 'de.aventiure.common',
+      },
+    ],
+  });
+
+  // THEN
+  assert.deepEqual(elkGraph.edges, [
+    {
+      id: 'edge-de.aventiure.story-de.aventiure.common',
+      sources: ['de.aventiure.story'],
+      targets: ['de.aventiure.common'],
+    },
+  ]);
+});
+
 function addPositions(layoutNode) {
   return {
     ...layoutNode,
@@ -232,4 +367,18 @@ function addPositions(layoutNode) {
     y: layoutNode.y ?? 0,
     children: (layoutNode.children ?? []).map((childNode) => addPositions(childNode)),
   };
+}
+
+function packageNode(id) {
+  return {
+    id,
+    label: id,
+    type: 'package',
+  };
+}
+
+function collectEdgeData(elements) {
+  return elements
+      .filter((element) => element?.data?.source != null)
+      .map((element) => element.data);
 }
