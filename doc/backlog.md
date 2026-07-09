@@ -3,13 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Abhängigkeiten aus module-info.java erkennen
-
-Der Server erkennt die Abhängigkeiten aus module-info.java: requires, exports, opens, uses, provides (bis Java 26).
-
-- Jeder erkannte Fall ist durch fokussierte Java-Unit-Tests der Analyseklasse oder package-private Methoden geprüft. Insbesondere jeweils
-  der Fall, dass es *keinen* Import gibt, sondern die Klasse explizit mit Package im Code genannt ist.
-
 ## Abhängigkeiten import b.bar.Outer.Inner erkennen
 
 Der Server erkennt die Abhängigkeiten aus importierten verschachtelten Typen wie import b.bar.Outer.Inner (bis Java 26).

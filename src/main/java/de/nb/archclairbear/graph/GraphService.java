@@ -32,6 +32,7 @@ class GraphService {
   private final Path workspacePath;
   private final ImportDependencyAnalyzer importDependencyAnalyzer = new ImportDependencyAnalyzer();
   private final TypeUseDependencyAnalyzer typeUseDependencyAnalyzer = new TypeUseDependencyAnalyzer();
+  private final ModuleInfoDependencyAnalyzer moduleInfoDependencyAnalyzer = new ModuleInfoDependencyAnalyzer();
   private final InitialRawDependencyFilter initialRawDependencyFilter = new InitialRawDependencyFilter();
   private volatile WorkspaceIndex cachedIndex;
 
@@ -172,15 +173,18 @@ class GraphService {
         return 1;
       }
 
-      var packageName = normalizePackageName(
-          compilationUnit.getPackageDeclaration()
-              .map(packageDeclaration -> packageDeclaration.getNameAsString())
-              .orElse(null));
-      var packageContent = packageContents.computeIfAbsent(packageName, MutablePackageContent::new);
-
-      addTypes(packageContent, compilationUnit, typesById);
       rawDependencies.addAll(importDependencyAnalyzer.analyze(compilationUnit));
       rawDependencies.addAll(typeUseDependencyAnalyzer.analyze(compilationUnit));
+      rawDependencies.addAll(moduleInfoDependencyAnalyzer.analyze(compilationUnit));
+      if (!isPureModuleDeclaration(compilationUnit)) {
+        var packageName = normalizePackageName(
+            compilationUnit.getPackageDeclaration()
+                .map(packageDeclaration -> packageDeclaration.getNameAsString())
+                .orElse(null));
+        var packageContent = packageContents.computeIfAbsent(packageName, MutablePackageContent::new);
+
+        addTypes(packageContent, compilationUnit, typesById);
+      }
       return parseResult.isSuccessful() ? 0 : 1;
     } catch (final ParseProblemException exception) {
       return 1;
@@ -326,12 +330,16 @@ class GraphService {
   private JavaParser createJavaParser() {
     var configuration = new ParserConfiguration();
     try {
-      configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_25"));
+      configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_26"));
     } catch (final IllegalArgumentException exception) {
       try {
-        configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_21"));
+        configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_25"));
       } catch (final IllegalArgumentException ignored) {
-        // Falls die Library keine neuere Sprachstufe kennt, bleibt die Default-Konfiguration aktiv.
+        try {
+          configuration.setLanguageLevel(ParserConfiguration.LanguageLevel.valueOf("JAVA_21"));
+        } catch (final IllegalArgumentException alsoIgnored) {
+          // Falls die Library keine neuere Sprachstufe kennt, bleibt die Default-Konfiguration aktiv.
+        }
       }
     }
 
@@ -342,8 +350,11 @@ class GraphService {
     var fileName = path.getFileName().toString();
     return Files.isRegularFile(path)
         && fileName.endsWith(JAVA_FILE_EXTENSION)
-        && !"module-info.java".equals(fileName)
         && !"package-info.java".equals(fileName);
+  }
+
+  private boolean isPureModuleDeclaration(final CompilationUnit compilationUnit) {
+    return compilationUnit.getModule().isPresent() && compilationUnit.getTypes().isEmpty();
   }
 
   private String createStatusMessage(final int parseProblemCount) {

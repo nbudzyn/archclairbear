@@ -191,6 +191,35 @@ class GraphServiceTest {
   }
 
   @Test
+  void rootGraphReturnsRawDependenciesFromModuleInfo() throws IOException {
+    // GIVEN
+    createJavaSource(
+        """
+            module de.aventiure {
+              exports de.aventiure.story;
+              requires de.aventiure.common;
+            }
+            """,
+        "module-info.java");
+    createJavaSource(
+        "package de.aventiure.story; class StoryType {}",
+        "story", "StoryType.java");
+    createJavaSource(
+        "package de.aventiure.common; class CommonType {}",
+        "common", "CommonType.java");
+    var graphService = new GraphService(tempDir);
+
+    // WHEN
+    var graph = graphService.rootGraph();
+
+    // THEN
+    assertThat(graph.rawDependencies())
+        .containsExactly(
+            new RawDependency("de.aventiure", "de.aventiure.common"),
+            new RawDependency("de.aventiure", "de.aventiure.story"));
+  }
+
+  @Test
   void rootGraphReturnsOnlyRawDependenciesInsideTheInitialPackageTree() throws IOException {
     // GIVEN
     createJavaSource(
