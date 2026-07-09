@@ -176,6 +176,43 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForImportedNestedTypeUse() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          Target.Inner target;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedNestedTypeUseWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          b.bar.Target.Inner target;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsDependencyForImportedSuperClass() {
     // GIVEN
     var compilationUnit = parse("""
@@ -385,6 +422,141 @@ class TypeUseDependencyAnalyzerTest {
         package a.foo;
         class Source {
           void act(@b.bar.Target String value) {
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedStaticMethodCall() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          void act() {
+            Target.create();
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedStaticMethodCallWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          void act() {
+            b.bar.Target.create();
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedStaticFieldAccess() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          String value = Target.VALUE;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedStaticFieldAccessWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          String value = b.bar.Target.VALUE;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForImportedMethodReference() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Target;
+        class Source {
+          Runnable value = Target::create;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedMethodReferenceWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          Runnable value = b.bar.Target::create;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeIgnoresNonNameMethodCallScopes() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          void act() {
+            new b.bar.Target().act();
           }
         }
         """);

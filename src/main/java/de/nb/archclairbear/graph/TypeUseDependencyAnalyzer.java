@@ -3,6 +3,9 @@ package de.nb.archclairbear.graph;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.MethodReferenceExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import java.util.Comparator;
 import java.util.List;
@@ -23,11 +26,13 @@ class TypeUseDependencyAnalyzer {
     var importedPackagesBySimpleName = importedPackagesBySimpleName(compilationUnit);
 
     return Stream
-        .concat(
-            compilationUnit.findAll(ClassOrInterfaceType.class).stream()
-                .map(ClassOrInterfaceType::getNameWithScope),
-            compilationUnit.findAll(AnnotationExpr.class).stream()
-                .map(annotation -> annotation.getName().asString()))
+        .of(
+            classOrInterfaceTypeNames(compilationUnit),
+            annotationNames(compilationUnit),
+            fieldAccessScopes(compilationUnit),
+            methodCallScopes(compilationUnit),
+            methodReferenceScopes(compilationUnit))
+        .flatMap(typeNames -> typeNames)
         .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName))
         .filter(Objects::nonNull)
         .filter(targetPackage -> !sourcePackage.equals(targetPackage))
@@ -37,6 +42,35 @@ class TypeUseDependencyAnalyzer {
             .comparing(RawDependency::sourcePackage)
             .thenComparing(RawDependency::targetPackage))
         .toList();
+  }
+
+  private Stream<String> classOrInterfaceTypeNames(final CompilationUnit compilationUnit) {
+    return compilationUnit.findAll(ClassOrInterfaceType.class).stream()
+        .map(ClassOrInterfaceType::getNameWithScope);
+  }
+
+  private Stream<String> annotationNames(final CompilationUnit compilationUnit) {
+    return compilationUnit.findAll(AnnotationExpr.class).stream()
+        .map(annotation -> annotation.getName().asString());
+  }
+
+  private Stream<String> fieldAccessScopes(final CompilationUnit compilationUnit) {
+    return compilationUnit.findAll(FieldAccessExpr.class).stream()
+        .map(fieldAccess -> fieldAccess.getScope().toString())
+        .filter(this::isName);
+  }
+
+  private Stream<String> methodCallScopes(final CompilationUnit compilationUnit) {
+    return compilationUnit.findAll(MethodCallExpr.class).stream()
+        .flatMap(methodCall -> methodCall.getScope().stream())
+        .map(Object::toString)
+        .filter(this::isName);
+  }
+
+  private Stream<String> methodReferenceScopes(final CompilationUnit compilationUnit) {
+    return compilationUnit.findAll(MethodReferenceExpr.class).stream()
+        .map(methodReference -> methodReference.getScope().toString())
+        .filter(this::isName);
   }
 
   private Map<String, String> importedPackagesBySimpleName(final CompilationUnit compilationUnit) {
@@ -53,7 +87,12 @@ class TypeUseDependencyAnalyzer {
       final String typeName,
       final Map<String, String> importedPackagesBySimpleName) {
     if (typeName.contains(".")) {
-      return packageFromQualifiedTypeName(typeName);
+      var packageName = packageFromQualifiedTypeName(typeName);
+      if (packageName != null) {
+        return packageName;
+      }
+
+      return importedPackageFromQualifiedMemberAccess(typeName, importedPackagesBySimpleName);
     }
 
     return importedPackagesBySimpleName.get(typeName);
@@ -61,20 +100,52 @@ class TypeUseDependencyAnalyzer {
 
   private String packageFromQualifiedTypeName(final String qualifiedTypeName) {
     var segments = qualifiedTypeName.split("\\.");
-    var packageSegmentCount = segments.length;
-    while (packageSegmentCount > 0 && startsWithUppercase(segments[packageSegmentCount - 1])) {
-      packageSegmentCount -= 1;
+    for (var segmentIndex = 0; segmentIndex < segments.length; segmentIndex += 1) {
+      if (startsWithUppercase(segments[segmentIndex])) {
+        if (segmentIndex == 0) {
+          return null;
+        }
+
+        return String.join(".", java.util.Arrays.copyOf(segments, segmentIndex));
+      }
     }
 
-    if (packageSegmentCount == 0 || packageSegmentCount == segments.length) {
+    return null;
+  }
+
+  private String importedPackageFromQualifiedMemberAccess(
+      final String qualifiedMemberAccess,
+      final Map<String, String> importedPackagesBySimpleName) {
+    var firstDotIndex = qualifiedMemberAccess.indexOf('.');
+    var firstSegment = qualifiedMemberAccess.substring(0, firstDotIndex);
+    if (!startsWithUppercase(firstSegment)) {
       return null;
     }
 
-    return String.join(".", java.util.Arrays.copyOf(segments, packageSegmentCount));
+    return importedPackagesBySimpleName.get(firstSegment);
   }
 
   private boolean startsWithUppercase(final String segment) {
     return !segment.isEmpty() && Character.isUpperCase(segment.charAt(0));
+  }
+
+  private boolean isName(final String value) {
+    return Stream.of(value.split("\\."))
+        .allMatch(this::isIdentifier);
+  }
+
+  private boolean isIdentifier(final String value) {
+    if (value.isEmpty() || !Character.isJavaIdentifierStart(value.charAt(0))) {
+      return false;
+    }
+
+    for (var index = 1; index < value.length(); index += 1) {
+      if (!Character.isJavaIdentifierPart(value.charAt(index))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   private String simpleName(final ImportDeclaration importDeclaration) {
