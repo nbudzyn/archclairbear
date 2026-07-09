@@ -66,17 +66,17 @@
 
 ### Verifikationsroute
 
+- Frühzeitig testen.
 - Die Verifikationsroute richtet sich nach der Art der Änderung.
 - Grundregel: immer mit der kleinsten fachlich sinnvollen Teststufe beginnen und nur bei Bedarf breiter werden.
 - Bei reiner JavaScript- oder Client-Logik zuerst `localJsTest`.
 - Bei reinen Server- oder API-Änderungen zuerst `localTest`.
 - Bei Browser- oder GUI-Änderungen zuerst die fachlich kleinste passende Teststufe, danach die weiteren betroffenen Stufen.
-- Bei GUI-Änderungen am Ende immer alle relevanten Testarten laufen lassen:
+- Am Ende immer alle relevanten Testarten laufen lassen:
     - `localJsTest`
     - `localTest`
     - `localBrowserTest`
     - manueller KI-Browser-Test auf Port `8082`
-- Ein manueller KI-Browser-Test ersetzt keine automatisierten Tests, sondern ergänzt sie.
 
 ### Tests durch die KI
 
