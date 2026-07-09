@@ -37,6 +37,10 @@ class ImportDependencyAnalyzer {
 
   private String targetPackage(final ImportDeclaration importDeclaration) {
     var importedName = importDeclaration.getNameAsString();
+    if (!importDeclaration.isStatic() && !importDeclaration.isAsterisk()) {
+      return packageFromQualifiedTypeName(importedName);
+    }
+
     var segmentsToRemove = segmentsToRemove(importDeclaration);
     var targetPackageEnd = importedName.length();
 
@@ -48,6 +52,26 @@ class ImportDependencyAnalyzer {
     }
 
     return importedName.substring(0, targetPackageEnd);
+  }
+
+  private String packageFromQualifiedTypeName(final String qualifiedTypeName) {
+    var segments = qualifiedTypeName.split("\\.");
+    for (var segmentIndex = 0; segmentIndex < segments.length; segmentIndex += 1) {
+      if (startsWithUppercase(segments[segmentIndex])) {
+        if (segmentIndex == 0) {
+          return null;
+        }
+
+        return String.join(".", java.util.Arrays.copyOf(segments, segmentIndex));
+      }
+    }
+
+    var lastDotIndex = qualifiedTypeName.lastIndexOf('.');
+    return lastDotIndex < 0 ? null : qualifiedTypeName.substring(0, lastDotIndex);
+  }
+
+  private boolean startsWithUppercase(final String segment) {
+    return !segment.isEmpty() && Character.isUpperCase(segment.charAt(0));
   }
 
   private int segmentsToRemove(final ImportDeclaration importDeclaration) {

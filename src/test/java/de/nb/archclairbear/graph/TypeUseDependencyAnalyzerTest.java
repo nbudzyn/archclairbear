@@ -195,12 +195,49 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForDirectlyImportedNestedTypeUse() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        import b.bar.Outer.Inner;
+        class Source {
+          Inner target;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsDependencyForQualifiedNestedTypeUseWithoutImport() {
     // GIVEN
     var compilationUnit = parse("""
         package a.foo;
         class Source {
           b.bar.Target.Inner target;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForDeepQualifiedNestedTypeUseWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          b.bar.Outer.Inner target;
         }
         """);
 

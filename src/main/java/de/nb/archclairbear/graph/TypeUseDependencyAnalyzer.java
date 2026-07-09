@@ -156,6 +156,11 @@ class TypeUseDependencyAnalyzer {
 
   private String packageName(final ImportDeclaration importDeclaration) {
     var importedName = importDeclaration.getNameAsString();
+    var packageName = packageFromQualifiedTypeName(importedName);
+    if (packageName != null) {
+      return packageName;
+    }
+
     var lastDotIndex = importedName.lastIndexOf('.');
     return lastDotIndex < 0 ? "" : importedName.substring(0, lastDotIndex);
   }
