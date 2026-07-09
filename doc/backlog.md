@@ -3,17 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Roh-Abhängigkeiten im Initial-Load transportieren
-
-Der Initial-Load kann Roh-Abhängigkeiten zwischen Packages transportieren, ohne daraus bereits sichtbare Pfeile zu machen.
-
-- Die Root-Antwort enthält ein eigenes Feld für Roh-Abhängigkeiten.
-- Eine Roh-Abhängigkeit besteht aus Quellpackage und Zielpackage.
-- Package- und Type-Nachladeanfragen liefern keine Roh-Abhängigkeiten.
-- Die API-Struktur ist durch Java-Unit- oder Controller-Tests prüfbar.
-- Falls dafür eine neue Klasse oder ein package-private Mapper entsteht, wird diese Klasse bzw. Methode isoliert getestet; bei
-  Controller-Tests kann der Service gemockt werden.
-
 ## Package-Abhängigkeiten aus Imports erkennen
 
 Der Server erkennt direkte Package-Abhängigkeiten aus Java-Imports.
