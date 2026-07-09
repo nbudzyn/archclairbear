@@ -6,11 +6,10 @@ Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren 
 ## Keine Server-Edges mehr an den Client liefern
 
 Die Graph-Antworten enthalten vorerst keine renderbaren Kanten mehr.
-Falls der Server aktuell `edges` an den Client liefert, wird das entfernt.
+Das Feld edges wird entfernt.
 
 - Der Server liefert für Root-, Package- und Type-Anfragen weiterhin Knoten.
-- Das Feld `edges` bleibt aus Kompatibilitätsgründen vorhanden, ist aber leer.
-- Vorhandene Client-Tests für leere `edges` bleiben grün.
+- Vorhandene Client-Tests bleiben grün.
 - Die Änderung ist durch Java-Unit- oder Controller-Tests prüfbar.
 
 ## Roh-Abhängigkeiten im Initial-Load transportieren
