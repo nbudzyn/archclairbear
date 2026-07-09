@@ -7,14 +7,17 @@ Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren 
 
 In der GUI werden jetzt auch Abhängigkeiten dargestellt:
 
-- Durch Pfeile A->B, wenn A von B statisch abhängig ist.
-- Abhängigkeiten werden immer nur zwischen Packages gezeigt, niemals zwischen Typen (obwohl natürlich in Wirklichkeit die Anforderungen
-  zwischen den Typen bestehen)
-- Wenn ein Paket nicht angezeigt wird (weil das direkte oder mittelbare Oberpaket nicht geklappt ist), wird der (eingehende oder ausgehende)
-  Pfeil mit dem niedrigsten angezeigten Oberpaket verbunden.
-- Je Paketpaar und Richtung gibt es maximal einen Pfeil.
+- Durch Pfeile A->B, wenn A von B direkt statisch abhängig ist.
+- Als statische Abhängigkeiten zählen alle direkten statischen Verweise, insbesondere Typverwendungen in Feldern, Parametern,
+  Rückgabewerten, `extends`/`implements`, Annotationen, Imports und generischen Typverwendungen.
+- Abhängigkeiten werden immer nur zwischen Packages gezeigt, niemals zwischen Typen.
+- Wenn ein Paket nicht angezeigt wird, weil ein direktes oder mittelbares Oberpaket nicht aufgeklappt ist, wird der Pfeil mit dem
+  niedrigsten angezeigten Oberpaket verbunden.
+    - Wenn mehrere Ebenen verborgen sind, wird der Pfeil immer am nächstsichtbaren Oberpackage befestigt.
+- Je sichtbares Paketpaar und Richtung gibt es maximal einen Pfeil, auch wenn mehrere Typabhängigkeiten dahinterliegen.
 - Wir zeigen keine Schleifen.
 - Immer, wenn ein Paket auf- oder zugeklappt wird, wird die Anzeige so aktualisiert, dass sie vollständig stimmt.
+- Die fachliche Darstellung ist rein visuell, aber auf dem Server durch Unit- und Mock-Tests prüfbar.
 
 ## Typen unterscheiden
 
