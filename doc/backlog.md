@@ -3,25 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Neue und entfernte Knoten beim Layoutwechsel überführen
-
-Beim Auf- oder Zuklappen erscheinen und verschwinden Knoten so, dass der räumliche Zusammenhang des Graphen nachvollziehbar bleibt.
-
-- Neu sichtbare Kind-Knoten erscheinen in der Nähe des aufgeklappten Knotens und bewegen sich in ihre Zielposition.
-- Beim Zuklappen verschwinden nicht mehr sichtbare Knoten erst nach der sichtbaren Übergangsbewegung.
-- Der aufgeklappte oder zugeklappte Knoten bleibt während und nach der Animation sichtbar.
-- Der Zoom- und Pan-Zustand des Nutzers bleibt während der Animation erhalten.
-- Die Lösung bleibt rein clientseitig; der Server merkt sich keinen UI-Zustand.
-
-Technische Hinweise:
-
-- Das Item ist mit der bestehenden Architektur aus Cytoscape und ELK umsetzbar.
-- ELK berechnet weiterhin das neue Ziel-Layout; Cytoscape rendert den bestehenden Graphen und animiert Knoten zu den neuen Zielpositionen.
-- Neue Knoten können initial nahe am aufgeklappten Elternknoten eingefügt und anschließend zur ELK-Zielposition animiert werden.
-- Entfernte Knoten sollten beim Zuklappen erst nach der sichtbaren Übergangsbewegung aus Cytoscape entfernt werden.
-- Kanten zu neuen oder entfernten Knoten werden passend zur Elementpflege ergänzt oder entfernt.
-- Die fachliche Layout-Entscheidung bleibt bei ELK. Cytoscape übernimmt nur Darstellung, Elementpflege und Animation.
-
 ## Manuell verschobene Knoten beim Layoutwechsel erhalten
 
 Wenn der Nutzer einen Knoten per Drag verschoben hat, bleibt diese Position bei späterem Auf- oder Zuklappen erhalten.
@@ -31,6 +12,7 @@ Das automatische Layout darf solche Knoten nicht wieder an ihre ELK-Position zur
 - Beim Auf- oder Zuklappen behalten manuell verschobene sichtbare Knoten ihre Position.
 - Nicht manuell verschobene Knoten dürfen weiterhin von ELK neu positioniert werden.
 - Beim Neuladen der Seite darf der Zustand verloren gehen; keine Server- oder LocalStorage-Persistenz in diesem Item.
+- Verschwindet ein Knoten (Zuklappen eines Vorfahren), wird auch seine gemerkte Position gelöscht.
 
 Technische Hinweise:
 
@@ -44,8 +26,6 @@ Technische Hinweise:
 - Für neu sichtbare oder nicht manuell verschobene Knoten bleibt das ELK-Ergebnis maßgeblich.
 - Bei aufgeklappten Compound-Knoten muss die Implementierung die Verschiebung als Gruppenverschiebung behandeln: Wird ein sichtbarer
   Container verschoben, sollen seine sichtbaren Kinder relativ dazu konsistent bleiben.
-- Beim Zuklappen können gemerkte Positionen für unsichtbar gewordene Nachfahren im Client erhalten bleiben, solange die Seite nicht neu
-  geladen wird.
 - Die Lösung darf Layoutqualität lokal verschlechtern, wenn der Nutzer Knoten bewusst verschiebt; das ist Teil der manuellen Kontrolle.
 
 ## Workspace-Pfad konfigurierbar machen

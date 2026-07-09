@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=animated-layout-26';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=animated-layout-28';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
@@ -43,6 +43,7 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
 
   cy.ready(() => {
     updateNodeLabelSizing(cy);
+    updateGraphStateAttributes(container, cy);
     fitGraph(cy);
   });
   cy.on('zoom', () => {
@@ -63,8 +64,9 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
           await layoutGraph(nextGraph, elk),
       );
       const anchoredGraphElements = keepNodeAtCurrentPosition(cy, positionedGraphElements, focusNodeId);
-      await updateGraphElements(cy, anchoredGraphElements);
+      await updateGraphElements(cy, anchoredGraphElements, { focusNodeId });
       updateNodeLabelSizing(cy);
+      updateGraphStateAttributes(container, cy);
     },
     destroy() {
       windowObject.removeEventListener('resize', resizeHandler);
@@ -329,36 +331,99 @@ function keepNodeAtCurrentPosition(cy, elements, focusNodeId) {
   });
 }
 
-async function updateGraphElements(cy, nextElements) {
+async function updateGraphElements(cy, nextElements, { focusNodeId = null } = {}) {
   const nextElementIds = new Set(nextElements.map((element) => element.data.id));
   const existingElements = elementsAsArray(cy.elements());
-
-  existingElements
-      .filter((element) => !nextElementIds.has(element.id()))
-      .forEach((element) => element.remove());
 
   const nextNodeElements = nextElements.filter((element) => element.data.source == null);
   const nextEdgeElements = nextElements.filter((element) => element.data.source != null);
 
-  const nodeAnimations = nextNodeElements.map((element) => upsertGraphElement(cy, element));
+  const nodeAnimations = nextNodeElements.map((element) => upsertGraphElement(cy, element, focusNodeId));
   nextEdgeElements.forEach((element) => upsertGraphElement(cy, element));
   await Promise.all(nodeAnimations);
+
+  existingElements
+      .filter((element) => !nextElementIds.has(element.id()))
+      .forEach((element) => element.remove());
 }
 
-function upsertGraphElement(cy, nextElement) {
+async function upsertGraphElement(cy, nextElement, focusNodeId = null) {
   const existingElement = getElementById(cy, nextElement.data.id);
 
   if (isEmptyElement(existingElement)) {
-    cy.add(nextElement);
+    const addedElement = addGraphElementNearFocus(cy, nextElement, focusNodeId);
+    if (nextElement.data.parent != null) {
+      return;
+    }
+
+    if (nextElement.position != null && addedElement != null) {
+      await moveGraphNodeToPosition(addedElement, nextElement.position);
+      applyGraphElementData(addedElement, nextElement.data);
+      addedElement.position(nextElement.position);
+    }
+
     return;
   }
 
-  existingElement.data(nextElement.data);
+  applyGraphElementData(existingElement, nextElement.data);
   if (nextElement.position != null) {
     return moveGraphNodeToPosition(existingElement, nextElement.position);
   }
 
-  return Promise.resolve();
+  return;
+}
+
+function addGraphElementNearFocus(cy, nextElement, focusNodeId) {
+  if (nextElement.data.parent != null) {
+    cy.add(nextElement);
+    return getElementById(cy, nextElement.data.id);
+  }
+
+  const targetPosition = nextElement.position;
+  const insertionPosition = targetPosition == null
+      ? null
+      : findInsertionPosition(cy, nextElement, focusNodeId) ?? targetPosition;
+  cy.add(insertionPosition == null ? nextElement : {
+    ...nextElement,
+    position: insertionPosition,
+  });
+
+  return getElementById(cy, nextElement.data.id);
+}
+
+function applyGraphElementData(element, data) {
+  element.data(data);
+  if (typeof element.move === 'function') {
+    element.move(data.parent == null ? { parent: null } : { parent: data.parent });
+  }
+}
+
+function findInsertionPosition(cy, nextElement, focusNodeId) {
+  const focusPosition = findCurrentNodePosition(cy, focusNodeId);
+  if (focusPosition != null) {
+    return focusPosition;
+  }
+
+  const parentPosition = findCurrentNodePosition(cy, nextElement.data.parent);
+  if (parentPosition != null) {
+    return parentPosition;
+  }
+
+  return null;
+}
+
+function findCurrentNodePosition(cy, nodeId) {
+  if (nodeId == null) {
+    return null;
+  }
+
+  const element = getElementById(cy, nodeId);
+  if (isEmptyElement(element) || typeof element.position !== 'function') {
+    return null;
+  }
+
+  const position = element.position();
+  return isPosition(position) ? position : null;
 }
 
 function moveGraphNodeToPosition(element, position) {
@@ -413,6 +478,23 @@ function elementsAsArray(elements) {
   }
 
   return Array.from(elements);
+}
+
+function updateGraphStateAttributes(container, cy) {
+  if (container?.dataset == null || typeof cy.nodes !== 'function' || typeof cy.edges !== 'function') {
+    return;
+  }
+
+  const nodes = elementsAsArray(cy.nodes());
+  const edges = elementsAsArray(cy.edges());
+  const positions = nodes
+      .map((node) => (typeof node.position === 'function' ? node.position() : null))
+      .filter(isPosition);
+  const distinctPositions = new Set(positions.map((position) => `${Math.round(position.x)}:${Math.round(position.y)}`));
+
+  container.dataset.renderedNodeCount = String(nodes.length);
+  container.dataset.renderedEdgeCount = String(edges.length);
+  container.dataset.renderedDistinctNodePositionCount = String(distinctPositions.size);
 }
 
 function isEmptyElement(element) {

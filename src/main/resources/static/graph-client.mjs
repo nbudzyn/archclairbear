@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=animated-layout-26';
-import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=animated-layout-26';
-import { renderGraph } from './graph-renderer.mjs?v=animated-layout-26';
+import { createGraphStatusController } from './graph-status.mjs?v=animated-layout-28';
+import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=animated-layout-28';
+import { renderGraph } from './graph-renderer.mjs?v=animated-layout-28';
 
 /**
  * Startet die Client-Anwendung für den Graphen.

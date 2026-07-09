@@ -62,10 +62,18 @@ test('package graph can be expanded with a double click', async ({ page }) => {
       .not.toBe(initialGraphSnapshot);
 
   // THEN
-  expect(graphData.nodes.length).toBeGreaterThan(0);
+  await expect.poll(() => getGraphRenderStats(page))
+      .toMatchObject({
+        nodeCount: graphData.nodes.length + 1,
+      });
+  const renderStats = await getGraphRenderStats(page);
+
+  expect(graphData.nodes.length).toBeGreaterThan(10);
   expect(graphData.nodes.every((node) => node.type === 'package')).toBe(true);
   expect(graphData.nodes.every((node) => node.parentId === 'de.aventiure')).toBe(true);
   expect(graphData.edges).toBeUndefined();
+  expect(renderStats.edgeCount).toBeGreaterThan(0);
+  expect(renderStats.distinctNodePositionCount).toBeGreaterThan(10);
   expect(packageGraphRequestCount).toBe(1);
 });
 
@@ -309,4 +317,12 @@ async function getRenderedCanvasContentBounds(page) {
       maxY,
     };
   });
+}
+
+async function getGraphRenderStats(page) {
+  return page.locator('#cy').evaluate((element) => ({
+    nodeCount: Number(element.dataset.renderedNodeCount ?? 0),
+    edgeCount: Number(element.dataset.renderedEdgeCount ?? 0),
+    distinctNodePositionCount: Number(element.dataset.renderedDistinctNodePositionCount ?? 0),
+  }));
 }

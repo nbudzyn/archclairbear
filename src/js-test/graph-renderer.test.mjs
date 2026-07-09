@@ -294,6 +294,79 @@ test('renderGraph verwendet bestehende Elemente beim Nachladen wieder und erhäl
   ]);
 });
 
+test('renderGraph fügt neue Compound-Kinder direkt an ihrer Zielposition ein', async () => {
+  // GIVEN
+  let cy = null;
+  const addedElements = [];
+  const animateCalls = [];
+  const layoutPositions = [
+    new Map([
+      ['de.aventiure', { x: 10, y: 20 }],
+    ]),
+    new Map([
+      ['de.aventiure', { x: 40, y: 50 }],
+      ['de.aventiure.story', { x: 300, y: 80 }],
+    ]),
+  ];
+  const cytoscape = (options) => {
+    cy = createCytoscapeUpdateDouble(options, {
+      addedElements,
+      animateCalls,
+    });
+
+    return cy;
+  };
+
+  // WHEN
+  const renderState = await renderGraph({
+    nodes: [
+      packageNode('de.aventiure'),
+    ],
+    edges: [],
+  }, {
+    cytoscape,
+    container: {},
+    windowObject: {
+      addEventListener() {},
+      removeEventListener() {},
+      ELK: class {
+        async layout(elkGraph) {
+          return addPositionsFromMap(elkGraph, layoutPositions.shift());
+        }
+      },
+    },
+  });
+
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure'),
+      {
+        ...packageNode('de.aventiure.story'),
+        parentId: 'de.aventiure',
+      },
+    ],
+    edges: [],
+  }, {
+    focusNodeId: 'de.aventiure',
+  });
+
+  // THEN
+  assert.deepEqual(addedElements.find((element) => element.id === 'de.aventiure.story'), {
+    id: 'de.aventiure.story',
+    parent: 'de.aventiure',
+    position: {
+      x: 420,
+      y: 146,
+    },
+  });
+  assert.equal(animateCalls.some((call) => call.id === 'de.aventiure.story'), false);
+  assert.deepEqual(cy.storedElement('de.aventiure.story').position, {
+    x: 420,
+    y: 146,
+  });
+  assert.equal(cy.storedElement('de.aventiure.story').data.parent, 'de.aventiure');
+});
+
 test('renderGraph animiert bestehende Knoten beim Nachladen auf ihre neue Layout-Position', async () => {
   // GIVEN
   let cy = null;
@@ -378,10 +451,12 @@ test('renderGraph animiert bestehende Knoten beim Nachladen auf ihre neue Layout
 
 test('renderGraph entfernt nicht mehr sichtbare Knoten einzeln beim Zuklappen', async () => {
   // GIVEN
+  const eventLog = [];
   const removedElementIds = [];
   let cy = null;
   const cytoscape = (options) => {
     cy = createCytoscapeUpdateDouble(options, {
+      eventLog,
       removedElementIds,
     });
 
@@ -422,6 +497,7 @@ test('renderGraph entfernt nicht mehr sichtbare Knoten einzeln beim Zuklappen', 
   });
 
   // THEN
+  assert.ok(eventLog.indexOf('remove:de.aventiure.story') > eventLog.indexOf('animate:de.aventiure'));
   assert.deepEqual(removedElementIds, ['de.aventiure.story']);
   assert.deepEqual(cy.snapshotElements().map((element) => element.data.id), ['de.aventiure']);
 });
@@ -583,6 +659,8 @@ function createCytoscapeUpdateDouble(options, {
   fitCalls = [],
   removedElementIds = [],
   animateCalls = [],
+  addedElements = [],
+  eventLog = [],
 } = {}) {
   const elementsById = new Map();
   const emptyElement = {
@@ -623,6 +701,7 @@ function createCytoscapeUpdateDouble(options, {
               elementsById,
               removedElementIds,
               animateCalls,
+              eventLog,
           ));
         },
         remove() {
@@ -634,12 +713,20 @@ function createCytoscapeUpdateDouble(options, {
       const elementList = Array.isArray(elements) ? elements : [elements];
       elementList.forEach((element) => {
         elementsById.set(element.data.id, structuredCloneForTest(element));
+        addedElements.push({
+          id: element.data.id,
+          parent: element.data.parent ?? null,
+          position: element.position == null ? null : structuredCloneForTest(element.position),
+        });
+        eventLog.push(`add:${element.data.id}`);
       });
     },
     getElementById(elementId) {
       const element = elementsById.get(elementId);
 
-      return element == null ? emptyElement : createElementApi(element, elementsById, removedElementIds, animateCalls);
+      return element == null
+          ? emptyElement
+          : createElementApi(element, elementsById, removedElementIds, animateCalls, eventLog);
     },
     storedElement(elementId) {
       return elementsById.get(elementId);
@@ -654,7 +741,7 @@ function createCytoscapeUpdateDouble(options, {
   return cy;
 }
 
-function createElementApi(element, elementsById, removedElementIds, animateCalls) {
+function createElementApi(element, elementsById, removedElementIds, animateCalls, eventLog) {
   return {
     empty() {
       return false;
@@ -678,6 +765,15 @@ function createElementApi(element, elementsById, removedElementIds, animateCalls
       element.position = nextPosition;
       return this;
     },
+    move(target) {
+      if (target.parent == null) {
+        delete element.data.parent;
+      } else {
+        element.data.parent = target.parent;
+      }
+
+      return this;
+    },
     animate(animation, options) {
       animateCalls.push({
         id: element.data.id,
@@ -685,6 +781,7 @@ function createElementApi(element, elementsById, removedElementIds, animateCalls
         duration: options.duration,
         easing: options.easing,
       });
+      eventLog.push(`animate:${element.data.id}`);
       element.position = animation.position;
       options.complete();
 
@@ -696,6 +793,7 @@ function createElementApi(element, elementsById, removedElementIds, animateCalls
     },
     remove() {
       removedElementIds.push(element.data.id);
+      eventLog.push(`remove:${element.data.id}`);
       elementsById.delete(element.data.id);
     },
   };
