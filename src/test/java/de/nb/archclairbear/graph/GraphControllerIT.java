@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -60,6 +61,39 @@ class GraphControllerIT {
     var root = objectMapper.readTree(response);
     assertThat(root) //
         .hasSinglePackageNode("de.aventiure", "de.aventiure") //
+        .hasEmptyRawDependenciesField() //
+        .hasNoEdgesField();
+  }
+
+  @Test
+  void rootGraphTransportsRawDependencies() throws Exception {
+    // GIVEN
+    var controller = new GraphController(new GraphService(tempDir) {
+      @Override
+      GraphResponse rootGraph() {
+        return new GraphResponse(
+            List.of(new GraphNode("de.aventiure", "package", "de.aventiure", true, null)),
+            List.of(new RawDependency("de.aventiure.story", "de.aventiure.common")),
+            null);
+      }
+    });
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
+    // WHEN
+    var response = standaloneMockMvc.perform(get("/api/graph/root"))
+        // THEN
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    var root = objectMapper.readTree(response);
+    assertThat(root) //
+        .hasSinglePackageNode("de.aventiure", "de.aventiure") //
+        .hasSingleRawDependency("de.aventiure.story", "de.aventiure.common") //
         .hasNoEdgesField();
   }
 
@@ -97,6 +131,7 @@ class GraphControllerIT {
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("label").asText()).isEqualTo("lay06b_world");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("parentId").asText()).isEqualTo("de.aventiure");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("parentId").asText()).isEqualTo("de.aventiure");
+    org.assertj.core.api.Assertions.assertThat(root.has("rawDependencies")).isFalse();
     org.assertj.core.api.Assertions.assertThat(root.has("edges")).isFalse();
   }
 
@@ -138,6 +173,7 @@ class GraphControllerIT {
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("type").asText()).isEqualTo("type");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("label").asText()).isEqualTo("BeingLayer");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("parentId").asText()).isEqualTo("de.aventiure.lay05_being");
+    org.assertj.core.api.Assertions.assertThat(root.has("rawDependencies")).isFalse();
     org.assertj.core.api.Assertions.assertThat(root.has("edges")).isFalse();
   }
 
@@ -182,6 +218,7 @@ class GraphControllerIT {
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("type").asText()).isEqualTo("type");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("label").asText()).isEqualTo("PrivateInner");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("parentId").asText()).isEqualTo("de.aventiure.Outer");
+    org.assertj.core.api.Assertions.assertThat(root.has("rawDependencies")).isFalse();
     org.assertj.core.api.Assertions.assertThat(root.has("edges")).isFalse();
   }
 

@@ -36,6 +36,36 @@ public class GraphJsonAssert extends AbstractAssert<GraphJsonAssert, JsonNode> {
     return this;
   }
 
+  public GraphJsonAssert hasEmptyRawDependenciesField() {
+    isNotNull();
+
+    var rawDependencies = requireArray("rawDependencies");
+    if (!rawDependencies.isEmpty()) {
+      failWithMessage(
+          "Expected graph response field <rawDependencies> to be empty, but found %d entries.",
+          rawDependencies.size());
+    }
+
+    return this;
+  }
+
+  public GraphJsonAssert hasSingleRawDependency(final String expectedSourcePackage, final String expectedTargetPackage) {
+    isNotNull();
+
+    var rawDependencies = requireArray("rawDependencies");
+    if (rawDependencies.size() != 1) {
+      failWithMessage(
+          "Expected graph response to contain exactly one raw dependency, but found %d.",
+          rawDependencies.size());
+    }
+
+    var rawDependency = rawDependencies.get(0);
+    assertFieldEquals(rawDependency, "sourcePackage", expectedSourcePackage);
+    assertFieldEquals(rawDependency, "targetPackage", expectedTargetPackage);
+
+    return this;
+  }
+
   private JsonNode requireArray(final String fieldName) {
     var field = actual.path(fieldName);
     if (!field.isArray()) {

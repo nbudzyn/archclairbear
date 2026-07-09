@@ -32,6 +32,7 @@ class GraphServiceTest {
     // THEN
     assertThat(graph.nodes())
         .containsExactly(new GraphNode("de.aventiure.lay05_being", "package", "de.aventiure.lay05_being", true, null));
+    assertThat(graph.rawDependencies()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
 
@@ -144,6 +145,7 @@ class GraphServiceTest {
     // THEN
     assertThat(graph.nodes())
         .containsExactly(new GraphNode("(default)", "package", "(default)", true, null));
+    assertThat(graph.rawDependencies()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
 
@@ -160,6 +162,7 @@ class GraphServiceTest {
     // THEN
     assertThat(graph.nodes())
         .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure", true, null));
+    assertThat(graph.rawDependencies()).isEmpty();
     assertThat(graph.statusMessage())
         .isEqualTo("Teilweise analysiert: 1 Datei konnte nicht vollständig gelesen werden.");
   }

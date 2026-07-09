@@ -46,11 +46,12 @@ class GraphService {
 
     var workspaceIndex = getWorkspaceIndex();
     if (workspaceIndex.visibleRootPackageName() == null) {
-      return new GraphResponse(List.of(), workspaceIndex.statusMessage());
+      return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage());
     }
 
     return new GraphResponse(
         List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null, workspaceIndex.packages())),
+        List.of(),
         workspaceIndex.statusMessage());
   }
 
