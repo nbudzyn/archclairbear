@@ -59,6 +59,24 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForQualifiedLowercaseFieldTypeWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          b.bar.target target;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsDependencyForImportedMethodParameterType() {
     // GIVEN
     var compilationUnit = parse("""
@@ -357,6 +375,24 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForQualifiedLowercaseTypeAnnotationWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        @b.bar.target
+        class Source {
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsDependencyForImportedFieldAnnotation() {
     // GIVEN
     var compilationUnit = parse("""
@@ -513,6 +549,26 @@ class TypeUseDependencyAnalyzerTest {
   }
 
   @Test
+  void analyzeReturnsDependencyForQualifiedLowercaseStaticMethodCallWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          void act() {
+            b.bar.target.create();
+          }
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
   void analyzeReturnsDependencyForImportedStaticFieldAccess() {
     // GIVEN
     var compilationUnit = parse("""
@@ -538,6 +594,24 @@ class TypeUseDependencyAnalyzerTest {
         package a.foo;
         class Source {
           String value = b.bar.Target.VALUE;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedLowercaseStaticFieldAccessWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          String value = b.bar.target.VALUE;
         }
         """);
 
@@ -602,6 +676,41 @@ class TypeUseDependencyAnalyzerTest {
     // THEN
     assertThat(dependencies)
         .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeReturnsDependencyForQualifiedLowercaseMethodReferenceWithoutImport() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          Runnable value = b.bar.target::create;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies)
+        .containsExactly(new RawDependency("a.foo", "b.bar"));
+  }
+
+  @Test
+  void analyzeIgnoresLowercaseObjectFieldAccess() {
+    // GIVEN
+    var compilationUnit = parse("""
+        package a.foo;
+        class Source {
+          String value = target.inner.value;
+        }
+        """);
+
+    // WHEN
+    var dependencies = analyzer.analyze(compilationUnit);
+
+    // THEN
+    assertThat(dependencies).isEmpty();
   }
 
   @Test

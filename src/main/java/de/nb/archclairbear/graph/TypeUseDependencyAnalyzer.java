@@ -27,13 +27,17 @@ class TypeUseDependencyAnalyzer {
 
     return Stream
         .of(
-            classOrInterfaceTypeNames(compilationUnit),
-            annotationNames(compilationUnit),
-            fieldAccessScopes(compilationUnit),
-            methodCallScopes(compilationUnit),
-            methodReferenceScopes(compilationUnit))
+            classOrInterfaceTypeNames(compilationUnit)
+                .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 2)),
+            annotationNames(compilationUnit)
+                .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 2)),
+            fieldAccessScopes(compilationUnit)
+                .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 3)),
+            methodCallScopes(compilationUnit)
+                .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 3)),
+            methodReferenceScopes(compilationUnit)
+                .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName, 3)))
         .flatMap(typeNames -> typeNames)
-        .map(typeName -> targetPackage(typeName, importedPackagesBySimpleName))
         .filter(Objects::nonNull)
         .filter(targetPackage -> !sourcePackage.equals(targetPackage))
         .map(targetPackage -> new RawDependency(sourcePackage, targetPackage))
@@ -46,7 +50,17 @@ class TypeUseDependencyAnalyzer {
 
   private Stream<String> classOrInterfaceTypeNames(final CompilationUnit compilationUnit) {
     return compilationUnit.findAll(ClassOrInterfaceType.class).stream()
+        .filter(classOrInterfaceType -> !isScopeOfClassOrInterfaceType(classOrInterfaceType))
         .map(ClassOrInterfaceType::getNameWithScope);
+  }
+
+  private boolean isScopeOfClassOrInterfaceType(final ClassOrInterfaceType classOrInterfaceType) {
+    return classOrInterfaceType.getParentNode()
+        .filter(ClassOrInterfaceType.class::isInstance)
+        .map(ClassOrInterfaceType.class::cast)
+        .flatMap(ClassOrInterfaceType::getScope)
+        .filter(scope -> scope == classOrInterfaceType)
+        .isPresent();
   }
 
   private Stream<String> annotationNames(final CompilationUnit compilationUnit) {
@@ -56,6 +70,9 @@ class TypeUseDependencyAnalyzer {
 
   private Stream<String> fieldAccessScopes(final CompilationUnit compilationUnit) {
     return compilationUnit.findAll(FieldAccessExpr.class).stream()
+        .filter(fieldAccess -> fieldAccess.getParentNode()
+            .filter(FieldAccessExpr.class::isInstance)
+            .isEmpty())
         .map(fieldAccess -> fieldAccess.getScope().toString())
         .filter(this::isName);
   }
@@ -85,9 +102,10 @@ class TypeUseDependencyAnalyzer {
 
   private String targetPackage(
       final String typeName,
-      final Map<String, String> importedPackagesBySimpleName) {
+      final Map<String, String> importedPackagesBySimpleName,
+      final int minimumSegmentsForLowercaseTypeName) {
     if (typeName.contains(".")) {
-      var packageName = packageFromQualifiedTypeName(typeName);
+      var packageName = packageFromQualifiedTypeName(typeName, minimumSegmentsForLowercaseTypeName);
       if (packageName != null) {
         return packageName;
       }
@@ -98,7 +116,9 @@ class TypeUseDependencyAnalyzer {
     return importedPackagesBySimpleName.get(typeName);
   }
 
-  private String packageFromQualifiedTypeName(final String qualifiedTypeName) {
+  private String packageFromQualifiedTypeName(
+      final String qualifiedTypeName,
+      final int minimumSegmentsForLowercaseTypeName) {
     var segments = qualifiedTypeName.split("\\.");
     for (var segmentIndex = 0; segmentIndex < segments.length; segmentIndex += 1) {
       if (startsWithUppercase(segments[segmentIndex])) {
@@ -110,7 +130,12 @@ class TypeUseDependencyAnalyzer {
       }
     }
 
-    return null;
+    if (segments.length < minimumSegmentsForLowercaseTypeName) {
+      return null;
+    }
+
+    var lastDotIndex = qualifiedTypeName.lastIndexOf('.');
+    return lastDotIndex < 0 ? null : qualifiedTypeName.substring(0, lastDotIndex);
   }
 
   private String importedPackageFromQualifiedMemberAccess(
@@ -156,7 +181,7 @@ class TypeUseDependencyAnalyzer {
 
   private String packageName(final ImportDeclaration importDeclaration) {
     var importedName = importDeclaration.getNameAsString();
-    var packageName = packageFromQualifiedTypeName(importedName);
+    var packageName = packageFromQualifiedTypeName(importedName, 2);
     if (packageName != null) {
       return packageName;
     }

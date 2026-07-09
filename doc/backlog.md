@@ -3,13 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Abhängigkeiten auf Typnamen mit kleinem Anfangsbuchstaben erkennen
-
-Der Server erkennt Java-erlaubte, aber unkonventionelle Typnamen mit kleinem Anfangsbuchstaben (bis Java 26).
-
-- Jeder erkannte Fall ist durch fokussierte Java-Unit-Tests der Analyseklasse oder package-private Methoden geprüft. Insbesondere jeweils
-  der Fall, dass es *keinen* Import gibt, sondern die Klasse explizit mit Package im Code genannt ist.
-
 ## Abhängigkeiten auf Pattern-/Switch-/Record-Pattern-Fälle erkennen (bis Java 26)
 
 Der Server erkennt Abhängigkeiten auf Pattern-/Switch-/Record-Pattern-Fälle (bis Java 26).
