@@ -26,12 +26,11 @@ public class GraphJsonAssert extends AbstractAssert<GraphJsonAssert, JsonNode> {
     return this;
   }
 
-  public GraphJsonAssert hasNoEdges() {
+  public GraphJsonAssert hasNoEdgesField() {
     isNotNull();
 
-    var edges = requireArray("edges");
-    if (!edges.isEmpty()) {
-      failWithMessage("Expected graph response to contain no edges, but found %d.", edges.size());
+    if (actual.has("edges")) {
+      failWithMessage("Expected graph response to contain no edges field.");
     }
 
     return this;

@@ -101,6 +101,36 @@ test('normalizeGraph normalisiert gültige Graphdaten', () => {
   ]);
 });
 
+test('normalizeGraph ergänzt fehlende Server-Kanten als interne leere Kantenliste', () => {
+  // GIVEN
+  const graph = {
+    nodes: [
+      {
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
+      },
+    ],
+  };
+
+  // WHEN
+  const normalized = normalizeGraph(graph);
+
+  // THEN
+  assert.deepEqual(normalized, {
+    nodes: [
+      {
+        id: 'de.aventiure',
+        label: 'de.aventiure',
+        type: 'package',
+        expandable: false,
+        parentId: null,
+      },
+    ],
+    edges: [],
+  });
+});
+
 test('createGraphElements zeigt aufklappbare zugeklappte Knoten mit Ellipse', () => {
   // GIVEN
   const graph = {

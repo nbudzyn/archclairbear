@@ -21,7 +21,6 @@ test('root graph is loaded and rendered visibly', async ({ page }) => {
         parentId: null,
       },
     ],
-    edges: [],
   });
 
   await expect(page.locator('#cy')).toBeVisible();
@@ -66,7 +65,7 @@ test('package graph can be expanded with a double click', async ({ page }) => {
   expect(graphData.nodes.length).toBeGreaterThan(0);
   expect(graphData.nodes.every((node) => node.type === 'package')).toBe(true);
   expect(graphData.nodes.every((node) => node.parentId === 'de.aventiure')).toBe(true);
-  expect(graphData.edges).toEqual([]);
+  expect(graphData.edges).toBeUndefined();
   expect(packageGraphRequestCount).toBe(1);
 });
 
@@ -85,7 +84,6 @@ test('expanded package renders type nodes inside the package box', async ({ page
           parentId: null,
         },
       ],
-      edges: [],
     }),
   }));
 
@@ -112,7 +110,6 @@ test('expanded package renders type nodes inside the package box', async ({ page
           parentId: 'de.aventiure',
         },
       ],
-      edges: [],
     }),
   }));
 

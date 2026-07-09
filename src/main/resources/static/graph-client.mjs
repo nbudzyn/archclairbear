@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=package-boxes-18';
-import { GraphDataValidationError, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=package-boxes-18';
-import { renderGraph } from './graph-renderer.mjs?v=package-boxes-18';
+import { createGraphStatusController } from './graph-status.mjs?v=no-server-edges-19';
+import { GraphDataValidationError, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=no-server-edges-19';
+import { renderGraph } from './graph-renderer.mjs?v=no-server-edges-19';
 
 /**
  * Startet die Client-Anwendung für den Graphen.

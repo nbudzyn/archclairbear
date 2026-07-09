@@ -3,15 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Keine Server-Edges mehr an den Client liefern
-
-Die Graph-Antworten enthalten vorerst keine renderbaren Kanten mehr.
-Das Feld edges wird entfernt.
-
-- Der Server liefert für Root-, Package- und Type-Anfragen weiterhin Knoten.
-- Vorhandene Client-Tests bleiben grün.
-- Die Änderung ist durch Java-Unit- oder Controller-Tests prüfbar.
-
 ## Roh-Abhängigkeiten im Initial-Load transportieren
 
 Der Initial-Load kann Roh-Abhängigkeiten zwischen Packages transportieren, ohne daraus bereits sichtbare Pfeile zu machen.

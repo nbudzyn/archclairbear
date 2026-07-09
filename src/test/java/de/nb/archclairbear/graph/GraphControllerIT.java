@@ -60,7 +60,7 @@ class GraphControllerIT {
     var root = objectMapper.readTree(response);
     assertThat(root) //
         .hasSinglePackageNode("de.aventiure", "de.aventiure") //
-        .hasNoEdges();
+        .hasNoEdgesField();
   }
 
   @Test
@@ -97,7 +97,7 @@ class GraphControllerIT {
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("label").asText()).isEqualTo("lay06b_world");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(0).path("parentId").asText()).isEqualTo("de.aventiure");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("parentId").asText()).isEqualTo("de.aventiure");
-    org.assertj.core.api.Assertions.assertThat(root.path("edges")).isEmpty();
+    org.assertj.core.api.Assertions.assertThat(root.has("edges")).isFalse();
   }
 
   @Test
@@ -138,7 +138,7 @@ class GraphControllerIT {
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("type").asText()).isEqualTo("type");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("label").asText()).isEqualTo("BeingLayer");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(2).path("parentId").asText()).isEqualTo("de.aventiure.lay05_being");
-    org.assertj.core.api.Assertions.assertThat(root.path("edges")).isEmpty();
+    org.assertj.core.api.Assertions.assertThat(root.has("edges")).isFalse();
   }
 
   @Test
@@ -182,7 +182,7 @@ class GraphControllerIT {
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("type").asText()).isEqualTo("type");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("label").asText()).isEqualTo("PrivateInner");
     org.assertj.core.api.Assertions.assertThat(root.path("nodes").get(1).path("parentId").asText()).isEqualTo("de.aventiure.Outer");
-    org.assertj.core.api.Assertions.assertThat(root.path("edges")).isEmpty();
+    org.assertj.core.api.Assertions.assertThat(root.has("edges")).isFalse();
   }
 
   @Test

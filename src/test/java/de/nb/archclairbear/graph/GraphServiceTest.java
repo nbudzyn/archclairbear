@@ -32,7 +32,6 @@ class GraphServiceTest {
     // THEN
     assertThat(graph.nodes())
         .containsExactly(new GraphNode("de.aventiure.lay05_being", "package", "de.aventiure.lay05_being", true, null));
-    assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
 
@@ -79,7 +78,6 @@ class GraphServiceTest {
             new GraphNode("de.aventiure.lay05_being.Outer", "type", "Outer", true, "de.aventiure.lay05_being"),
             new GraphNode("de.aventiure.lay05_being.PackagePrivateType", "type", "PackagePrivateType", false, "de.aventiure.lay05_being"),
             new GraphNode("de.aventiure.lay05_being.SampleRecord", "type", "SampleRecord", false, "de.aventiure.lay05_being"));
-    assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
 
@@ -126,13 +124,11 @@ class GraphServiceTest {
         .containsExactly(
             new GraphNode("de.aventiure.Outer.Inner", "type", "Inner", true, "de.aventiure.Outer"),
             new GraphNode("de.aventiure.Outer.PrivateInner", "type", "PrivateInner", false, "de.aventiure.Outer"));
-    assertThat(outerGraph.edges()).isEmpty();
     assertThat(outerGraph.statusMessage()).isNull();
 
     assertThat(innerGraph.nodes())
         .containsExactly(
             new GraphNode("de.aventiure.Outer.Inner.Deep", "type", "Deep", false, "de.aventiure.Outer.Inner"));
-    assertThat(innerGraph.edges()).isEmpty();
     assertThat(innerGraph.statusMessage()).isNull();
   }
 
@@ -148,7 +144,6 @@ class GraphServiceTest {
     // THEN
     assertThat(graph.nodes())
         .containsExactly(new GraphNode("(default)", "package", "(default)", true, null));
-    assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage()).isNull();
   }
 
@@ -165,7 +160,6 @@ class GraphServiceTest {
     // THEN
     assertThat(graph.nodes())
         .containsExactly(new GraphNode("de.aventiure", "package", "de.aventiure", true, null));
-    assertThat(graph.edges()).isEmpty();
     assertThat(graph.statusMessage())
         .isEqualTo("Teilweise analysiert: 1 Datei konnte nicht vollständig gelesen werden.");
   }

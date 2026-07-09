@@ -46,12 +46,11 @@ class GraphService {
 
     var workspaceIndex = getWorkspaceIndex();
     if (workspaceIndex.visibleRootPackageName() == null) {
-      return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage());
+      return new GraphResponse(List.of(), workspaceIndex.statusMessage());
     }
 
     return new GraphResponse(
         List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null, workspaceIndex.packages())),
-        List.of(),
         workspaceIndex.statusMessage());
   }
 
@@ -62,7 +61,7 @@ class GraphService {
     var normalizedPackageName = normalizePackageName(packageName);
     var packageContent = workspaceIndex.packages().get(normalizedPackageName);
     if (packageContent == null) {
-      return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage());
+      return new GraphResponse(List.of(), workspaceIndex.statusMessage());
     }
 
     var nodes = new ArrayList<GraphNode>();
@@ -73,7 +72,7 @@ class GraphService {
         .map(typeInfo -> createTypeNode(typeInfo, normalizedPackageName))
         .forEach(nodes::add);
 
-    return new GraphResponse(List.copyOf(nodes), List.of(), workspaceIndex.statusMessage());
+    return new GraphResponse(List.copyOf(nodes), workspaceIndex.statusMessage());
   }
 
   GraphResponse typeGraph(final String typeId) {
@@ -82,14 +81,14 @@ class GraphService {
     var workspaceIndex = getWorkspaceIndex();
     var typeInfo = workspaceIndex.typesById().get(typeId);
     if (typeInfo == null) {
-      return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage());
+      return new GraphResponse(List.of(), workspaceIndex.statusMessage());
     }
 
     var nodes = typeInfo.nestedTypes().stream()
         .map(nestedTypeInfo -> createTypeNode(nestedTypeInfo, typeInfo.id()))
         .toList();
 
-    return new GraphResponse(List.copyOf(nodes), List.of(), workspaceIndex.statusMessage());
+    return new GraphResponse(List.copyOf(nodes), workspaceIndex.statusMessage());
   }
 
   private void ensureWorkspaceDirectoryExists() {

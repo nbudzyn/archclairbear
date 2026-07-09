@@ -7,13 +7,14 @@ export function normalizeGraph(graph) {
     throw new GraphDataValidationError('Die Graphdaten vom Server sind ungültig.');
   }
 
-  if (!Array.isArray(graph.edges)) {
+  const edges = graph.edges ?? [];
+  if (!Array.isArray(edges)) {
     throw new GraphDataValidationError('Die Graphdaten vom Server sind ungültig.');
   }
 
   return {
     nodes: graph.nodes.map((node) => normalizeNode(node)),
-    edges: graph.edges.map((edge) => normalizeEdge(edge)),
+    edges: edges.map((edge) => normalizeEdge(edge)),
   };
 }
 
