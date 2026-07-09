@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=visible-package-edges-20';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=visible-package-edges-21';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
@@ -18,8 +18,8 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
 
   const elk = createElkLayoutEngine(windowObject);
   const positionedElements = applyLayoutToElements(
-      createGraphElements(graph),
-      await layoutGraph(graph, elk),
+      createGraphElements(withoutRenderedEdges(graph)),
+      await layoutGraph(withoutRenderedEdges(graph), elk),
   );
 
   const cy = cytoscape({
@@ -57,9 +57,10 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
         return;
       }
 
+      const renderableGraph = withoutRenderedEdges(nextGraph);
       const positionedGraphElements = applyLayoutToElements(
-          createGraphElements(nextGraph),
-          await layoutGraph(nextGraph, elk),
+          createGraphElements(renderableGraph),
+          await layoutGraph(renderableGraph, elk),
       );
       cy.elements().remove();
       cy.add(positionedGraphElements);
@@ -70,6 +71,13 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
       windowObject.removeEventListener('resize', resizeHandler);
       cy.destroy();
     },
+  };
+}
+
+function withoutRenderedEdges(graph) {
+  return {
+    nodes: graph.nodes,
+    edges: [],
   };
 }
 

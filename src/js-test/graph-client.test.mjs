@@ -689,6 +689,166 @@ test('startGraphApp klappt ein geöffnetes Package bei erneutem Doppelklick wied
   ]);
 });
 
+test('startGraphApp berechnet Package-Kanten beim Auf- und Zuklappen aus initialen Roh-Abhängigkeiten neu', async () => {
+  // GIVEN
+  const statusMessage = { textContent: '' };
+  const errorMessage = { textContent: '' };
+  const statusElement = { hidden: true, querySelector: () => statusMessage };
+  const errorElement = { hidden: true, querySelector: () => errorMessage };
+  const renderCalls = [];
+  const appendCalls = [];
+  const loadCalls = [];
+  const tapHandlers = [];
+  const originalConsoleError = console.error;
+  let now = 1000;
+
+  // WHEN
+  console.error = () => {};
+
+  try {
+    await startGraphApp({
+      container: { id: 'cy' },
+      errorElement,
+      fetchImpl: async () => {
+        throw new Error('fetchImpl should not be used in this test.');
+      },
+      graphErrorMessage: errorMessage,
+      graphStatus: statusElement,
+      graphStatusMessage: statusMessage,
+      loadGraphImpl: async (_fetchImpl, requestUrl) => {
+        loadCalls.push(requestUrl);
+        if (requestUrl === '/api/graph/root') {
+          return {
+            nodes: [
+              {
+                id: 'de.aventiure',
+                label: 'de.aventiure',
+                type: 'package',
+                expandable: true,
+              },
+            ],
+            rawDependencies: [
+              {
+                sourcePackage: 'de.aventiure.story.internal',
+                targetPackage: 'de.aventiure.common.internal',
+              },
+            ],
+          };
+        }
+
+        return {
+          nodes: [
+            {
+              id: 'de.aventiure.story',
+              label: 'story',
+              type: 'package',
+              expandable: false,
+              parentId: 'de.aventiure',
+            },
+            {
+              id: 'de.aventiure.common',
+              label: 'common',
+              type: 'package',
+              expandable: false,
+              parentId: 'de.aventiure',
+            },
+          ],
+        };
+      },
+      renderGraphImpl: (graph) => {
+        renderCalls.push(graph);
+        return {
+          appendGraph(graphToAppend) {
+            appendCalls.push(graphToAppend);
+          },
+          cy: {
+            on(eventName, selector, handler) {
+              tapHandlers.push({ eventName, selector, handler });
+            },
+          },
+          destroy() {},
+        };
+      },
+      timeSource: () => now,
+      requestUrl: '/api/graph/root',
+      windowObject: {
+        addEventListener() {},
+        removeEventListener() {},
+      },
+      cytoscape: {},
+    });
+
+    const handler = tapHandlers[0].handler;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure';
+          }
+
+          return fieldName === 'type' ? 'package' : undefined;
+        },
+      },
+    });
+    now += 150;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure';
+          }
+
+          return fieldName === 'type' ? 'package' : undefined;
+        },
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    now += 50;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure';
+          }
+
+          return fieldName === 'type' ? 'package' : undefined;
+        },
+      },
+    });
+    now += 120;
+    handler({
+      target: {
+        data(fieldName) {
+          if (fieldName === 'id') {
+            return 'de.aventiure';
+          }
+
+          return fieldName === 'type' ? 'package' : undefined;
+        },
+      },
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  // THEN
+  assert.deepEqual(loadCalls, [
+    '/api/graph/root',
+    '/api/graph/package?packageName=de.aventiure',
+  ]);
+  assert.deepEqual(renderCalls[0].edges, []);
+  assert.deepEqual(appendCalls.map((graph) => graph.edges), [
+    [
+      {
+        source: 'de.aventiure.story',
+        target: 'de.aventiure.common',
+      },
+    ],
+    [],
+  ]);
+});
+
 test('createPackageRequestUrl kodiert den Package-Namen für Nachladeanfragen', () => {
   // WHEN / THEN
   assert.equal(createPackageRequestUrl('de.aventiure.lay05_being'), '/api/graph/package?packageName=de.aventiure.lay05_being');

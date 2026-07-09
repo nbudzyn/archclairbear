@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=visible-package-edges-20';
-import { GraphDataValidationError, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=visible-package-edges-20';
-import { renderGraph } from './graph-renderer.mjs?v=visible-package-edges-20';
+import { createGraphStatusController } from './graph-status.mjs?v=visible-package-edges-21';
+import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=visible-package-edges-21';
+import { renderGraph } from './graph-renderer.mjs?v=visible-package-edges-21';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
@@ -17,6 +17,7 @@ export async function startGraphApp({
   requestUrl = '/api/graph/root',
   packageRequestUrlFactory = createPackageRequestUrl,
   typeRequestUrlFactory = createTypeRequestUrl,
+  timeSource = () => Date.now(),
   windowObject = window,
   cytoscape = window.cytoscape,
 } = {}) {
@@ -31,7 +32,8 @@ export async function startGraphApp({
 
   try {
     const loadedGraph = await loadGraphImpl(fetchImpl, requestUrl);
-    let graph = normalizeGraph(loadedGraph);
+    const rawDependencies = loadedGraph.rawDependencies ?? [];
+    let graph = withVisiblePackageEdges(normalizeGraph(loadedGraph), rawDependencies);
     const renderState = await renderGraphImpl(graph, {
       cytoscape,
       container,
@@ -41,7 +43,7 @@ export async function startGraphApp({
       installNodeDoubleClickHandler(renderState.cy, async (nodeId, nodeType) => {
         try {
           if (hasVisibleChildNodes(graph, nodeId)) {
-            graph = collapseGraph(graph, nodeId);
+            graph = withVisiblePackageEdges(collapseGraph(graph, nodeId), rawDependencies);
             await renderState.appendGraph(graph);
             return;
           }
@@ -55,7 +57,7 @@ export async function startGraphApp({
               : packageRequestUrlFactory(nodeId);
           const expandedLoadedGraph = await loadGraphImpl(fetchImpl, requestUrlToLoad);
           const expandedGraph = normalizeGraph(expandedLoadedGraph);
-          graph = mergeGraphs(graph, expandedGraph);
+          graph = withVisiblePackageEdges(mergeGraphs(graph, expandedGraph), rawDependencies);
           await renderState.appendGraph(graph);
           if (typeof expandedLoadedGraph.statusMessage === 'string' && expandedLoadedGraph.statusMessage.length > 0) {
             graphStatusController.showStatus(expandedLoadedGraph.statusMessage);
@@ -66,7 +68,7 @@ export async function startGraphApp({
           console.error(`Failed to toggle node ${nodeId}.`, error);
           graphStatusController.showError(createUserFacingErrorMessage(error));
         }
-      });
+      }, timeSource);
     }
     if (typeof loadedGraph.statusMessage === 'string' && loadedGraph.statusMessage.length > 0) {
       graphStatusController.showStatus(loadedGraph.statusMessage);
@@ -133,6 +135,13 @@ function hasVisibleChildNodes(graph, nodeId) {
 
 function isNodeExpandable(graph, nodeId) {
   return graph.nodes.some((node) => node.id === nodeId && node.expandable === true);
+}
+
+function withVisiblePackageEdges(graph, rawDependencies) {
+  return {
+    nodes: graph.nodes,
+    edges: calculateVisiblePackageEdges(rawDependencies, graph),
+  };
 }
 
 function createUserFacingErrorMessage(error) {

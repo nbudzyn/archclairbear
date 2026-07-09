@@ -3,23 +3,11 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Package-Pfeile beim Auf- und Zuklappen neu berechnen
-
-Der Client speichert die initial geladenen Roh-Abhängigkeiten und aktualisiert die sichtbaren Kanten nach jeder Änderung des sichtbaren
-Graphen.
-
-- Es wird der implementierte Code zur Berechnung der sichtbaren Kanten verwendet: calculateVisiblePackageEdges (oder eine darüberliegende
-  Methode).
-- Nach dem Aufklappen eines Packages werden die sichtbaren Kanten für den gesamten sichtbaren Graphen neu berechnet.
-- Nach dem Zuklappen eines Packages werden die sichtbaren Kanten ebenfalls neu berechnet.
-- Nachladeanfragen für Packages oder Typen müssen dafür keine Roh-Abhängigkeiten liefern.
-- Das Verhalten ist per JS-Unit-Test am Client-Zustand prüfbar.
-
 ## Package-Pfeile rendern
 
 Die berechneten Package-Kanten werden in der GUI als gerichtete Pfeile angezeigt.
 
-- Cytoscape erhält Kanten zwischen sichtbaren Package-Knoten.
+- Cytoscape fügt Kanten zwischen den sichtbaren Package-Knoten ein.
 - Der Renderer stellt die Kanten als Pfeile dar.
 - Der ELK-Graph enthält die sichtbaren Kanten für das Layout.
 - Das Verhalten ist durch JS-Renderer-Tests und einen manuellen Browser-Check prüfbar.

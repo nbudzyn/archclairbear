@@ -44,7 +44,7 @@ werden, soll das Backlog-Item angepasst werden oder handelt es sich um eine Ausn
   statt auf `C:\TMP` auszuweichen.
     - Das gilt auch für Screenshots, Browser-Artefakte und andere Prüfdateien.
 - Bei statischen Browser-Modulen immer Cache-Busting und alle abhängigen Versionen gemeinsam aktualisieren
-  (`graph-app.js`, `graph-client.mjs`, `graph-renderer.mjs`, Landing-Page-Test).
+  (`graph-app.js`, `graph-client.mjs`, `graph-renderer.mjs`, Integration Test `LandingPageIT`).
     - Cache-Busting-Regel: Jede Änderung an statischen Browser-Assets bekommt eine neue gemeinsame Versionskennung; die zusammengehörigen
       Imports, HTML-Referenzen und betroffenen Tests werden immer im selben Schritt mitgezogen.
 
