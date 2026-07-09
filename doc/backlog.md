@@ -5,7 +5,7 @@ Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren 
 
 ## Package-Pfeile rendern
 
-Die berechneten Package-Kanten werden in der GUI als gerichtete Pfeile angezeigt.
+Die berechneten Package-Kanten werden in der GUI als gerichtete Pfeile angezeigt (nach jeder Änderung).
 
 - Cytoscape fügt Kanten zwischen den sichtbaren Package-Knoten ein.
 - Der Renderer stellt die Kanten als Pfeile dar.
