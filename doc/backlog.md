@@ -3,6 +3,17 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
+## Wenn kein Knoten sichtbar ist...
+
+Wenn kein Knoten sichtbar ist, soll die Sicht so verschoben werden, dass 1 äußerster Knoten vollständig sichtbar ist.
+Alternative Idee: Wenn 1 äußerster Knoten vollständig sichtbar war und der Knoten wird aufgeklappt, soll die Sicht so angepasst werden, dass
+der Knoten nach dem aufklappen vollständig zu sehen ist.
+
+## Statische Code-Analyse im Prozess
+
+Genau wie die Tests sollen als Quality Gate nach Änderung ein oder mehrere statische Code-Analyse Tools (für Java und JavaScript laufen).
+Genügt, die Qualität nicht den Ansprüchen, muss bei der Umsetzung noch nachgebessert werden.
+
 ## Manuell verschobene aufgeklappte Container als Gruppe behandeln
 
 Wenn der Nutzer einen aufgeklappten Container-Knoten per Drag verschiebt, bleiben dessen sichtbare Kinder relativ dazu konsistent.
