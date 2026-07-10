@@ -9,7 +9,7 @@ werden, soll das Backlog-Item angepasst werden oder handelt es sich um eine Ausn
 
 ## Gradle
 
-- Vor Gradle-Aufrufen immer explizit Freigabe holen.
+- Vor Gradle-Aufrufen immer explizit Freigabe holen (über den Tool-Aufruf).
     - Das gilt für `gradle`, `gradlew.bat`, `.\localTest.ps1`, `.\localJsTest.ps1` und `.\localBrowserTest.ps1`.
 - Die Wrapper verwenden das Standard-Gradle-User-Home im Benutzerverzeichnis (`C:\Users\...\ .gradle`).
 - Bei `functions.exec_command` keine PowerShell-Exe in `cmd` hinein verschachteln, wenn der PowerShell-Interpreter bereits der Shell-Kontext

@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=animated-layout-28';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=manual-node-position-29';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
@@ -18,6 +18,7 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
   }
 
   const elk = createElkLayoutEngine(windowObject);
+  const manuallyMovedNodePositions = new Map();
   const positionedElements = applyLayoutToElements(
       createGraphElements(graph),
       await layoutGraph(graph, elk),
@@ -49,6 +50,7 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
   cy.on('zoom', () => {
     updateNodeLabelSizing(cy);
   });
+  installManualNodePositionTracking(cy, manuallyMovedNodePositions);
 
   windowObject.addEventListener('resize', resizeHandler);
 
@@ -64,7 +66,8 @@ export async function renderGraph(graph, { cytoscape, container, windowObject = 
           await layoutGraph(nextGraph, elk),
       );
       const anchoredGraphElements = keepNodeAtCurrentPosition(cy, positionedGraphElements, focusNodeId);
-      await updateGraphElements(cy, anchoredGraphElements, { focusNodeId });
+      const manualPositionedGraphElements = applyManualNodePositions(anchoredGraphElements, manuallyMovedNodePositions);
+      await updateGraphElements(cy, manualPositionedGraphElements, { focusNodeId, manuallyMovedNodePositions });
       updateNodeLabelSizing(cy);
       updateGraphStateAttributes(container, cy);
     },
@@ -293,6 +296,23 @@ function applyLayoutToElements(elements, positions) {
   });
 }
 
+function installManualNodePositionTracking(cy, manuallyMovedNodePositions) {
+  cy.on('dragfree', 'node', (event) => {
+    const node = event.target;
+    const nodeId = typeof node.data === 'function' ? node.data('id') : null;
+    const position = typeof node.position === 'function' ? node.position() : null;
+
+    if (typeof nodeId !== 'string' || !isPosition(position)) {
+      return;
+    }
+
+    manuallyMovedNodePositions.set(nodeId, {
+      x: position.x,
+      y: position.y,
+    });
+  });
+}
+
 function keepNodeAtCurrentPosition(cy, elements, focusNodeId) {
   if (focusNodeId == null) {
     return elements;
@@ -331,7 +351,26 @@ function keepNodeAtCurrentPosition(cy, elements, focusNodeId) {
   });
 }
 
-async function updateGraphElements(cy, nextElements, { focusNodeId = null } = {}) {
+function applyManualNodePositions(elements, manuallyMovedNodePositions) {
+  return elements.map((element) => {
+    const nodeId = element?.data?.id;
+    const manualPosition = manuallyMovedNodePositions.get(nodeId);
+
+    if (manualPosition == null || element.position == null) {
+      return element;
+    }
+
+    return {
+      ...element,
+      position: {
+        x: manualPosition.x,
+        y: manualPosition.y,
+      },
+    };
+  });
+}
+
+async function updateGraphElements(cy, nextElements, { focusNodeId = null, manuallyMovedNodePositions = new Map() } = {}) {
   const nextElementIds = new Set(nextElements.map((element) => element.data.id));
   const existingElements = elementsAsArray(cy.elements());
 
@@ -344,7 +383,10 @@ async function updateGraphElements(cy, nextElements, { focusNodeId = null } = {}
 
   existingElements
       .filter((element) => !nextElementIds.has(element.id()))
-      .forEach((element) => element.remove());
+      .forEach((element) => {
+        manuallyMovedNodePositions.delete(element.id());
+        element.remove();
+      });
 }
 
 async function upsertGraphElement(cy, nextElement, focusNodeId = null) {
@@ -367,6 +409,11 @@ async function upsertGraphElement(cy, nextElement, focusNodeId = null) {
 
   applyGraphElementData(existingElement, nextElement.data);
   if (nextElement.position != null) {
+    const currentPosition = typeof existingElement.position === 'function' ? existingElement.position() : null;
+    if (hasSamePosition(currentPosition, nextElement.position)) {
+      return;
+    }
+
     return moveGraphNodeToPosition(existingElement, nextElement.position);
   }
 
@@ -503,6 +550,10 @@ function isEmptyElement(element) {
 
 function isPosition(value) {
   return typeof value?.x === 'number' && typeof value?.y === 'number';
+}
+
+function hasSamePosition(left, right) {
+  return isPosition(left) && isPosition(right) && left.x === right.x && left.y === right.y;
 }
 
 export function calculateZoomAdjustedNodeTextStyle(zoom) {

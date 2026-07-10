@@ -3,34 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Manuell verschobene Knoten beim Layoutwechsel erhalten
-
-Wenn der Nutzer einen sichtbaren Knoten per Drag verschoben hat, bleibt diese Position bei späterem Auf- oder Zuklappen erhalten.
-Das automatische Layout darf diesen Knoten nicht wieder an seine ELK-Position zurücksetzen.
-
-In diesem Item wird nur die Position des direkt verschobenen sichtbaren Knotens gemerkt.
-Die spezielle Gruppenbehandlung aufgeklappter Container-Knoten ist ein eigenes Folge-Item.
-
-- Nach Drag eines Knotens wird dessen Position im Client unter der Knoten-ID gemerkt.
-- Beim Auf- oder Zuklappen behalten manuell verschobene sichtbare Knoten ihre Position.
-- Nicht manuell verschobene Knoten dürfen weiterhin von ELK neu positioniert werden.
-- Beim Neuladen der Seite darf der Zustand verloren gehen; keine Server- oder LocalStorage-Persistenz in diesem Item.
-- Verschwindet ein Knoten (Zuklappen eines Vorfahren), wird auch seine gemerkte Position gelöscht.
-- Wird ein aufgeklappter Container-Knoten verschoben, muss in diesem Item nur dessen eigene Position erhalten bleiben; das konsistente
-  Mitverschieben seiner sichtbaren Kinder ist nicht Teil dieses Items.
-
-Technische Hinweise:
-
-- Das Item ist mit der bestehenden Architektur aus Cytoscape und ELK umsetzbar.
-- Die gemerkten Positionen sind reiner Client-Zustand im Renderer, zum Beispiel als `Map` von Knoten-ID auf Cytoscape-Modellposition.
-- Cytoscape liefert die manuelle Endposition nach Drag; diese Position kann beim Drag-Ende des Knotens gespeichert werden.
-- ELK berechnet weiterhin das automatische Ziel-Layout für den sichtbaren Graphen.
-- Nach der ELK-Berechnung überschreibt der Renderer die ELK-Zielpositionen für manuell verschobene Knoten mit den gemerkten Positionen.
-- Manuell verschobene Knoten dürfen bei späteren Layoutwechseln nicht zur ELK-Zielposition animiert werden; sie bleiben an ihrer gemerkten
-  Position.
-- Für neu sichtbare oder nicht manuell verschobene Knoten bleibt das ELK-Ergebnis maßgeblich.
-- Die Lösung darf Layoutqualität lokal verschlechtern, wenn der Nutzer Knoten bewusst verschiebt; das ist Teil der manuellen Kontrolle.
-
 ## Manuell verschobene aufgeklappte Container als Gruppe behandeln
 
 Wenn der Nutzer einen aufgeklappten Container-Knoten per Drag verschiebt, bleiben dessen sichtbare Kinder relativ dazu konsistent.

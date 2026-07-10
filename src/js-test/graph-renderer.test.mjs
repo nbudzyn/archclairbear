@@ -449,6 +449,114 @@ test('renderGraph animiert bestehende Knoten beim Nachladen auf ihre neue Layout
   });
 });
 
+test('renderGraph erhält manuell verschobene sichtbare Knoten beim Layoutwechsel', async () => {
+  // GIVEN
+  let cy = null;
+  const animateCalls = [];
+  const layoutPositions = [
+    new Map([
+      ['de.aventiure.story', { x: 10, y: 20 }],
+      ['de.aventiure.common', { x: 240, y: 20 }],
+    ]),
+    new Map([
+      ['de.aventiure.story', { x: 90, y: 120 }],
+      ['de.aventiure.common', { x: 320, y: 120 }],
+    ]),
+    new Map([
+      ['de.aventiure.common', { x: 320, y: 120 }],
+    ]),
+    new Map([
+      ['de.aventiure.story', { x: 500, y: 120 }],
+      ['de.aventiure.common', { x: 320, y: 120 }],
+    ]),
+  ];
+  const cytoscape = (options) => {
+    cy = createCytoscapeUpdateDouble(options, {
+      animateCalls,
+    });
+
+    return cy;
+  };
+
+  // WHEN
+  const renderState = await renderGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [],
+  }, {
+    cytoscape,
+    container: {},
+    windowObject: {
+      addEventListener() {},
+      removeEventListener() {},
+      ELK: class {
+        async layout(elkGraph) {
+          return addPositionsFromMap(elkGraph, layoutPositions.shift());
+        }
+      },
+    },
+  });
+
+  cy.getElementById('de.aventiure.story').position({
+    x: 777,
+    y: 888,
+  });
+  cy.triggerNodeEvent('dragfree', 'de.aventiure.story');
+
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [],
+  });
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [],
+  });
+  await renderState.appendGraph({
+    nodes: [
+      packageNode('de.aventiure.story'),
+      packageNode('de.aventiure.common'),
+    ],
+    edges: [],
+  });
+
+  // THEN
+  assert.deepEqual(animateCalls, [
+    {
+      id: 'de.aventiure.common',
+      position: {
+        x: 430,
+        y: 166,
+      },
+      duration: 320,
+      easing: 'ease-in-out',
+    },
+    {
+      id: 'de.aventiure.story',
+      position: {
+        x: 610,
+        y: 166,
+      },
+      duration: 320,
+      easing: 'ease-in-out',
+    },
+  ]);
+  assert.deepEqual(cy.storedElement('de.aventiure.story').position, {
+    x: 610,
+    y: 166,
+  });
+  assert.deepEqual(cy.storedElement('de.aventiure.common').position, {
+    x: 430,
+    y: 166,
+  });
+});
+
 test('renderGraph entfernt nicht mehr sichtbare Knoten einzeln beim Zuklappen', async () => {
   // GIVEN
   const eventLog = [];
@@ -663,6 +771,7 @@ function createCytoscapeUpdateDouble(options, {
   eventLog = [],
 } = {}) {
   const elementsById = new Map();
+  const eventHandlers = [];
   const emptyElement = {
     empty() {
       return true;
@@ -672,7 +781,13 @@ function createCytoscapeUpdateDouble(options, {
     ready(callback) {
       callback();
     },
-    on() {},
+    on(eventName, selector, handler) {
+      eventHandlers.push({
+        eventName,
+        selector,
+        handler,
+      });
+    },
     style() {
       return {
         selector() {
@@ -731,6 +846,12 @@ function createCytoscapeUpdateDouble(options, {
     storedElement(elementId) {
       return elementsById.get(elementId);
     },
+    triggerNodeEvent(eventName, elementId) {
+      const target = this.getElementById(elementId);
+      eventHandlers
+          .filter((handler) => handler.eventName === eventName && handler.selector === 'node')
+          .forEach((handler) => handler.handler({ target }));
+    },
     snapshotElements() {
       return [...elementsById.values()].map((element) => structuredCloneForTest(element));
     },
@@ -752,6 +873,10 @@ function createElementApi(element, elementsById, removedElementIds, animateCalls
     data(nextData) {
       if (nextData == null) {
         return element.data;
+      }
+
+      if (typeof nextData === 'string') {
+        return element.data[nextData];
       }
 
       element.data = nextData;
