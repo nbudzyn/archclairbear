@@ -15,7 +15,7 @@ Ausgangslage:
 Fachlicher Ablauf:
 
 - Der aktuell analysierte Workspace-Pfad ist im Browser sichtbar.
-- Der Nutzer kann über einen nativen Dateidialog einen anderen absoluten Workspace-Pfad auswählen und übernehmen.
+- Der Nutzer kann einen anderen absoluten Workspace-Pfad eingeben oder einfügen und übernehmen.
 - Nach dem Übernehmen analysiert die Anwendung diesen neuen Pfad.
 - Der sichtbare Graph wird durch den Root-Graphen des neuen Workspace ersetzt.
 - Aufgeklappte Knoten, manuelle Positionen und geladene Graphdaten des vorherigen Workspace werden verworfen.
@@ -27,6 +27,7 @@ Abgrenzung:
 - Der konfigurierte Pfad wird nicht über einen Anwendungsneustart hinaus gespeichert.
 - Es wird weiterhin genau ein Workspace-Pfad gleichzeitig analysiert.
 - Mehrere Source Roots sind nicht Teil dieses Items.
+- Es gibt keinen Auswahl-Dialog für Dateien oder Verzeichnisse.
 
 Akzeptanzkriterien:
 
