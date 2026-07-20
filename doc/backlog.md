@@ -3,40 +3,6 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
-## Workspace-Pfad konfigurierbar machen
-
-Der Nutzer kann den zu analysierenden Java-Workspace im Browser ändern, ohne die Anwendung neu zu starten.
-
-Ausgangslage:
-
-- Beim Start verwendet die Anwendung weiterhin `archclairbear.workspace.path` als initialen Workspace-Pfad.
-- Der Graph zeigt den initialen Workspace wie bisher beim Laden der Seite.
-
-Fachlicher Ablauf:
-
-- Der aktuell analysierte Workspace-Pfad ist im Browser sichtbar.
-- Der Nutzer kann einen anderen absoluten Workspace-Pfad eingeben oder einfügen und übernehmen.
-- Nach dem Übernehmen analysiert die Anwendung diesen neuen Pfad.
-- Der sichtbare Graph wird durch den Root-Graphen des neuen Workspace ersetzt.
-- Aufgeklappte Knoten, manuelle Positionen und geladene Graphdaten des vorherigen Workspace werden verworfen.
-- Wird ein fehlender Pfad übernommen, zeigt die Anwendung die bestehende Fehlermeldung zum fehlenden Workspace-Pfad.
-- Nach einer fehlgeschlagenen Übernahme kann der Nutzer einen anderen Pfad eingeben und erneut übernehmen.
-
-Abgrenzung:
-
-- Der konfigurierte Pfad wird nicht über einen Anwendungsneustart hinaus gespeichert.
-- Es wird weiterhin genau ein Workspace-Pfad gleichzeitig analysiert.
-- Mehrere Source Roots sind nicht Teil dieses Items.
-- Es gibt keinen Auswahl-Dialog für Dateien oder Verzeichnisse.
-
-Akzeptanzkriterien:
-
-- Beim Seitenstart ist der aktuell verwendete Workspace-Pfad sichtbar.
-- Bei Eingabe eines existierenden Java-Workspace-Pfads und Übernehmen wird der Graph aus diesem Pfad geladen.
-- Bei Eingabe eines fehlenden Pfads und Übernehmen erscheint eine fachliche Fehlermeldung im Browser.
-- Nach einem Fehler kann ein existierender Pfad übernommen werden und der Graph wird wieder sichtbar geladen.
-- Ein zuvor aufgeklappter Graphzustand wird beim Workspace-Wechsel sichtbar zurückgesetzt.
-
 ## Wenn kein Knoten sichtbar ist...
 
 Wenn kein Knoten sichtbar ist, soll die Sicht so verschoben werden, dass 1 äußerster Knoten vollständig sichtbar ist.
