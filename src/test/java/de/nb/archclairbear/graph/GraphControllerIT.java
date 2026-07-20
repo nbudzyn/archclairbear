@@ -66,11 +66,40 @@ class GraphControllerIT {
   }
 
   @Test
+  void rootGraphUsesTheWorkspacePathFromTheRequest() throws Exception {
+    // GIVEN
+    Files.writeString(
+        tempDir.resolve("ConfiguredType.java"),
+        "package configured.workspace; class ConfiguredType {}");
+    var requestedWorkspace = Files.createDirectory(tempDir.resolve("requested-workspace"));
+    Files.writeString(
+        requestedWorkspace.resolve("RequestedType.java"),
+        "package requested.workspace; class RequestedType {}");
+    var controller = new GraphController(new GraphService(tempDir));
+    var standaloneMockMvc = MockMvcBuilders.standaloneSetup(controller)
+        .setControllerAdvice(new GraphExceptionHandler())
+        .build();
+
+    // WHEN
+    var response = standaloneMockMvc.perform(get("/api/graph/root").param("workspacePath", requestedWorkspace.toString()))
+        // THEN
+        .andExpect(status().isOk())
+        .andReturn()
+        .getResponse()
+        .getContentAsString();
+
+    var root = objectMapper.readTree(response);
+    assertThat(root).hasSinglePackageNode("requested.workspace", "requested.workspace");
+    org.assertj.core.api.Assertions.assertThat(root.path("workspacePath").asText())
+        .isEqualTo(requestedWorkspace.toAbsolutePath().normalize().toString());
+  }
+
+  @Test
   void rootGraphTransportsRawDependencies() throws Exception {
     // GIVEN
     var controller = new GraphController(new GraphService(tempDir) {
       @Override
-      GraphResponse rootGraph() {
+      GraphResponse rootGraph(final String workspacePath) {
         return new GraphResponse(
             List.of(new GraphNode("de.aventiure", "package", "de.aventiure", true, null)),
             List.of(new RawDependency("de.aventiure.story", "de.aventiure.common")),

@@ -16,17 +16,21 @@ class GraphController {
   }
 
   @GetMapping("/api/graph/root")
-  GraphResponse rootGraph() {
-    return service.rootGraph();
+  GraphResponse rootGraph(@RequestParam(required = false) final String workspacePath) {
+    return service.rootGraph(workspacePath);
   }
 
   @GetMapping("/api/graph/package")
-  GraphResponse packageGraph(@RequestParam final String packageName) {
-    return service.packageGraph(packageName);
+  GraphResponse packageGraph(
+      @RequestParam final String packageName,
+      @RequestParam(required = false) final String workspacePath) {
+    return service.packageGraph(packageName, workspacePath);
   }
 
   @GetMapping("/api/graph/type")
-  GraphResponse typeGraph(@RequestParam final String typeId) {
-    return service.typeGraph(typeId);
+  GraphResponse typeGraph(
+      @RequestParam final String typeId,
+      @RequestParam(required = false) final String workspacePath) {
+    return service.typeGraph(typeId, workspacePath);
   }
 }

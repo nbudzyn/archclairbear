@@ -54,10 +54,12 @@ class LandingPageIT {
         .hasElement("#graph-status[role=\"status\"]") //
         .hasElement("#graph-error[role=\"alert\"]") //
         .hasElement("#graph-error[hidden]") //
+        .hasElement("#workspace-form") //
+        .hasElement("#workspace-path") //
         .hasElement("#cy") //
         .hasElement("script[src=\"/webjars/cytoscape/3.33.1/dist/cytoscape.min.js\"]") //
         .hasElement("script[src=\"/vendor/elkjs/elk.bundled.js\"]") //
-        .hasElement("script[src=\"/graph-app.js?v=manual-node-position-29\"]");
+        .hasElement("script[src=\"/graph-app.js?v=workspace-path-30\"]");
   }
 
   @Test

@@ -2,7 +2,47 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { GraphDataValidationError } from '../main/resources/static/graph-data.mjs';
-import { createPackageRequestUrl, createTypeRequestUrl, installNodeDoubleClickHandler, startGraphApp } from '../main/resources/static/graph-client.mjs';
+import { createPackageRequestUrl, createRootRequestUrl, createTypeRequestUrl, installNodeDoubleClickHandler, installWorkspaceFormHandler, startGraphApp } from '../main/resources/static/graph-client.mjs';
+
+test('Graph-Anfragen enthalten bei einem Workspace-Wechsel den Workspace-Pfad', () => {
+  // WHEN
+  const rootUrl = createRootRequestUrl('C:\\workspaces\\new workspace');
+  const packageUrl = createPackageRequestUrl('de.nb', 'C:\\workspaces\\new workspace');
+  const typeUrl = createTypeRequestUrl('de.nb.Type', 'C:\\workspaces\\new workspace');
+
+  // THEN
+  assert.equal(rootUrl, '/api/graph/root?workspacePath=C%3A%5Cworkspaces%5Cnew+workspace');
+  assert.equal(packageUrl, '/api/graph/package?packageName=de.nb&workspacePath=C%3A%5Cworkspaces%5Cnew+workspace');
+  assert.equal(typeUrl, '/api/graph/type?typeId=de.nb.Type&workspacePath=C%3A%5Cworkspaces%5Cnew+workspace');
+});
+
+test('installWorkspaceFormHandler übernimmt das Formular ohne Seiten-Neuladen', async () => {
+  // GIVEN
+  let submitHandler;
+  let submitCount = 0;
+  const workspaceForm = {
+    addEventListener(eventName, handler) {
+      assert.equal(eventName, 'submit');
+      submitHandler = handler;
+    },
+  };
+  installWorkspaceFormHandler(workspaceForm, async () => {
+    submitCount += 1;
+  });
+  let prevented = false;
+
+  // WHEN
+  submitHandler({
+    preventDefault() {
+      prevented = true;
+    },
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // THEN
+  assert.equal(prevented, true);
+  assert.equal(submitCount, 1);
+});
 
 test('startGraphApp zeigt den Ladezustand und rendert den Graphen bei Erfolg', async () => {
   // GIVEN

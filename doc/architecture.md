@@ -18,7 +18,7 @@
 
 - Spring Boot
 - `src/main/java/de/nb/archclairbear/graph` analysiert Java-Quelltext und liefert JSON-Graphdaten
-- Liest Java-Quelltext aus einem fest konfigurierten Workspace-Pfad.
+- Liest Java-Quelltext aus dem Workspace-Pfad der jeweiligen Anfrage; ohne Angabe verwendet es den konfigurierten initialen Workspace-Pfad.
 - Analysiert den Quelltext mit JavaParser und extrahiert statische Abhängigkeiten.
 - Baut ein hierarchisches Graphmodell aus Packages und Typen auf Basis der `package`-Deklaration.
 - Stellt die Graphdaten bereit.
@@ -34,6 +34,7 @@
 - Behandelt Aufklappen, Zuklappen, Zoom, Pan und Drag. Später auch Hover.
 - Hält mehrere Detailstufen gleichzeitig sichtbar.
 - Fragt bei Bedarf zusätzliche Graphdaten ab.
+- Hält den aktuell gewählten Workspace-Pfad und übermittelt ihn bei Initial- und Nachladeanfragen.
 - Cytoscape für Interaktion und Graph-Rendering verwenden.
 - ELK als Layout-Engine verwenden, wenn der Graph schichtweise und möglichst kollisionsfrei angeordnet werden soll.
 - Der Renderer bleibt leicht: ELK berechnet Positionen, Cytoscape rendert nur noch die fertigen Boxen und Kanten.

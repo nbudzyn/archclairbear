@@ -64,6 +64,40 @@ body {
   line-height: 1.5;
 }
 
+.workspace-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  pointer-events: auto;
+}
+
+.workspace-form label {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.workspace-form input {
+  width: min(420px, 46vw);
+  min-width: 180px;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(8, 13, 24, 0.8);
+  color: var(--text);
+  font: inherit;
+}
+
+.workspace-form button {
+  padding: 8px 10px;
+  border: 1px solid rgba(124, 212, 255, 0.32);
+  border-radius: 8px;
+  background: rgba(124, 212, 255, 0.16);
+  color: var(--text);
+  cursor: pointer;
+}
+
 .graph-frame {
   position: absolute;
   inset: 92px 20px 20px;

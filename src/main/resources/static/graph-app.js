@@ -1,3 +1,3 @@
-import { startGraphApp } from './graph-client.mjs?v=manual-node-position-29';
+import { startGraphApp } from './graph-client.mjs?v=workspace-path-30';
 
 startGraphApp();

@@ -253,6 +253,30 @@ test('load errors are shown in the browser', async ({ page }) => {
       .toContainText('Der Workspace-Pfad C:\\projects\\2003\\aventiure wurde nicht gefunden.');
 });
 
+test('a manually entered workspace path replaces the graph', async ({ page }) => {
+  // GIVEN
+  const workspacePath = 'C:\\projects\\2026\\archclairbear\\archclairbear\\src\\main\\java';
+  await page.goto('/');
+  const rootGraphResponse = page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return url.pathname === '/api/graph/root'
+        && url.searchParams.get('workspacePath') === workspacePath
+        && response.ok();
+  });
+
+  // WHEN
+  await page.locator('#workspace-path').fill(workspacePath);
+  await page.getByRole('button', { name: 'Übernehmen' }).click();
+  const graphData = await (await rootGraphResponse).json();
+
+  // THEN
+  await expect(page.locator('#workspace-path')).toHaveValue(workspacePath);
+  expect(graphData.workspacePath).toBe(workspacePath);
+  expect(graphData.nodes).toEqual(expect.arrayContaining([
+    expect.objectContaining({ id: 'de.nb.archclairbear' }),
+  ]));
+});
+
 async function hasRenderedCanvasPixels(page) {
   return page.locator('#cy canvas').evaluateAll((canvases) => canvases.some((canvas) => {
     const context = canvas.getContext('2d', { willReadFrequently: true });

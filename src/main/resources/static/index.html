@@ -4,13 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ArchClairBear</title>
-  <link rel="stylesheet" href="/graph-app.css?v=manual-node-position-29" />
+  <link rel="stylesheet" href="/graph-app.css?v=workspace-path-30" />
 </head>
 <body>
   <div class="shell">
     <header class="hero">
       <h1>ArchClairBear</h1>
       <p>Packages und Typen lassen sich per Doppelklick auf- und wieder zuklappen. Die Darstellung läuft mit Cytoscape und ELK.</p>
+      <form id="workspace-form" class="workspace-form">
+        <label for="workspace-path">Java-Workspace</label>
+        <input id="workspace-path" name="workspacePath" type="text" autocomplete="off" spellcheck="false" />
+        <button type="submit">Übernehmen</button>
+      </form>
     </header>
 
     <div class="tag" aria-hidden="true">
@@ -34,6 +39,6 @@
 
   <script defer src="/webjars/cytoscape/3.33.1/dist/cytoscape.min.js"></script>
   <script defer src="/vendor/elkjs/elk.bundled.js"></script>
-  <script type="module" src="/graph-app.js?v=manual-node-position-29"></script>
+  <script type="module" src="/graph-app.js?v=workspace-path-30"></script>
 </body>
 </html>

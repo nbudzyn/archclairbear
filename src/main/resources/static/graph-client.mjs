@@ -1,6 +1,6 @@
-import { createGraphStatusController } from './graph-status.mjs?v=manual-node-position-29';
-import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=manual-node-position-29';
-import { renderGraph } from './graph-renderer.mjs?v=manual-node-position-29';
+import { createGraphStatusController } from './graph-status.mjs?v=workspace-path-30';
+import { GraphDataValidationError, calculateVisiblePackageEdges, collapseGraph, mergeGraphs, normalizeGraph } from './graph-data.mjs?v=workspace-path-30';
+import { renderGraph } from './graph-renderer.mjs?v=workspace-path-30';
 
 /**
  * Startet die Client-Anwendung für den Graphen.
@@ -15,8 +15,11 @@ export async function startGraphApp({
   loadGraphImpl = loadGraph,
   renderGraphImpl = renderGraph,
   requestUrl = '/api/graph/root',
+  rootRequestUrlFactory = createRootRequestUrl,
   packageRequestUrlFactory = createPackageRequestUrl,
   typeRequestUrlFactory = createTypeRequestUrl,
+  workspaceForm = globalThis.document?.getElementById('workspace-form'),
+  workspacePathInput = globalThis.document?.getElementById('workspace-path'),
   timeSource = () => Date.now(),
   windowObject = window,
   cytoscape = window.cytoscape,
@@ -32,49 +35,76 @@ export async function startGraphApp({
 
   try {
     const loadedGraph = await loadGraphImpl(fetchImpl, requestUrl);
-    const rawDependencies = loadedGraph.rawDependencies ?? [];
+    let workspacePath = loadedGraph.workspacePath;
+    updateWorkspacePathInput(workspacePathInput, workspacePath);
+    let rawDependencies = loadedGraph.rawDependencies ?? [];
     let graph = withVisiblePackageEdges(normalizeGraph(loadedGraph), rawDependencies);
-    const renderState = await renderGraphImpl(graph, {
+    let renderState = await renderGraphImpl(graph, {
       cytoscape,
       container,
       windowObject,
     });
-    if (renderState?.cy != null && typeof renderState.appendGraph === 'function') {
-      installNodeDoubleClickHandler(renderState.cy, async (nodeId, nodeType) => {
-        try {
-          if (hasVisibleChildNodes(graph, nodeId)) {
-            graph = withVisiblePackageEdges(collapseGraph(graph, nodeId), rawDependencies);
-            await renderState.appendGraph(graph, { focusNodeId: nodeId });
-            return;
-          }
 
-          if (!isNodeExpandable(graph, nodeId)) {
-            return;
-          }
-
-          const requestUrlToLoad = nodeType === 'type'
-              ? typeRequestUrlFactory(nodeId)
-              : packageRequestUrlFactory(nodeId);
-          const expandedLoadedGraph = await loadGraphImpl(fetchImpl, requestUrlToLoad);
-          const expandedGraph = normalizeGraph(expandedLoadedGraph);
-          graph = withVisiblePackageEdges(mergeGraphs(graph, expandedGraph), rawDependencies);
+    const loadNode = async (nodeId, nodeType) => {
+      try {
+        if (hasVisibleChildNodes(graph, nodeId)) {
+          graph = withVisiblePackageEdges(collapseGraph(graph, nodeId), rawDependencies);
           await renderState.appendGraph(graph, { focusNodeId: nodeId });
-          if (typeof expandedLoadedGraph.statusMessage === 'string' && expandedLoadedGraph.statusMessage.length > 0) {
-            graphStatusController.showStatus(expandedLoadedGraph.statusMessage);
-          } else {
-            graphStatusController.hideStatus();
-          }
-        } catch (error) {
-          console.error(`Failed to toggle node ${nodeId}.`, error);
-          graphStatusController.showError(createUserFacingErrorMessage(error));
+          return;
         }
-      }, timeSource);
-    }
-    if (typeof loadedGraph.statusMessage === 'string' && loadedGraph.statusMessage.length > 0) {
-      graphStatusController.showStatus(loadedGraph.statusMessage);
-    } else {
-      graphStatusController.hideStatus();
-    }
+
+        if (!isNodeExpandable(graph, nodeId)) {
+          return;
+        }
+
+        const requestUrlToLoad = nodeType === 'type'
+            ? typeRequestUrlFactory(nodeId, workspacePath)
+            : packageRequestUrlFactory(nodeId, workspacePath);
+        const expandedLoadedGraph = await loadGraphImpl(fetchImpl, requestUrlToLoad);
+        const expandedGraph = normalizeGraph(expandedLoadedGraph);
+        graph = withVisiblePackageEdges(mergeGraphs(graph, expandedGraph), rawDependencies);
+        await renderState.appendGraph(graph, { focusNodeId: nodeId });
+        updateGraphStatus(graphStatusController, expandedLoadedGraph);
+      } catch (error) {
+        console.error(`Failed to toggle node ${nodeId}.`, error);
+        graphStatusController.showError(createUserFacingErrorMessage(error));
+      }
+    };
+    const installNodeHandler = () => {
+      if (renderState?.cy != null && typeof renderState.appendGraph === 'function') {
+        installNodeDoubleClickHandler(renderState.cy, loadNode, timeSource);
+      }
+    };
+
+    installNodeHandler();
+    installWorkspaceFormHandler(workspaceForm, async () => {
+      graphStatusController.showLoading('Graphdaten werden geladen ...');
+
+      try {
+        const loadedWorkspaceGraph = await loadGraphImpl(
+            fetchImpl,
+            rootRequestUrlFactory(workspacePathInput?.value ?? ''));
+        const nextRawDependencies = loadedWorkspaceGraph.rawDependencies ?? [];
+        const nextGraph = withVisiblePackageEdges(normalizeGraph(loadedWorkspaceGraph), nextRawDependencies);
+
+        renderState?.destroy?.();
+        renderState = await renderGraphImpl(nextGraph, {
+          cytoscape,
+          container,
+          windowObject,
+        });
+        workspacePath = loadedWorkspaceGraph.workspacePath;
+        updateWorkspacePathInput(workspacePathInput, workspacePath);
+        rawDependencies = nextRawDependencies;
+        graph = nextGraph;
+        installNodeHandler();
+        updateGraphStatus(graphStatusController, loadedWorkspaceGraph);
+      } catch (error) {
+        console.error('Failed to load workspace graph.', error);
+        graphStatusController.showError(createUserFacingErrorMessage(error));
+      }
+    });
+    updateGraphStatus(graphStatusController, loadedGraph);
     return renderState;
   } catch (error) {
     console.error('Failed to load root graph.', error);
@@ -100,12 +130,27 @@ export async function loadGraph(fetchImpl = fetch, requestUrl = '/api/graph/root
   return response.json();
 }
 
-export function createPackageRequestUrl(packageName) {
-  return `/api/graph/package?packageName=${encodeURIComponent(packageName)}`;
+export function createRootRequestUrl(workspacePath) {
+  return createRequestUrl('/api/graph/root', { workspacePath });
 }
 
-export function createTypeRequestUrl(typeId) {
-  return `/api/graph/type?typeId=${encodeURIComponent(typeId)}`;
+export function createPackageRequestUrl(packageName, workspacePath) {
+  return createRequestUrl('/api/graph/package', { packageName, workspacePath });
+}
+
+export function createTypeRequestUrl(typeId, workspacePath) {
+  return createRequestUrl('/api/graph/type', { typeId, workspacePath });
+}
+
+export function installWorkspaceFormHandler(workspaceForm, onWorkspaceSubmit) {
+  if (workspaceForm == null) {
+    return;
+  }
+
+  workspaceForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    void onWorkspaceSubmit();
+  });
 }
 
 export function installNodeDoubleClickHandler(cy, onNodeDoubleClick, timeSource = () => Date.now()) {
@@ -142,6 +187,33 @@ function withVisiblePackageEdges(graph, rawDependencies) {
     nodes: graph.nodes,
     edges: calculateVisiblePackageEdges(rawDependencies, graph),
   };
+}
+
+function updateGraphStatus(graphStatusController, loadedGraph) {
+  if (typeof loadedGraph.statusMessage === 'string' && loadedGraph.statusMessage.length > 0) {
+    graphStatusController.showStatus(loadedGraph.statusMessage);
+  } else {
+    graphStatusController.hideStatus();
+  }
+}
+
+function createRequestUrl(path, parameters) {
+  const searchParameters = new URLSearchParams();
+
+  Object.entries(parameters).forEach(([name, value]) => {
+    if (typeof value === 'string' && value.length > 0) {
+      searchParameters.set(name, value);
+    }
+  });
+
+  const query = searchParameters.toString();
+  return query.length === 0 ? path : `${path}?${query}`;
+}
+
+function updateWorkspacePathInput(workspacePathInput, workspacePath) {
+  if (workspacePathInput != null && typeof workspacePath === 'string') {
+    workspacePathInput.value = workspacePath;
+  }
 }
 
 function createUserFacingErrorMessage(error) {

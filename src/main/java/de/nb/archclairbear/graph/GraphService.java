@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,13 +29,13 @@ class GraphService {
   private static final String DEFAULT_PACKAGE_LABEL = "(default)";
   private static final String JAVA_FILE_EXTENSION = ".java";
 
-  private final Path workspacePath;
+  private final Path initialWorkspacePath;
   private final ImportDependencyAnalyzer importDependencyAnalyzer = new ImportDependencyAnalyzer();
   private final TypeUseDependencyAnalyzer typeUseDependencyAnalyzer = new TypeUseDependencyAnalyzer();
   private final ModuleInfoDependencyAnalyzer moduleInfoDependencyAnalyzer = new ModuleInfoDependencyAnalyzer();
   private final InitialRawDependencyFilter initialRawDependencyFilter = new InitialRawDependencyFilter();
   private final JavaParserFactory javaParserFactory = new JavaParserFactory();
-  private volatile WorkspaceIndex cachedIndex;
+  private final Map<Path, WorkspaceIndex> cachedIndices = new ConcurrentHashMap<>();
 
   @Autowired
   GraphService(@Value("${archclairbear.workspace.path}") final String workspacePath) {
@@ -42,15 +43,20 @@ class GraphService {
   }
 
   GraphService(final Path workspacePath) {
-    this.workspacePath = workspacePath;
+    this.initialWorkspacePath = workspacePath.toAbsolutePath().normalize();
   }
 
   GraphResponse rootGraph() {
-    ensureWorkspaceDirectoryExists();
+    return rootGraph(null);
+  }
 
-    var workspaceIndex = getWorkspaceIndex();
+  GraphResponse rootGraph(final String requestedWorkspacePath) {
+    var workspacePath = resolveWorkspacePath(requestedWorkspacePath);
+    ensureWorkspaceDirectoryExists(workspacePath);
+
+    var workspaceIndex = getWorkspaceIndex(workspacePath);
     if (workspaceIndex.visibleRootPackageName() == null) {
-      return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage());
+      return new GraphResponse(List.of(), List.of(), workspaceIndex.statusMessage(), workspacePath.toString());
     }
 
     var nodes = List.of(createPackageNode(workspaceIndex.visibleRootPackageName(), null, workspaceIndex.packages()));
@@ -60,13 +66,19 @@ class GraphService {
         initialRawDependencyFilter.filter(
             workspaceIndex.rawDependencies(),
             initialRawDependencyFilter.analyzedRootPackageName(nodes)),
-        workspaceIndex.statusMessage());
+        workspaceIndex.statusMessage(),
+        workspacePath.toString());
   }
 
   GraphResponse packageGraph(final String packageName) {
-    ensureWorkspaceDirectoryExists();
+    return packageGraph(packageName, null);
+  }
 
-    var workspaceIndex = getWorkspaceIndex();
+  GraphResponse packageGraph(final String packageName, final String requestedWorkspacePath) {
+    var workspacePath = resolveWorkspacePath(requestedWorkspacePath);
+    ensureWorkspaceDirectoryExists(workspacePath);
+
+    var workspaceIndex = getWorkspaceIndex(workspacePath);
     var normalizedPackageName = normalizePackageName(packageName);
     var packageContent = workspaceIndex.packages().get(normalizedPackageName);
     if (packageContent == null) {
@@ -85,9 +97,14 @@ class GraphService {
   }
 
   GraphResponse typeGraph(final String typeId) {
-    ensureWorkspaceDirectoryExists();
+    return typeGraph(typeId, null);
+  }
 
-    var workspaceIndex = getWorkspaceIndex();
+  GraphResponse typeGraph(final String typeId, final String requestedWorkspacePath) {
+    var workspacePath = resolveWorkspacePath(requestedWorkspacePath);
+    ensureWorkspaceDirectoryExists(workspacePath);
+
+    var workspaceIndex = getWorkspaceIndex(workspacePath);
     var typeInfo = workspaceIndex.typesById().get(typeId);
     if (typeInfo == null) {
       return new GraphResponse(List.of(), workspaceIndex.statusMessage());
@@ -100,7 +117,15 @@ class GraphService {
     return new GraphResponse(List.copyOf(nodes), workspaceIndex.statusMessage());
   }
 
-  private void ensureWorkspaceDirectoryExists() {
+  private Path resolveWorkspacePath(final String requestedWorkspacePath) {
+    if (requestedWorkspacePath == null || requestedWorkspacePath.isBlank()) {
+      return initialWorkspacePath;
+    }
+
+    return Path.of(requestedWorkspacePath).toAbsolutePath().normalize();
+  }
+
+  private void ensureWorkspaceDirectoryExists(final Path workspacePath) {
     if (!Files.exists(workspacePath)) {
       throw new WorkspacePathNotFoundException(workspacePath);
     }
@@ -110,23 +135,11 @@ class GraphService {
     }
   }
 
-  private WorkspaceIndex getWorkspaceIndex() {
-    var index = cachedIndex;
-    if (index != null) {
-      return index;
-    }
-
-    synchronized (this) {
-      index = cachedIndex;
-      if (index == null) {
-        index = buildWorkspaceIndex();
-        cachedIndex = index;
-      }
-      return index;
-    }
+  private WorkspaceIndex getWorkspaceIndex(final Path workspacePath) {
+    return cachedIndices.computeIfAbsent(workspacePath, this::buildWorkspaceIndex);
   }
 
-  private WorkspaceIndex buildWorkspaceIndex() {
+  private WorkspaceIndex buildWorkspaceIndex(final Path workspacePath) {
     var parser = javaParserFactory.create();
     var packageContents = new HashMap<String, MutablePackageContent>();
     var rawDependencies = new HashSet<RawDependency>();

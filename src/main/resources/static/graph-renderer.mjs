@@ -1,4 +1,4 @@
-import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=manual-node-position-29';
+import { createGraphElements, getGraphNodeDimensions } from './graph-data.mjs?v=workspace-path-30';
 
 const BASE_NODE_FONT_SIZE = 12;
 const MIN_RENDERED_NODE_FONT_SIZE = 10;
