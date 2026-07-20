@@ -3,6 +3,39 @@
 Dieses Backlog beschreibt die nächsten Umsetzungsschritte für den Architektur-Explorer.
 Die Reihenfolge ist so gewählt, dass jeder Schritt einen im Browser sichtbaren und prüfbaren fachlichen Mehrwert liefert.
 
+## Workspace-Pfad konfigurierbar machen
+
+Der Nutzer kann den zu analysierenden Java-Workspace im Browser ändern, ohne die Anwendung neu zu starten.
+
+Ausgangslage:
+
+- Beim Start verwendet die Anwendung weiterhin `archclairbear.workspace.path` als initialen Workspace-Pfad.
+- Der Graph zeigt den initialen Workspace wie bisher beim Laden der Seite.
+
+Fachlicher Ablauf:
+
+- Der aktuell analysierte Workspace-Pfad ist im Browser sichtbar.
+- Der Nutzer kann über einen nativen Dateidialog einen anderen absoluten Workspace-Pfad auswählen und übernehmen.
+- Nach dem Übernehmen analysiert die Anwendung diesen neuen Pfad.
+- Der sichtbare Graph wird durch den Root-Graphen des neuen Workspace ersetzt.
+- Aufgeklappte Knoten, manuelle Positionen und geladene Graphdaten des vorherigen Workspace werden verworfen.
+- Wird ein fehlender Pfad übernommen, zeigt die Anwendung die bestehende Fehlermeldung zum fehlenden Workspace-Pfad.
+- Nach einer fehlgeschlagenen Übernahme kann der Nutzer einen anderen Pfad eingeben und erneut übernehmen.
+
+Abgrenzung:
+
+- Der konfigurierte Pfad wird nicht über einen Anwendungsneustart hinaus gespeichert.
+- Es wird weiterhin genau ein Workspace-Pfad gleichzeitig analysiert.
+- Mehrere Source Roots sind nicht Teil dieses Items.
+
+Akzeptanzkriterien:
+
+- Beim Seitenstart ist der aktuell verwendete Workspace-Pfad sichtbar.
+- Bei Eingabe eines existierenden Java-Workspace-Pfads und Übernehmen wird der Graph aus diesem Pfad geladen.
+- Bei Eingabe eines fehlenden Pfads und Übernehmen erscheint eine fachliche Fehlermeldung im Browser.
+- Nach einem Fehler kann ein existierender Pfad übernommen werden und der Graph wird wieder sichtbar geladen.
+- Ein zuvor aufgeklappter Graphzustand wird beim Workspace-Wechsel sichtbar zurückgesetzt.
+
 ## Wenn kein Knoten sichtbar ist...
 
 Wenn kein Knoten sichtbar ist, soll die Sicht so verschoben werden, dass 1 äußerster Knoten vollständig sichtbar ist.
@@ -12,7 +45,7 @@ der Knoten nach dem aufklappen vollständig zu sehen ist.
 ## Statische Code-Analyse im Prozess
 
 Genau wie die Tests sollen als Quality Gate nach Änderung ein oder mehrere statische Code-Analyse Tools (für Java und JavaScript laufen).
-Genügt, die Qualität nicht den Ansprüchen, muss bei der Umsetzung noch nachgebessert werden.
+Genügt die Qualität nicht den Ansprüchen, muss bei der Umsetzung noch nachgebessert werden.
 
 ## Manuell verschobene aufgeklappte Container als Gruppe behandeln
 
@@ -32,10 +65,6 @@ Offene Fragen vor Umsetzung:
   mitverschoben?
 - Soll ein später wieder nachgeladener Kind-Knoten bewusst neu von ELK platziert werden, oder soll eine frühere relative Position wieder
   hergestellt werden?
-
-## Workspace-Pfad konfigurierbar machen
-
-Der zu analysierende Java-Workspace wird konfigurierbar.
 
 ## Source-Root-Knoten bei mehreren Source Roots anzeigen
 
